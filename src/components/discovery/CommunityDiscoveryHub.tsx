@@ -7,6 +7,7 @@ import {
   Building2, Plus, Trophy, Award, TrendingUp, Grid, List, Clock 
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatTimeRange, formatPercentage } from '../../utils/formatters';
+import { CommunityCalendarView } from './CommunityCalendarView';
 
 interface CommunityDiscoveryHubProps {
   onSelectEvent: (eventId: string) => void;
@@ -384,37 +385,11 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
 
         {/* VIEW 2: INTERACTIVE CALENDAR VIEW */}
         {viewMode === 'calendar' && (
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-sm">
-            <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-indigo-600" />
-                Community Calendar — {selectedMonth}
-              </h3>
-              <div className="text-xs text-slate-400 font-semibold">
-                Click any scheduled date to register
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {filteredUpcoming.map((event) => (
-                <div
-                  key={event.id}
-                  onClick={() => handleSelectEventAction(event)}
-                  className="p-4 rounded-2xl border border-indigo-100 bg-indigo-50/40 hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer transition space-y-2"
-                >
-                  <span className="text-xs font-bold text-indigo-700 uppercase bg-indigo-100 px-2 py-0.5 rounded">
-                    {formatDate(event.startDate)}
-                  </span>
-                  <h4 className="text-sm font-bold text-slate-900">{event.title}</h4>
-                  <p className="text-xs text-slate-500">{event.venueName}</p>
-                  <div className="flex justify-between items-center text-xs font-bold text-indigo-600 pt-1">
-                    <span>Goal: {formatCurrency(event.fundraisingGoal)}</span>
-                    <span className="flex items-center gap-0.5">Sign Up <ArrowRight className="w-3 h-3" /></span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <CommunityCalendarView
+            events={filteredUpcoming}
+            organizations={organizations}
+            onSelectEvent={handleSelectEventAction}
+          />
         )}
 
       </section>
