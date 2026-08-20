@@ -49,7 +49,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
             {currentEvent.title}
           </h2>
           <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl">
-            Coordinating {subParts.length} Committee Departments, {shifts.length} Volunteer Shifts, and ${formatCurrency(currentEvent.fundraisingGoal)} Campaign Target.
+            Coordinating {subParts.length} Committee Departments, {shifts.length} Volunteer Shifts, and {formatCurrency(currentEvent.fundraisingGoal)} Campaign Target.
           </p>
         </div>
 
