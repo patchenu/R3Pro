@@ -57,10 +57,14 @@ CREATE TABLE events (
     status VARCHAR(50) DEFAULT 'published',
     approval_threshold_budget NUMERIC(10,2) DEFAULT 250,
     approval_threshold_slots INTEGER DEFAULT 5,
-    reminder_cadence VARCHAR(50) DEFAULT 'standard',
-    allow_fee_coverage BOOLEAN DEFAULT TRUE,
+    settings JSONB DEFAULT '{"default_currency":"USD","approval_threshold_budget":250,"approval_threshold_slots":5,"default_reminder_cadence":"standard"}',
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Deduplication & Anti-Collision Constraints
+CREATE UNIQUE INDEX idx_orgs_ein_unique ON organizations (regexp_replace(ein, '[^0-9]', '', 'g'));
+CREATE UNIQUE INDEX idx_events_org_slug_unique ON events (org_id, slug);
+
 
 -- Sub-Parts (Committees)
 CREATE TABLE sub_parts (

@@ -14,7 +14,7 @@ interface EventBuilderWizardProps {
 }
 
 export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, onClose }) => {
-  const { createEvent, currentOrg } = useApp();
+  const { createEvent, currentOrg, events, showToast } = useApp();
 
   const [selectedTemplate, setSelectedTemplate] = useState<EventTemplatePreset | null>(EVENT_TEMPLATES[0]);
   const [title, setTitle] = useState(EVENT_TEMPLATES[0].title);
@@ -32,8 +32,20 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setGoal(preset.defaultGoal);
   };
 
+  const isDuplicateEvent = events.some(e => 
+    e.orgId === currentOrg.id && 
+    e.title.toLowerCase().trim() === title.toLowerCase().trim() && 
+    e.startDate.slice(0, 10) === startDate.slice(0, 10)
+  );
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!title.trim()) return;
+
+    if (isDuplicateEvent) {
+      showToast('error', 'Duplicate Event Detected', `An event titled "${title}" is already scheduled on ${startDate.slice(0, 10)} for ${currentOrg.name}.`);
+      return;
+    }
 
     createEvent({
       title,
