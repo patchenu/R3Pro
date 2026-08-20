@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { RoleSwitcherBar } from './components/common/RoleSwitcherBar';
 import { Navbar } from './components/common/Navbar';
@@ -13,9 +13,33 @@ import { KioskSelfCheckIn } from './components/checkin/KioskSelfCheckIn';
 import { EventBuilderWizard } from './components/organizer/EventBuilderWizard';
 
 const MainLayout: React.FC = () => {
-  const { activeRole } = useApp();
+  const { activeRole, switchEvent, switchOrganization } = useApp();
   const [activeTab, setActiveTab] = useState<string>('public_landing');
   const [isEventBuilderOpen, setIsEventBuilderOpen] = useState(false);
+  const [showRoleSimulator, setShowRoleSimulator] = useState(true);
+
+  // Check URL query parameters on boot
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const eventId = params.get('event');
+    const orgId = params.get('org');
+    const mode = params.get('mode');
+    const tab = params.get('tab');
+
+    if (eventId) {
+      switchEvent(eventId);
+    }
+    if (orgId) {
+      switchOrganization(orgId);
+    }
+    if (mode === 'public') {
+      setShowRoleSimulator(false);
+      setActiveTab('public_landing');
+    }
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, []);
 
   // If in kiosk role or kiosk tab, render fullscreen Kiosk
   if (activeRole === 'kiosk' || activeTab === 'kiosk_mode') {
@@ -39,7 +63,7 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-indigo-500 selection:text-white">
       {/* Top Role Simulator Switcher Bar */}
-      <RoleSwitcherBar />
+      {showRoleSimulator && <RoleSwitcherBar />}
 
       {/* Main Navbar */}
       <Navbar

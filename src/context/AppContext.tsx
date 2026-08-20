@@ -10,6 +10,7 @@ import {
   SEED_DONATIONS, SEED_VENDOR_APPLICATIONS, SEED_APPROVAL_REQUESTS, 
   SEED_VOLUNTEER_CRM, SEED_ANNOUNCEMENTS, SEED_AUDIT_LOGS 
 } from '../data/seedData';
+import { EVENT_TEMPLATES, ORG_TEMPLATES } from '../data/templates';
 import { generateManageToken, generateReceiptNumber } from '../utils/formatters';
 
 interface ToastNotification {
@@ -50,6 +51,7 @@ interface AppContextType {
   switchEvent: (eventId: string) => void;
 
   // Actions
+  createOrganization: (orgData: Partial<Organization>, templatePresetId?: string, adminName?: string) => Organization;
   createEvent: (newEvent: Partial<Event>, templatePresetId?: string) => Event;
   claimSlotsAndRegister: (payload: {
     primaryName: string;
@@ -184,6 +186,123 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setData((prev: any) => ({ ...prev, currentEventId: eventId }));
   };
 
+  const createOrganization = (orgData: Partial<Organization>, templatePresetId?: string, adminName: string = 'Super Admin'): Organization => {
+    const orgId = 'org_' + Date.now();
+    const adminId = 'user_admin_' + Date.now();
+    
+    const newOrg: Organization = {
+      id: orgId,
+      name: orgData.name || 'New Organization',
+      type: orgData.type || 'non_profit',
+      ein: orgData.ein || '12-3456789',
+      contactEmail: orgData.contactEmail || 'admin@org.org',
+      phone: orgData.phone || '(555) 000-0000',
+      address: orgData.address || '100 Main St',
+      logoUrl: orgData.logoUrl || 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=120&auto=format&fit=crop&q=80',
+      primaryColor: orgData.primaryColor || '#4f46e5',
+      volunteerCount: 0,
+      totalFundsRaised: 0,
+      settings: {
+        defaultCurrency: 'USD',
+        defaultReminderCadence: 'standard',
+        approvalThresholdBudget: 250,
+        approvalThresholdSlots: 5
+      }
+    };
+
+    const newAdminUser: User = {
+      id: adminId,
+      orgId: orgId,
+      name: adminName,
+      email: newOrg.contactEmail,
+      phone: newOrg.phone,
+      role: 'org_admin'
+    };
+
+    // Create initial kickoff event
+    const eventId = 'evt_' + Date.now();
+    const initialEvent: Event = {
+      id: eventId,
+      orgId: orgId,
+      title: `${newOrg.name} Kickoff & Fundraiser 2026`,
+      slug: (newOrg.name + '-kickoff-2026').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      tagline: 'Annual community event, volunteer drive and fundraising campaign',
+      description: `Welcome to the official volunteer and fundraising portal for ${newOrg.name}.`,
+      startDate: new Date(Date.now() + 86400000 * 14).toISOString(),
+      endDate: new Date(Date.now() + 86400000 * 14 + 28800000).toISOString(),
+      venueName: 'Community Center Main Hall',
+      venueAddress: newOrg.address,
+      isVirtual: false,
+      coverImageUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&auto=format&fit=crop&q=80',
+      theme: {
+        id: 'indigo_modern',
+        name: 'Indigo Modern',
+        primaryColor: newOrg.primaryColor,
+        accentColor: '#6366f1',
+        bgGradient: 'from-indigo-600 to-purple-800'
+      },
+      fundraisingGoal: 10000,
+      totalRaised: 0,
+      currency: 'USD',
+      status: 'published',
+      approvalThresholdBudget: 250,
+      approvalThresholdSlots: 5,
+      reminderCadence: 'standard',
+      allowFeeCoverage: true,
+      subPartIds: []
+    };
+
+    const template = ORG_TEMPLATES.find(t => t.id === templatePresetId) || ORG_TEMPLATES[0];
+    const defaultSubParts: SubPart[] = template.defaultDepartments.map((deptName, dIdx) => ({
+      id: `subpart_${orgId}_${dIdx}`,
+      eventId: eventId,
+      name: deptName,
+      category: (dIdx === 0 ? 'registration_greeters' : dIdx === 1 ? 'hospitality_food' : 'labor_setup') as any,
+      leadUserId: adminId,
+      leadName: adminName,
+      leadPhone: newOrg.phone,
+      leadEmail: newOrg.contactEmail,
+      leadRadioChannel: `Channel ${dIdx + 1}`,
+      reportingGate: 'Main Entrance & Check-In Desk',
+      dressCodeNotes: 'Comfortable casual attire or organization spirit shirt',
+      suppliesNotes: 'Check in with lead upon arrival',
+      budgetAllocated: 500,
+      budgetSpent: 0,
+      shiftIds: [],
+      itemSlotIds: []
+    }));
+
+    const starterShift: Shift = {
+      id: 'shift_' + Date.now(),
+      subPartId: defaultSubParts[0].id,
+      eventId: eventId,
+      title: 'Event Greeter & Volunteer Check-In',
+      description: 'Welcome arriving volunteers and families, hand out name tags.',
+      startTime: initialEvent.startDate,
+      endTime: initialEvent.endDate,
+      capacity: 4,
+      claimedCount: 0,
+      requiresWaiver: true,
+      waiverTemplateId: 'waiver_general_liability',
+      isApproved: true
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      organizations: [newOrg, ...prev.organizations],
+      users: [newAdminUser, ...prev.users],
+      events: [initialEvent, ...prev.events],
+      subParts: [...defaultSubParts, ...prev.subParts],
+      shifts: [starterShift, ...prev.shifts],
+      currentOrgId: orgId,
+      currentUserId: adminId,
+      currentEventId: eventId
+    }));
+
+    showToast('success', 'Organization Registered!', `${newOrg.name} workspace created.`);
+    return newOrg;
+  };
+
   const createEvent = (newEventData: Partial<Event>, templatePresetId?: string): Event => {
     const id = 'evt_' + Date.now();
     const slug = (newEventData.title || 'event').toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -219,9 +338,74 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       subPartIds: []
     };
 
+    // Hydrate template departments, shifts, items if chosen
+    const template = EVENT_TEMPLATES.find(t => t.id === templatePresetId);
+    let newSubParts: SubPart[] = [];
+    let newShifts: Shift[] = [];
+    let newItems: ItemSlot[] = [];
+
+    if (template) {
+      template.departments.forEach((dept, dIdx) => {
+        const subPartId = `sp_${id}_${dIdx}`;
+        newSubParts.push({
+          id: subPartId,
+          eventId: id,
+          name: dept.name,
+          category: (dIdx === 0 ? 'registration_greeters' : dIdx === 1 ? 'hospitality_food' : 'labor_setup') as any,
+          leadUserId: currentUser.id,
+          leadName: currentUser.name,
+          leadPhone: currentUser.phone,
+          leadEmail: currentUser.email,
+          leadRadioChannel: `Channel ${dIdx + 1}`,
+          reportingGate: `${dept.name} Check-In Station`,
+          dressCodeNotes: 'Comfortable event attire',
+          suppliesNotes: 'Check in with lead',
+          budgetAllocated: Math.round(event.fundraisingGoal * 0.08),
+          budgetSpent: 0,
+          shiftIds: [],
+          itemSlotIds: []
+        });
+
+        dept.shifts.forEach((s, sIdx) => {
+          newShifts.push({
+            id: `shift_${id}_${dIdx}_${sIdx}`,
+            subPartId,
+            eventId: id,
+            title: s.title,
+            description: `Shift role for ${dept.name}`,
+            startTime: event.startDate,
+            endTime: event.endDate,
+            capacity: s.capacity,
+            claimedCount: 0,
+            requiresWaiver: true,
+            waiverTemplateId: 'waiver_general_liability',
+            isApproved: true
+          });
+        });
+
+        dept.items.forEach((i, iIdx) => {
+          newItems.push({
+            id: `item_${id}_${dIdx}_${iIdx}`,
+            subPartId,
+            eventId: id,
+            itemName: i.itemName,
+            category: 'Supplies',
+            quantityNeeded: i.quantityNeeded,
+            quantityPledged: 0,
+            unit: i.unit,
+            dropOffLocation: `${dept.name} Desk`,
+            dropOffDeadline: 'Event Morning'
+          });
+        });
+      });
+    }
+
     setData((prev: any) => ({
       ...prev,
       events: [event, ...prev.events],
+      subParts: [...newSubParts, ...prev.subParts],
+      shifts: [...newShifts, ...prev.shifts],
+      itemSlots: [...newItems, ...prev.itemSlots],
       currentEventId: event.id
     }));
 
@@ -731,6 +915,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       switchRole,
       switchOrganization,
       switchEvent,
+      createOrganization,
       createEvent,
       claimSlotsAndRegister,
       cancelRegistration,
