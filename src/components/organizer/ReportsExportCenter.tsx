@@ -5,7 +5,7 @@ import {
   Receipt, Users, ShieldCheck, CheckCircle2 
 } from 'lucide-react';
 import { exportRosterToCsv, exportFinancialLedgerToCsv } from '../../utils/exportCsv';
-import { printVolunteerRosterHtml, printIrsTaxLetterHtml, printNameBadgesHtml } from '../../utils/exportPdf';
+import { printVolunteerRosterHtml, printIrsTaxLetterHtml, printNameBadgesHtml, printStudentServiceLetterHtml } from '../../utils/exportPdf';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
 export const ReportsExportCenter: React.FC = () => {
@@ -168,22 +168,60 @@ export const ReportsExportCenter: React.FC = () => {
 
       </div>
 
+      {/* CARD 5: STUDENT COMMUNITY SERVICE VERIFICATION CERTIFICATES */}
+      <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-3xl p-6 sm:p-8 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="space-y-2 max-w-xl">
+          <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 text-[10px] font-bold uppercase tracking-wider border border-blue-400/30">
+            High School & Scouting Service Hours
+          </span>
+          <h3 className="text-xl sm:text-2xl font-black text-white">Student Service Verification Certificates</h3>
+          <p className="text-xs text-blue-200 leading-relaxed">
+            Generate formal, signed institutional verification letters certifying volunteer hours for high school graduation, National Honor Society, or Scouting rank advancement.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+          <select
+            id="studentCertSelect"
+            className="px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-semibold text-white focus:ring-2 focus:ring-indigo-400"
+          >
+            {registrations.flatMap(r => r.members).map(m => (
+              <option key={m.id} value={m.name}>
+                {m.name} {m.isMinor ? '(Student / Minor)' : '(Adult Volunteer)'}
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={() => {
+              const sel = document.getElementById('studentCertSelect') as HTMLSelectElement;
+              const name = sel ? sel.value : (registrations[0]?.members[0]?.name || 'Volunteer');
+              printStudentServiceLetterHtml(name, 4.5, currentEvent, currentOrg);
+            }}
+            className="flex items-center justify-center gap-2 bg-white text-indigo-950 hover:bg-slate-100 font-extrabold text-xs py-2.5 px-5 rounded-xl shadow-md transition whitespace-nowrap"
+          >
+            <Printer className="w-4 h-4 text-indigo-600" />
+            <span>Print Verification Letter</span>
+          </button>
+        </div>
+      </div>
+
       {/* DONATION & TRANSACTION LOG TABLE */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
-        <h3 className="text-lg font-bold text-slate-900">Recorded Financial Contributions</h3>
+        <h3 className="text-lg font-bold text-slate-900">Recorded Financial Contributions & Tax Acknowledgements</h3>
         
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider font-semibold">
-                <th className="pb-3">Receipt #</th>
-                <th className="pb-3">Contributor</th>
-                <th className="pb-3">Amount</th>
-                <th className="pb-3">Fee Covered</th>
-                <th className="pb-3">Deductible</th>
-                <th className="pb-3">Method</th>
-                <th className="pb-3">Date</th>
-                <th className="pb-3 text-right">Tax Letter</th>
+                <th className="pb-3 font-bold">Receipt #</th>
+                <th className="pb-3 font-bold">Contributor Name</th>
+                <th className="pb-3 font-bold">Gross Amount</th>
+                <th className="pb-3 font-bold">Fee Status</th>
+                <th className="pb-3 font-bold">Tax Deductible</th>
+                <th className="pb-3 font-bold">Payment Method</th>
+                <th className="pb-3 font-bold">Date Issued</th>
+                <th className="pb-3 text-right font-bold">IRS Letter</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -196,7 +234,7 @@ export const ReportsExportCenter: React.FC = () => {
                   <td className="py-3 font-extrabold text-slate-900">{formatCurrency(d.amount)}</td>
                   <td className="py-3">
                     {d.feeCoveredByDonor ? (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">100% Net</span>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">100% Net (Covered)</span>
                     ) : (
                       <span className="text-slate-400 text-[10px]">Fee deducted</span>
                     )}
@@ -207,7 +245,7 @@ export const ReportsExportCenter: React.FC = () => {
                   <td className="py-3 text-right">
                     <button
                       onClick={() => handlePrintTaxReceipt(d.id)}
-                      className="text-indigo-600 hover:text-indigo-800 font-bold hover:underline"
+                      className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg font-bold text-xs transition"
                     >
                       Print Receipt
                     </button>

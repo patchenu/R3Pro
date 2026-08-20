@@ -725,6 +725,306 @@ export const SEED_REGISTRATIONS: Registration[] = [
         isVerifiedAtDoor: true
       }
     ]
+  },
+  {
+    id: 'reg_robert_miller',
+    eventId: 'evt_fall_carnival_2026',
+    primaryName: 'Robert Miller',
+    primaryEmail: 'robert.miller@techcorp.com',
+    primaryPhone: '(555) 321-7654',
+    manageToken: 'tok_a8192bc0912401ba8',
+    createdAt: '2026-08-16T14:10:00',
+    status: 'confirmed',
+    notes: 'Lucas needs verified high school service hours for Key Club.',
+    members: [
+      {
+        id: 'member_robert',
+        registrationId: 'reg_robert_miller',
+        name: 'Robert Miller',
+        relationship: 'Self',
+        isMinor: false,
+        phone: '(555) 321-7654'
+      },
+      {
+        id: 'member_lucas',
+        registrationId: 'reg_robert_miller',
+        name: 'Lucas Miller',
+        relationship: 'Child',
+        isMinor: true,
+        age: 14,
+        emergencyContactName: 'Robert Miller',
+        emergencyContactPhone: '(555) 321-7654'
+      }
+    ],
+    shiftClaims: [
+      {
+        shiftId: 'shift_carnival_morningsetup',
+        groupMemberId: 'member_robert',
+        checkedIn: true,
+        checkedInAt: '2026-09-19T06:55:00',
+        checkedInBy: 'Mike Alvarez'
+      },
+      {
+        shiftId: 'shift_carnival_obstacle',
+        groupMemberId: 'member_lucas',
+        checkedIn: false
+      }
+    ],
+    itemPledges: [
+      {
+        itemSlotId: 'item_carnival_canopies',
+        quantity: 2,
+        delivered: true
+      }
+    ],
+    ticketPurchases: [
+      {
+        ticketTierId: 'tier_carnival_wristband',
+        quantity: 1
+      }
+    ],
+    donations: [
+      {
+        amount: 250,
+        feeCovered: true,
+        totalPaid: 257.55,
+        isAnonymous: false,
+        taxReceiptNumber: 'REC-2026-0843'
+      }
+    ],
+    waivers: [
+      {
+        id: 'waiver_signed_robert',
+        registrationId: 'reg_robert_miller',
+        groupMemberId: 'member_robert',
+        waiverTemplateId: 'waiver_general_liability',
+        waiverTitle: 'General Volunteer Assumption of Risk & Liability Release',
+        waiverText: 'I hereby release and hold harmless the organization...',
+        signerName: 'Robert Miller',
+        signerRelationship: 'Self',
+        signatureData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+        signedAt: '2026-08-16T14:11:20',
+        ipAddress: '192.168.1.104',
+        isVerifiedAtDoor: true
+      },
+      {
+        id: 'waiver_signed_lucas',
+        registrationId: 'reg_robert_miller',
+        groupMemberId: 'member_lucas',
+        waiverTemplateId: 'waiver_minor_consent',
+        waiverTitle: 'Parental Consent & Minor Volunteer Safety Agreement',
+        waiverText: 'I, the undersigned parent or legal guardian of Lucas Miller...',
+        signerName: 'Robert Miller',
+        signerRelationship: 'Father / Legal Guardian',
+        signatureData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+        signedAt: '2026-08-16T14:12:05',
+        ipAddress: '192.168.1.104',
+        isVerifiedAtDoor: true
+      }
+    ]
+  },
+  {
+    id: 'reg_amanda_white',
+    eventId: 'evt_fall_carnival_2026',
+    primaryName: 'Amanda White',
+    primaryEmail: 'amanda.arts@gmail.com',
+    primaryPhone: '(555) 987-6543',
+    manageToken: 'tok_c91823bc019284',
+    createdAt: '2026-08-17T09:30:00',
+    status: 'confirmed',
+    members: [
+      {
+        id: 'member_amanda',
+        registrationId: 'reg_amanda_white',
+        name: 'Amanda White',
+        relationship: 'Self',
+        isMinor: false
+      }
+    ],
+    shiftClaims: [
+      {
+        shiftId: 'shift_carnival_facepainting',
+        groupMemberId: 'member_amanda',
+        checkedIn: false
+      }
+    ],
+    itemPledges: [
+      {
+        itemSlotId: 'item_carnival_facepaint',
+        quantity: 1,
+        delivered: false
+      }
+    ],
+    ticketPurchases: [],
+    donations: [],
+    waivers: [
+      {
+        id: 'waiver_signed_amanda',
+        registrationId: 'reg_amanda_white',
+        groupMemberId: 'member_amanda',
+        waiverTemplateId: 'waiver_general_liability',
+        waiverTitle: 'General Volunteer Assumption of Risk & Liability Release',
+        waiverText: 'I hereby release and hold harmless the organization...',
+        signerName: 'Amanda White',
+        signerRelationship: 'Self',
+        signatureData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+        signedAt: '2026-08-17T09:31:40',
+        ipAddress: '192.168.1.120',
+        isVerifiedAtDoor: true
+      }
+    ]
+  },
+  {
+    id: 'reg_carlos_gomez',
+    eventId: 'evt_fall_carnival_2026',
+    primaryName: 'Carlos Gomez',
+    primaryEmail: 'carlos.gomez@springfield.org',
+    primaryPhone: '(555) 432-1098',
+    manageToken: 'tok_e01928471ba98',
+    createdAt: '2026-08-17T11:45:00',
+    status: 'confirmed',
+    members: [
+      {
+        id: 'member_carlos',
+        registrationId: 'reg_carlos_gomez',
+        name: 'Carlos Gomez',
+        relationship: 'Self',
+        isMinor: false
+      },
+      {
+        id: 'member_sofia',
+        registrationId: 'reg_carlos_gomez',
+        name: 'Sofia Gomez',
+        relationship: 'Child',
+        isMinor: true,
+        age: 16,
+        emergencyContactName: 'Carlos Gomez',
+        emergencyContactPhone: '(555) 432-1098'
+      }
+    ],
+    shiftClaims: [
+      {
+        shiftId: 'shift_carnival_afternooncleanup',
+        groupMemberId: 'member_carlos',
+        checkedIn: false
+      },
+      {
+        shiftId: 'shift_carnival_ringtoss',
+        groupMemberId: 'member_sofia',
+        checkedIn: false
+      }
+    ],
+    itemPledges: [
+      {
+        itemSlotId: 'item_carnival_trashbags',
+        quantity: 2,
+        delivered: true
+      }
+    ],
+    ticketPurchases: [
+      {
+        ticketTierId: 'tier_carnival_ticketbook',
+        quantity: 2
+      }
+    ],
+    donations: [
+      {
+        amount: 75,
+        feeCovered: true,
+        totalPaid: 77.45,
+        isAnonymous: false,
+        taxReceiptNumber: 'REC-2026-0844'
+      }
+    ],
+    waivers: [
+      {
+        id: 'waiver_signed_carlos',
+        registrationId: 'reg_carlos_gomez',
+        groupMemberId: 'member_carlos',
+        waiverTemplateId: 'waiver_general_liability',
+        waiverTitle: 'General Volunteer Assumption of Risk & Liability Release',
+        waiverText: 'I hereby release and hold harmless the organization...',
+        signerName: 'Carlos Gomez',
+        signerRelationship: 'Self',
+        signatureData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+        signedAt: '2026-08-17T11:46:15',
+        ipAddress: '192.168.1.135',
+        isVerifiedAtDoor: true
+      },
+      {
+        id: 'waiver_signed_sofia',
+        registrationId: 'reg_carlos_gomez',
+        groupMemberId: 'member_sofia',
+        waiverTemplateId: 'waiver_minor_consent',
+        waiverTitle: 'Parental Consent & Minor Volunteer Safety Agreement',
+        waiverText: 'I, the undersigned parent or legal guardian of Sofia Gomez...',
+        signerName: 'Carlos Gomez',
+        signerRelationship: 'Father / Legal Guardian',
+        signatureData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+        signedAt: '2026-08-17T11:47:00',
+        ipAddress: '192.168.1.135',
+        isVerifiedAtDoor: true
+      }
+    ]
+  },
+  {
+    id: 'reg_patricia_kim',
+    eventId: 'evt_fall_carnival_2026',
+    primaryName: 'Patricia Kim',
+    primaryEmail: 'patricia.kim@lawfirm.com',
+    primaryPhone: '(555) 654-3210',
+    manageToken: 'tok_b192847102948',
+    createdAt: '2026-08-18T16:00:00',
+    status: 'confirmed',
+    members: [
+      {
+        id: 'member_patricia',
+        registrationId: 'reg_patricia_kim',
+        name: 'Patricia Kim',
+        relationship: 'Self',
+        isMinor: false
+      }
+    ],
+    shiftClaims: [
+      {
+        shiftId: 'shift_carnival_popcorn',
+        groupMemberId: 'member_patricia',
+        checkedIn: false
+      }
+    ],
+    itemPledges: [
+      {
+        itemSlotId: 'item_carnival_juice',
+        quantity: 2,
+        delivered: true
+      }
+    ],
+    ticketPurchases: [],
+    donations: [
+      {
+        amount: 500,
+        feeCovered: true,
+        totalPaid: 514.80,
+        isAnonymous: false,
+        taxReceiptNumber: 'REC-2026-0845'
+      }
+    ],
+    waivers: [
+      {
+        id: 'waiver_signed_patricia',
+        registrationId: 'reg_patricia_kim',
+        groupMemberId: 'member_patricia',
+        waiverTemplateId: 'waiver_food_safety',
+        waiverTitle: 'Food Handler & Hospitality Safety Agreement',
+        waiverText: 'I agree to adhere strictly to all food hygiene standards...',
+        signerName: 'Patricia Kim',
+        signerRelationship: 'Self',
+        signatureData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+        signedAt: '2026-08-18T16:01:25',
+        ipAddress: '192.168.1.150',
+        isVerifiedAtDoor: true
+      }
+    ]
   }
 ];
 
@@ -765,6 +1065,38 @@ export const SEED_DONATIONS: Donation[] = [
   {
     id: 'don_103',
     eventId: 'evt_fall_carnival_2026',
+    donorName: 'Lincoln Heritage Bank',
+    donorEmail: 'community@lincolnheritage.bank',
+    amount: 2500,
+    feeAmount: 0,
+    netAmount: 2500,
+    feeCoveredByDonor: true,
+    paymentMethod: 'stripe_card',
+    paymentStatus: 'completed',
+    isAnonymous: false,
+    taxReceiptNumber: 'REC-2026-0803',
+    deductibleAmount: 2380,
+    createdAt: '2026-08-13T14:15:00'
+  },
+  {
+    id: 'don_104',
+    eventId: 'evt_fall_carnival_2026',
+    donorName: 'Dr. Robert Hayes Family Foundation',
+    donorEmail: 'foundation@hayesmd.com',
+    amount: 1500,
+    feeAmount: 0,
+    netAmount: 1500,
+    feeCoveredByDonor: true,
+    paymentMethod: 'stripe_card',
+    paymentStatus: 'completed',
+    isAnonymous: false,
+    taxReceiptNumber: 'REC-2026-0804',
+    deductibleAmount: 1500,
+    createdAt: '2026-08-14T10:00:00'
+  },
+  {
+    id: 'don_105',
+    eventId: 'evt_fall_carnival_2026',
     donorName: 'Anonymous Community Supporter',
     donorEmail: 'anon@lincolnpta.org',
     amount: 500,
@@ -774,9 +1106,25 @@ export const SEED_DONATIONS: Donation[] = [
     paymentMethod: 'paypal',
     paymentStatus: 'completed',
     isAnonymous: true,
-    taxReceiptNumber: 'REC-2026-0803',
+    taxReceiptNumber: 'REC-2026-0805',
     deductibleAmount: 500,
     createdAt: '2026-08-14T16:45:00'
+  },
+  {
+    id: 'don_106',
+    eventId: 'evt_fall_carnival_2026',
+    donorName: 'Patricia Kim',
+    donorEmail: 'patricia.kim@lawfirm.com',
+    amount: 500,
+    feeAmount: 0,
+    netAmount: 500,
+    feeCoveredByDonor: true,
+    paymentMethod: 'stripe_card',
+    paymentStatus: 'completed',
+    isAnonymous: false,
+    taxReceiptNumber: 'REC-2026-0845',
+    deductibleAmount: 500,
+    createdAt: '2026-08-18T16:00:00'
   }
 ];
 
