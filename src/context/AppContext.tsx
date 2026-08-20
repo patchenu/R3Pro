@@ -88,6 +88,14 @@ interface AppContextType {
   postAnnouncement: (ann: Omit<Announcement, 'id' | 'sentAt'>) => void;
   recordDirectDonation: (donation: Omit<Donation, 'id' | 'createdAt' | 'taxReceiptNumber'>) => Donation;
   
+  // Auth & Session
+  isAuthenticated: boolean;
+  login: (email: string, password?: string) => boolean;
+  registerUser: (payload: { name: string; email: string; phone?: string; password?: string; role: UserRole }) => User;
+  logout: () => void;
+  resetPassword: (email: string, newPassword?: string) => boolean;
+  updateUserProfile: (data: Partial<User>) => void;
+
   // Utilities
   dismissToast: (id: string) => void;
   showToast: (type: 'success' | 'info' | 'warning' | 'error', title: string, message: string) => void;
@@ -891,12 +899,93 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('info', 'Demo Data Reset', 'Restored original demo organizations, events, and rosters.');
   };
 
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+
+  const login = (email: string, password?: string): boolean => {
+    const user = data.users.find((u: User) => u.email.toLowerCase() === email.toLowerCase());
+    if (user) {
+      setData((prev: any) => ({
+        ...prev,
+        currentUserId: user.id,
+        currentOrgId: user.orgId || prev.currentOrgId
+      }));
+      setIsAuthenticated(true);
+      showToast('success', `Welcome back, ${user.name}!`, `Signed in as ${user.role.replace('_', ' ')}.`);
+      return true;
+    } else {
+      // Auto-create account for new volunteer
+      const newUser: User = {
+        id: 'user_' + Date.now(),
+        name: email.split('@')[0].replace('.', ' '),
+        email,
+        phone: '(555) 000-0000',
+        role: 'volunteer',
+        orgId: currentOrg.id,
+        isRegisteredUser: true
+      };
+      setData((prev: any) => ({
+        ...prev,
+        users: [newUser, ...prev.users],
+        currentUserId: newUser.id
+      }));
+      setIsAuthenticated(true);
+      showToast('success', `Welcome, ${newUser.name}!`, 'Account created and signed in.');
+      return true;
+    }
+  };
+
+  const registerUser = (payload: { name: string; email: string; phone?: string; password?: string; role: UserRole }): User => {
+    const newUser: User = {
+      id: 'user_' + Date.now(),
+      name: payload.name,
+      email: payload.email,
+      phone: payload.phone || '(555) 000-0000',
+      role: payload.role,
+      orgId: currentOrg.id,
+      isRegisteredUser: true
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      users: [newUser, ...prev.users],
+      currentUserId: newUser.id
+    }));
+    setIsAuthenticated(true);
+    showToast('success', 'Account Registered!', `Welcome to R3Pro, ${newUser.name}.`);
+    return newUser;
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+    // Revert to a guest volunteer user
+    const guestUser = data.users.find((u: User) => u.role === 'volunteer') || data.users[0];
+    setData((prev: any) => ({
+      ...prev,
+      currentUserId: guestUser.id
+    }));
+    showToast('info', 'Signed Out', 'You have been signed out of your account.');
+  };
+
+  const resetPassword = (email: string, newPassword?: string): boolean => {
+    showToast('success', 'Password Updated', `New password saved for ${email}. Please sign in.`);
+    return true;
+  };
+
+  const updateUserProfile = (userData: Partial<User>) => {
+    setData((prev: any) => ({
+      ...prev,
+      users: prev.users.map((u: User) => u.id === currentUser.id ? { ...u, ...userData } : u)
+    }));
+    showToast('success', 'Profile Saved', 'Your account details have been updated.');
+  };
+
   return (
     <AppContext.Provider value={{
       currentOrg,
       currentUser,
       currentEvent,
       activeRole,
+      isAuthenticated,
       organizations: data.organizations,
       users: data.users,
       events: data.events,
@@ -930,6 +1019,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       rejectVendor,
       postAnnouncement,
       recordDirectDonation,
+      login,
+      registerUser,
+      logout,
+      resetPassword,
+      updateUserProfile,
       dismissToast,
       showToast,
       resetDemoData
