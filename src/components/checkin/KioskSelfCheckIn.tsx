@@ -219,7 +219,7 @@ export const KioskSelfCheckIn: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Enter Phone # or Name..."
-                className="w-full pl-13 pr-4 py-4 bg-slate-800 border-2 border-slate-700 focus:border-indigo-500 rounded-2xl text-lg sm:text-xl font-bold text-white placeholder-slate-500 focus:outline-none shadow-inner"
+                className="w-full pl-12 pr-4 py-4 bg-slate-800 border-2 border-slate-700 focus:border-indigo-500 rounded-2xl text-lg sm:text-xl font-bold text-white placeholder-slate-500 focus:outline-none shadow-inner"
               />
             </div>
 
