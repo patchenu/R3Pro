@@ -10,12 +10,16 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: 'login' | 'register' | 'forgot_password';
+  initialRoleIntent?: 'org_admin' | 'volunteer';
+  onRegisterSuccess?: (role: 'org_admin' | 'volunteer') => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
-  initialMode = 'login'
+  initialMode = 'login',
+  initialRoleIntent = 'volunteer',
+  onRegisterSuccess
 }) => {
   const { login, registerUser, resetPassword, users, showToast } = useApp();
 
@@ -31,7 +35,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regPassword, setRegPassword] = useState('');
-  const [regRoleIntent, setRegRoleIntent] = useState<'org_admin' | 'volunteer'>('volunteer');
+  const [regRoleIntent, setRegRoleIntent] = useState<'org_admin' | 'volunteer'>(initialRoleIntent);
 
   // Forgot Password State
   const [resetEmail, setResetEmail] = useState('');
@@ -50,7 +54,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     if (!regName.trim() || !regEmail.trim() || !regPassword.trim()) return;
 
-    registerUser({
+    const user = registerUser({
       name: regName,
       email: regEmail,
       phone: regPhone || '(555) 000-0000',
@@ -59,6 +63,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     });
 
     onClose();
+    if (onRegisterSuccess) {
+      onRegisterSuccess(regRoleIntent);
+    }
   };
 
   const handleResetSubmit = (e: React.FormEvent) => {

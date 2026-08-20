@@ -14,13 +14,25 @@ import { EventMarketingHub } from './components/marketing/EventMarketingHub';
 import { KioskSelfCheckIn } from './components/checkin/KioskSelfCheckIn';
 import { EventBuilderWizard } from './components/organizer/EventBuilderWizard';
 import { OrgOnboardingModal } from './components/organizer/OrgOnboardingModal';
+import { AuthModal } from './components/auth/AuthModal';
 
 const MainLayout: React.FC = () => {
-  const { activeRole, switchEvent, switchOrganization } = useApp();
+  const { activeRole, switchEvent, switchOrganization, isAuthenticated } = useApp();
   const [activeTab, setActiveTab] = useState<string>('discovery_hub');
   const [isEventBuilderOpen, setIsEventBuilderOpen] = useState(false);
   const [isOrgWizardOpen, setIsOrgWizardOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authRoleIntent, setAuthRoleIntent] = useState<'org_admin' | 'volunteer'>('org_admin');
   const [showRoleSimulator, setShowRoleSimulator] = useState(true);
+
+  const handleOpenOrgWizard = () => {
+    if (!isAuthenticated) {
+      setAuthRoleIntent('org_admin');
+      setIsAuthModalOpen(true);
+    } else {
+      setIsOrgWizardOpen(true);
+    }
+  };
 
   // Check URL query parameters on boot
   useEffect(() => {
@@ -82,7 +94,7 @@ const MainLayout: React.FC = () => {
         {activeTab === 'discovery_hub' && (
           <CommunityDiscoveryHub
             onSelectEvent={(eventId) => setActiveTab('public_landing')}
-            onOpenOrgWizard={() => setIsOrgWizardOpen(true)}
+            onOpenOrgWizard={handleOpenOrgWizard}
             onOpenEventBuilder={() => setIsEventBuilderOpen(true)}
           />
         )}
@@ -109,6 +121,21 @@ const MainLayout: React.FC = () => {
         
         {activeTab === 'reports_center' && <ReportsExportCenter />}
       </main>
+
+      {/* Auth Modal Gate */}
+      {isAuthModalOpen && (
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          initialMode="register"
+          initialRoleIntent={authRoleIntent}
+          onRegisterSuccess={(role) => {
+            if (role === 'org_admin') {
+              setIsOrgWizardOpen(true);
+            }
+          }}
+        />
+      )}
 
       {/* Event Builder Modal */}
       {isEventBuilderOpen && (

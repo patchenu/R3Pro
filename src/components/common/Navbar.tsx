@@ -31,7 +31,11 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
 
   const handleOrgChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (e.target.value === 'NEW_ORG') {
-      setIsOrgModalOpen(true);
+      if (!isAuthenticated) {
+        setIsAuthModalOpen(true);
+      } else {
+        setIsOrgModalOpen(true);
+      }
     } else {
       switchOrganization(e.target.value);
     }
@@ -292,6 +296,13 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
         <AuthModal
           isOpen={isAuthModalOpen}
           onClose={() => setIsAuthModalOpen(false)}
+          initialMode="register"
+          initialRoleIntent="org_admin"
+          onRegisterSuccess={(role) => {
+            if (role === 'org_admin') {
+              setIsOrgModalOpen(true);
+            }
+          }}
         />
       )}
 
