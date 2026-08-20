@@ -20,7 +20,7 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
   onOpenOrgWizard,
   onOpenEventBuilder
 }) => {
-  const { events, organizations, shifts, registrations, donations, switchEvent, switchOrganization } = useApp();
+  const { currentUser, events, organizations, shifts, registrations, donations, switchEvent, switchOrganization } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrgType, setSelectedOrgType] = useState<string>('all');
@@ -72,91 +72,80 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
   return (
     <div className="space-y-12 pb-16">
       
-      {/* HERO SECTION WITH 3 PERSONA LAUNCHPADS */}
-      <section className="relative bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white py-16 sm:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden rounded-b-3xl shadow-xl">
+      {/* HERO SECTION CENTERED ON DRIVING VOLUNTEER PARTICIPATION & SIGN-UPS */}
+      <section className="relative bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white py-14 sm:py-18 px-4 sm:px-6 lg:px-8 overflow-hidden rounded-b-3xl shadow-xl">
         <div className="absolute inset-0 bg-[radial-gradient(#4f46e5_1px,transparent_1px)] [background-size:24px_24px] opacity-15" />
         
-        <div className="relative max-w-6xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-widest border border-indigo-500/30">
+        <div className="relative max-w-5xl mx-auto text-center space-y-5">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-widest border border-indigo-500/30">
             <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>Community Event, Volunteer & Fundraising Portal</span>
+            <span>Community Volunteer & Event Network</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-4xl mx-auto leading-tight">
-            Connecting Communities, Schools & Non-Profits to <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-teal-300 to-amber-300">Make an Impact</span>
+            Discover Volunteer Opportunities & <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-teal-300 to-amber-300">Support Your Community</span>
           </h1>
 
           <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Discover local charity events, volunteer with your family in seconds, or register your organization to coordinate volunteers and campaign fundraising.
+            Sign up for shifts in seconds, register your family with digital waivers, receive express QR check-in passes, and make a real difference in local schools, sports, and non-profit causes.
           </p>
 
-          {/* 3-Persona Action Launchpads */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 max-w-4xl mx-auto text-left">
-            
-            {/* Launchpad 1: Volunteers & Families */}
-            <div 
+          {/* Primary Action Buttons Driving Volunteer Sign-Ups */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <button
               onClick={() => {
                 const el = document.getElementById('events-explorer');
                 el?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="bg-white/10 hover:bg-white/15 backdrop-blur-md p-5 rounded-2xl border border-white/15 cursor-pointer transition transform hover:-translate-y-1 group"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
             >
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/30 text-indigo-300 flex items-center justify-center mb-3">
-                <Users className="w-5 h-5" />
-              </div>
-              <h3 className="text-sm font-bold text-white group-hover:text-indigo-300 transition">
-                🙋‍♂️ Volunteers & Families
-              </h3>
-              <p className="text-xs text-slate-300 mt-1">
-                Find local shifts, sign up children with digital waivers, and download QR check-in passes.
-              </p>
-              <span className="text-[11px] text-indigo-300 font-bold mt-3 flex items-center gap-1">
-                Explore Events <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition" />
-              </span>
-            </div>
+              <Users className="w-4 h-4" />
+              <span>Browse Open Volunteer Shifts</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
 
-            {/* Launchpad 2: Non-Profit & School Admins */}
-            <div 
+            <button
               onClick={onOpenOrgWizard}
-              className="bg-white/10 hover:bg-white/15 backdrop-blur-md p-5 rounded-2xl border border-white/15 cursor-pointer transition transform hover:-translate-y-1 group"
+              className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition"
             >
-              <div className="w-10 h-10 rounded-xl bg-purple-500/30 text-purple-300 flex items-center justify-center mb-3">
-                <Building2 className="w-5 h-5" />
-              </div>
-              <h3 className="text-sm font-bold text-white group-hover:text-purple-300 transition">
-                🏛️ Organization Leaders
-              </h3>
-              <p className="text-xs text-slate-300 mt-1">
-                Register your 501(c)(3), school PTA, or league. Retain multi-year volunteer memory & CRM.
-              </p>
-              <span className="text-[11px] text-purple-300 font-bold mt-3 flex items-center gap-1">
-                Register Organization <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition" />
-              </span>
-            </div>
-
-            {/* Launchpad 3: Event Chairs & Committee Leads */}
-            <div 
-              onClick={onOpenEventBuilder}
-              className="bg-white/10 hover:bg-white/15 backdrop-blur-md p-5 rounded-2xl border border-white/15 cursor-pointer transition transform hover:-translate-y-1 group"
-            >
-              <div className="w-10 h-10 rounded-xl bg-teal-500/30 text-teal-300 flex items-center justify-center mb-3">
-                <CalendarIcon className="w-5 h-5" />
-              </div>
-              <h3 className="text-sm font-bold text-white group-hover:text-teal-300 transition">
-                📋 Event Chairs & Leads
-              </h3>
-              <p className="text-xs text-slate-300 mt-1">
-                Launch gala, 5K, or carnival campaigns with turnkey department presets and door kiosk check-in.
-              </p>
-              <span className="text-[11px] text-teal-300 font-bold mt-3 flex items-center gap-1">
-                Create an Event <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition" />
-              </span>
-            </div>
-
+              <span>Register an Organization</span>
+            </button>
           </div>
 
-          {/* Platform Impact Stats Banner */}
-          <div className="pt-8 grid grid-cols-3 max-w-2xl mx-auto border-t border-white/10 text-center">
+          {/* Conditional Admin / Planner Workspace Shortcuts (Only visible if registered as Leader/Planner) */}
+          {(currentUser.role === 'org_admin' || currentUser.role === 'event_planner' || currentUser.role === 'committee_lead') && (
+            <div className="pt-6 max-w-2xl mx-auto">
+              <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15 text-left flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] font-bold uppercase text-indigo-300 tracking-wider block">
+                    Leadership Workspace ({currentUser.role.replace('_', ' ')})
+                  </span>
+                  <h4 className="text-sm font-bold text-white mt-0.5">
+                    Managing {organizations.find(o => o.id === currentUser.orgId)?.name || 'Organization'}
+                  </h4>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onOpenEventBuilder}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>New Event</span>
+                  </button>
+                  <button
+                    onClick={onOpenOrgWizard}
+                    className="bg-white/15 hover:bg-white/25 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition"
+                  >
+                    Org Settings
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Platform Community Impact Stats Banner */}
+          <div className="pt-6 grid grid-cols-3 max-w-xl mx-auto border-t border-white/10 text-center">
             <div>
               <span className="text-xl sm:text-2xl font-black text-emerald-400">{formatCurrency(totalPlatformRaised)}</span>
               <span className="block text-[11px] text-slate-400 font-medium">Funds Raised for Causes</span>
