@@ -42,29 +42,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [newPassword, setNewPassword] = useState('');
   const [resetStep, setResetStep] = useState<1 | 2>(1);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const success = login(loginEmail, loginPassword);
+    const formData = new FormData(e.currentTarget);
+    const emailVal = (formData.get('loginEmail') as string) || loginEmail;
+    const passwordVal = (formData.get('loginPassword') as string) || loginPassword;
+
+    const success = login(emailVal.trim(), passwordVal.trim());
     if (success) {
       onClose();
     }
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!regName.trim() || !regEmail.trim() || !regPassword.trim()) return;
+    const formData = new FormData(e.currentTarget);
+    const nameVal = (formData.get('name') as string) || regName;
+    const emailVal = (formData.get('email') as string) || regEmail;
+    const phoneVal = (formData.get('phone') as string) || regPhone;
+    const passwordVal = (formData.get('password') as string) || regPassword;
+    const roleVal = (formData.get('roleIntent') as any) || regRoleIntent;
+
+    if (!nameVal.trim() || !emailVal.trim() || !passwordVal.trim()) return;
 
     const user = registerUser({
-      name: regName,
-      email: regEmail,
-      phone: regPhone || '(555) 000-0000',
-      password: regPassword,
-      role: regRoleIntent
+      name: nameVal.trim(),
+      email: emailVal.trim(),
+      phone: phoneVal.trim() || '(555) 000-0000',
+      password: passwordVal.trim(),
+      role: roleVal
     });
 
     onClose();
     if (onRegisterSuccess) {
-      onRegisterSuccess(regRoleIntent);
+      onRegisterSuccess(roleVal);
     }
   };
 
@@ -229,6 +240,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
+                  name="name"
                   required
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
@@ -244,6 +256,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="email"
+                  name="email"
                   required
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
@@ -259,6 +272,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
+                  name="phone"
                   value={regPhone}
                   onChange={(e) => setRegPhone(e.target.value)}
                   placeholder="(555) 000-0000"
@@ -273,6 +287,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  name="password"
                   required
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
@@ -292,6 +307,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Primary Role Intention</label>
               <select
+                name="roleIntent"
                 value={regRoleIntent}
                 onChange={(e) => setRegRoleIntent(e.target.value as any)}
                 className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium"
