@@ -231,17 +231,27 @@ classDiagram
 * **Volunteer Pool Blast**: Re-engagement email composer to broadcast upcoming opportunities to previous event volunteers.
 
 ### 6.5 Reports & IRS Substantiation Center (`ReportsExportCenter.tsx`)
-* **Volunteer Check-In Manifest**: Printable door roster with emergency contact phone numbers and dietary notes.
-* **IRS 501(c)(3) Tax Deduction Receipts**: Formal tax acknowledgement letters with Fair Market Value (FMV) deduction offsets:
-  $$\text{Tax Deductible Amount} = \text{Total Contribution} - \text{Fair Market Value of Goods Received}$$
-* **Student Community Service Certificates**: Official verified service completion letters signed by event coordinators.
+### 6.4 Volunteer Management, Printable Lanyards & Statutory Document Generators
+R3Pro features comprehensive document generation and live attendance management engines accessible to Event Chairs and Committee Leads:
 
-### 6.6 On-Site Tablet Check-In Kiosk (`KioskSelfCheckIn.tsx`)
-* Dedicated fullscreen kiosk mode for event entrance gates.
-* Express 2-second check-in via QR Pass scanner or mobile phone lookup.
-* Emergency on-site signature pad for missing minor liability waivers.
+1. **Live Volunteer Attendance Manifest & Check-In Hub (`MasterPlannerDashboard.tsx` & `LeadPortal.tsx`)**:
+   * Unified cross-department manifest displaying volunteer name, minor status, department, assigned shift times, contact phone, waiver status, and 1-click check-in toggle.
+   * Real-time search across volunteer names, shift titles, and committee departments.
+   * Filterable by Check-In status (*Checked In* vs *Pending Arrival*) and Committee Department.
 
----
+2. **Printable Volunteer Name Badges & Lanyards (`printNameBadgesHtml`)**:
+   * Ready-to-cut 2-column print-optimized sheet designed for standard plastic lanyard pouches and clip badges.
+   * Renders Organization Name & Logo, Event Title, Volunteer Full Name, Department / Committee, Assigned Shift Time Window, Designated Reporting Gate / Lead Contact, and scannable QR Pass for door check-in stations.
+
+3. **Official IRS 501(c)(3) Charitable Tax Contribution Receipts (`printIrsTaxLetterHtml`)**:
+   * Statutory written substantiation letters adhering to Internal Revenue Code § 170(f)(8).
+   * Automatically calculates Gross Donation Amount, Fair Market Value (FMV) deduction offsets (e.g. for Gala tickets, wristbands, or sponsor perks), and Eligible Net Tax-Deductible Amount.
+   * Includes Organization Legal Name, Normalized EIN, unique Tax Receipt ID, payment method, contribution timestamp, and authorized executive signature line.
+
+4. **Official Student Community Service Verification Certificates (`printStudentServiceLetterHtml`)**:
+   * Formal institutional verification letters certifying verified service hours for high school graduation requirements, National Honor Society, and Scouting rank advancement.
+   * Details verified service hours, event title, date, venue location, and organizational seal.
+
 
 ## 7. Turnkey Industry Presets Catalog
 
