@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Sparkles, Calendar, Users, BarChart3, ShieldCheck, 
-  FileText, Plus, Bell, ChevronDown, CheckCircle2, Share2, Copy, Building2 
+  FileText, Plus, ChevronDown, CheckCircle2, Share2, Building2, User as UserIcon 
 } from 'lucide-react';
 import { OrgOnboardingModal } from '../organizer/OrgOnboardingModal';
+import { UserProfileModal } from '../auth/UserProfileModal';
 
 interface NavbarProps {
   activeTab: string;
@@ -13,9 +14,11 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEventBuilder }) => {
-  const { currentOrg, currentEvent, organizations, events, switchOrganization, switchEvent, activeRole, approvalRequests, showToast } = useApp();
+  const { currentOrg, currentEvent, currentUser, organizations, events, switchOrganization, switchEvent, activeRole, approvalRequests, showToast } = useApp();
 
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
   const pendingApprovalsCount = approvalRequests.filter(r => r.status === 'pending').length;
 
   const handleCopyShareableLink = () => {
@@ -204,7 +207,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
               </button>
             </nav>
 
-            {/* Quick Actions */}
+            {/* Quick Actions & User Profile */}
             <div className="flex items-center gap-2">
               <button
                 onClick={handleCopyShareableLink}
@@ -224,6 +227,25 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
                   <span className="hidden sm:inline">New Event</span>
                 </button>
               )}
+
+              {/* User Account Button */}
+              <button
+                onClick={() => setIsProfileModalOpen(true)}
+                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 bg-slate-100 hover:bg-slate-200 rounded-xl transition border border-slate-200"
+                title="My Account, Roles & Volunteer Passes"
+              >
+                <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white text-xs font-black flex items-center justify-center">
+                  {currentUser.name.slice(0, 1).toUpperCase()}
+                </div>
+                <div className="hidden md:block text-left">
+                  <span className="block text-xs font-bold text-slate-900 leading-tight truncate max-w-[100px]">
+                    {currentUser.name}
+                  </span>
+                  <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-semibold leading-tight">
+                    {currentUser.role.replace('_', ' ')}
+                  </span>
+                </div>
+              </button>
             </div>
 
           </div>
@@ -235,6 +257,15 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
         <OrgOnboardingModal
           isOpen={isOrgModalOpen}
           onClose={() => setIsOrgModalOpen(false)}
+        />
+      )}
+
+      {/* User Profile & Multi-Role Hub */}
+      {isProfileModalOpen && (
+        <UserProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          onOpenOrgWizard={() => setIsOrgModalOpen(true)}
         />
       )}
     </>

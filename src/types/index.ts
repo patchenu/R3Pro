@@ -2,6 +2,16 @@ export type OrganizationType = 'school_pta' | 'non_profit' | 'youth_sports' | 'c
 
 export type UserRole = 'org_admin' | 'event_planner' | 'committee_lead' | 'vendor' | 'volunteer' | 'kiosk';
 
+export interface OrgMembership {
+  orgId: string;
+  orgName: string;
+  role: UserRole;
+  assignedEventIds?: string[];
+  assignedSubPartIds?: string[];
+  invitedAt?: string;
+  status: 'active' | 'pending_invite' | 'inactive';
+}
+
 export interface User {
   id: string;
   name: string;
@@ -11,6 +21,8 @@ export interface User {
   orgId: string;
   avatarUrl?: string;
   assignedSubPartIds?: string[]; // IDs of sub-parts this lead is responsible for
+  memberships?: OrgMembership[]; // Multi-tenant role memberships
+  isRegisteredUser?: boolean;
 }
 
 export interface Organization {
