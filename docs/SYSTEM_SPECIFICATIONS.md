@@ -89,14 +89,23 @@ When registering, users declare their primary operational intent:
 1. **Volunteer & Family**: Immediate redirect to community opportunities and shift sign-ups.
 2. **Organization Leader / Coordinator**: Seamless handoff directly into the **Organization Onboarding Wizard**.
 
-### 3.2 Granular RBAC Permissions Matrix
-| Role Level | Permitted Actions | Scoping Boundaries |
-| :--- | :--- | :--- |
-| **Org Super Admin** | Full organization control, branding, billing, team member invites, audit log, financial reports, all events. | Scoped strictly to assigned `org_id`. |
-| **Event Planner / Chair** | Full control over designated events, total budget, variable approval queue, committee setups. | Scoped to assigned `event_id` under `org_id`. |
-| **Committee / Sub-Part Lead** | Department shift management, supply wishlist, department broadcast, day-of-event check-in. | Scoped strictly to assigned `sub_part_id`. Cannot mutate global event settings. |
-| **Vendor / Sponsor** | Booth package purchases, intake questionnaires (COI, EIN, power requirements), invoice downloads. | Scoped to vendor application records. |
-| **Public Volunteer / Donor** | Shift sign-up, family registration, digital waiver signing, ticket purchases, donations, personal QR passes. | Self-service via authenticated account or 256-bit `manage_token`. |
+### 3.3 Dual Environment Architecture (Demo Simulator vs Live Clean Mode)
+To support both rapid stakeholder exploration and rigorous end-to-end production testing, R3Pro provides a top-level environment mode toggle:
+
+1. **🧪 Mode 1: Interactive Demo Sandbox (Default for Stakeholder Review)**:
+   * Displays the sticky **Role Simulator Bar** at the top of the screen.
+   * Allows 1-click switching between simulated personas (*Elena / Org Super Admin*, *Marcus / Event Chair*, *Sarah / Hospitality Lead*, *Artisan Bakery / Vendor*, *David / Volunteer*, *On-Site Tablet Kiosk*).
+   * Pre-loads realistic sample campaigns, shifts, wishlists, and registrations.
+   * Includes a **Reset Sample Data** button to wipe edits and restore clean seed data.
+
+2. **🌐 Mode 2: Live Clean Production Mode (For Authentic User Acceptance Testing)**:
+   * Completely removes the simulated role switcher.
+   * Boots the user as a real **Unauthenticated Guest Visitor** (`isAuthenticated === false`, `currentUser === guestUser`).
+   * Renders the true public discovery feed with primary **"Browse Volunteer Shifts"** and **"Register an Organization"** CTAs.
+   * Enforces the authentic user registration flow: visitors must create their own real account with legal name, email, password, and role selection.
+   * Once registered, dynamically hands off into the **Organization Onboarding Wizard**, creating their real organization workspace where they become verified **Org Super Admin**.
+   * Persists authenticated sessions via `localStorage['r3pro_live_user_id']`. Logging out properly returns the user to the unauthenticated guest state.
+
 
 ---
 

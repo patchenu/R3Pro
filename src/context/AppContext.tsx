@@ -96,6 +96,10 @@ interface AppContextType {
   resetPassword: (email: string, newPassword?: string) => boolean;
   updateUserProfile: (data: Partial<User>) => void;
 
+  // Demo & Environment Mode
+  isDemoMode: boolean;
+  toggleDemoMode: (enabled?: boolean) => void;
+
   // Utilities
   dismissToast: (id: string) => void;
   showToast: (type: 'success' | 'info' | 'warning' | 'error', title: string, message: string) => void;
@@ -141,6 +145,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [data, setData] = useState(loadInitialData);
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
 
+  const DEMO_MODE_STORAGE_KEY = 'r3pro_demo_mode_active';
+  const LIVE_USER_STORAGE_KEY = 'r3pro_live_user_id';
+
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem(DEMO_MODE_STORAGE_KEY);
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    const savedDemo = localStorage.getItem(DEMO_MODE_STORAGE_KEY);
+    const demo = savedDemo !== null ? savedDemo === 'true' : true;
+    if (demo) return true;
+    return !!localStorage.getItem(LIVE_USER_STORAGE_KEY);
+  });
+
   // Persist on changes
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -159,8 +178,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Resolved active entities
+  const guestUser: User = {
+    id: 'user_guest',
+    name: 'Guest Visitor',
+    email: '',
+    phone: '',
+    role: 'volunteer',
+    orgId: '',
+    isRegisteredUser: false
+  };
+
   const currentOrg = data.organizations.find((o: Organization) => o.id === data.currentOrgId) || data.organizations[0];
-  const currentUser = data.users.find((u: User) => u.id === data.currentUserId) || data.users[0];
+  const resolvedUser = data.users.find((u: User) => u.id === data.currentUserId) || data.users[0];
+  const currentUser = (!isDemoMode && !isAuthenticated) ? guestUser : resolvedUser;
   const currentEvent = data.events.find((e: Event) => e.id === data.currentEventId) || data.events[0];
   const activeRole = currentUser.role;
 
@@ -895,11 +925,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetDemoData = () => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(LIVE_USER_STORAGE_KEY);
     setData(loadInitialData());
     showToast('info', 'Demo Data Reset', 'Restored original demo organizations, events, and rosters.');
   };
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const toggleDemoMode = (enabled?: boolean) => {
+    const next = enabled !== undefined ? enabled : !isDemoMode;
+    setIsDemoMode(next);
+    localStorage.setItem(DEMO_MODE_STORAGE_KEY, String(next));
+
+    if (!next) {
+      // Switched to Live Clean Mode
+      const savedUserId = localStorage.getItem(LIVE_USER_STORAGE_KEY);
+      if (savedUserId) {
+        const realUser = data.users.find((u: User) => u.id === savedUserId);
+        if (realUser) {
+          setData((prev: any) => ({ ...prev, currentUserId: realUser.id, currentOrgId: realUser.orgId || prev.currentOrgId }));
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
+      showToast('info', 'Live Clean Mode Activated', 'Viewing real public interface as a fresh unauthenticated visitor.');
+    } else {
+      // Switched to Demo Sandbox
+      setIsAuthenticated(true);
+      setData((prev: any) => ({ ...prev, currentUserId: 'user_elena' }));
+      showToast('info', 'Demo Simulator Activated', 'Role switcher and pre-configured test accounts enabled.');
+    }
+  };
 
   const login = (email: string, password?: string): boolean => {
     const user = data.users.find((u: User) => u.email.toLowerCase() === email.toLowerCase());
@@ -910,6 +967,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentOrgId: user.orgId || prev.currentOrgId
       }));
       setIsAuthenticated(true);
+      if (!isDemoMode) {
+        localStorage.setItem(LIVE_USER_STORAGE_KEY, user.id);
+      }
       showToast('success', `Welcome back, ${user.name}!`, `Signed in as ${user.role.replace('_', ' ')}.`);
       return true;
     } else {
@@ -929,6 +989,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentUserId: newUser.id
       }));
       setIsAuthenticated(true);
+      if (!isDemoMode) {
+        localStorage.setItem(LIVE_USER_STORAGE_KEY, newUser.id);
+      }
       showToast('success', `Welcome, ${newUser.name}!`, 'Account created and signed in.');
       return true;
     }
@@ -951,17 +1014,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       currentUserId: newUser.id
     }));
     setIsAuthenticated(true);
+    if (!isDemoMode) {
+      localStorage.setItem(LIVE_USER_STORAGE_KEY, newUser.id);
+    }
     showToast('success', 'Account Registered!', `Welcome to R3Pro, ${newUser.name}.`);
     return newUser;
   };
 
   const logout = () => {
     setIsAuthenticated(false);
-    // Revert to a guest volunteer user
-    const guestUser = data.users.find((u: User) => u.role === 'volunteer') || data.users[0];
+    localStorage.removeItem(LIVE_USER_STORAGE_KEY);
     setData((prev: any) => ({
       ...prev,
-      currentUserId: guestUser.id
+      currentUserId: 'user_guest'
     }));
     showToast('info', 'Signed Out', 'You have been signed out of your account.');
   };
@@ -986,6 +1051,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       currentEvent,
       activeRole,
       isAuthenticated,
+      isDemoMode,
+      toggleDemoMode,
       organizations: data.organizations,
       users: data.users,
       events: data.events,
