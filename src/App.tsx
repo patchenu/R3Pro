@@ -3,19 +3,23 @@ import { AppProvider, useApp } from './context/AppContext';
 import { RoleSwitcherBar } from './components/common/RoleSwitcherBar';
 import { Navbar } from './components/common/Navbar';
 import { ToastContainer } from './components/common/ToastContainer';
+import { CommunityDiscoveryHub } from './components/discovery/CommunityDiscoveryHub';
 import { PublicEventLanding } from './components/public/PublicEventLanding';
 import { MasterPlannerDashboard } from './components/organizer/MasterPlannerDashboard';
 import { LeadPortal } from './components/lead/LeadPortal';
 import { OrgExecutiveDashboard } from './components/organizer/OrgExecutiveDashboard';
 import { GapAnalysisDashboard } from './components/intelligence/GapAnalysisDashboard';
 import { ReportsExportCenter } from './components/organizer/ReportsExportCenter';
+import { EventMarketingHub } from './components/marketing/EventMarketingHub';
 import { KioskSelfCheckIn } from './components/checkin/KioskSelfCheckIn';
 import { EventBuilderWizard } from './components/organizer/EventBuilderWizard';
+import { OrgOnboardingModal } from './components/organizer/OrgOnboardingModal';
 
 const MainLayout: React.FC = () => {
   const { activeRole, switchEvent, switchOrganization } = useApp();
-  const [activeTab, setActiveTab] = useState<string>('public_landing');
+  const [activeTab, setActiveTab] = useState<string>('discovery_hub');
   const [isEventBuilderOpen, setIsEventBuilderOpen] = useState(false);
+  const [isOrgWizardOpen, setIsOrgWizardOpen] = useState(false);
   const [showRoleSimulator, setShowRoleSimulator] = useState(true);
 
   // Check URL query parameters on boot
@@ -28,6 +32,7 @@ const MainLayout: React.FC = () => {
 
     if (eventId) {
       switchEvent(eventId);
+      setActiveTab('public_landing');
     }
     if (orgId) {
       switchOrganization(orgId);
@@ -48,7 +53,7 @@ const MainLayout: React.FC = () => {
         <RoleSwitcherBar />
         <div className="p-2 bg-slate-950 text-right">
           <button
-            onClick={() => setActiveTab('public_landing')}
+            onClick={() => setActiveTab('discovery_hub')}
             className="text-xs text-slate-400 hover:text-white px-3 py-1 bg-slate-800 rounded-lg"
           >
             Exit Kiosk Fullscreen
@@ -74,7 +79,16 @@ const MainLayout: React.FC = () => {
 
       {/* Main Tab Routing */}
       <main className="flex-1">
+        {activeTab === 'discovery_hub' && (
+          <CommunityDiscoveryHub
+            onSelectEvent={(eventId) => setActiveTab('public_landing')}
+            onOpenOrgWizard={() => setIsOrgWizardOpen(true)}
+            onOpenEventBuilder={() => setIsEventBuilderOpen(true)}
+          />
+        )}
+        
         {activeTab === 'public_landing' && <PublicEventLanding />}
+        
         {activeTab === 'planner_dashboard' && (
           <MasterPlannerDashboard
             onOpenEventBuilder={() => setIsEventBuilderOpen(true)}
@@ -82,11 +96,17 @@ const MainLayout: React.FC = () => {
             onOpenReports={() => setActiveTab('reports_center')}
           />
         )}
+        
+        {activeTab === 'marketing_hub' && <EventMarketingHub />}
+
         {activeTab === 'lead_portal' && <LeadPortal />}
+        
         {activeTab === 'org_admin_view' && <OrgExecutiveDashboard />}
+        
         {activeTab === 'gap_analysis' && (
           <GapAnalysisDashboard onOpenBroadcast={() => setActiveTab('lead_portal')} />
         )}
+        
         {activeTab === 'reports_center' && <ReportsExportCenter />}
       </main>
 
@@ -95,6 +115,14 @@ const MainLayout: React.FC = () => {
         <EventBuilderWizard
           isOpen={isEventBuilderOpen}
           onClose={() => setIsEventBuilderOpen(false)}
+        />
+      )}
+
+      {/* Org Onboarding Modal */}
+      {isOrgWizardOpen && (
+        <OrgOnboardingModal
+          isOpen={isOrgWizardOpen}
+          onClose={() => setIsOrgWizardOpen(false)}
         />
       )}
 

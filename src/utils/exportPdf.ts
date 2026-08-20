@@ -295,3 +295,81 @@ export function printNameBadgesHtml(
   printWindow.document.write(html);
   printWindow.document.close();
 }
+
+export function printStudentServiceLetterHtml(
+  volunteerName: string,
+  hours: number,
+  event: Event,
+  org: Organization
+): void {
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) return;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Student Community Service Verification - ${volunteerName}</title>
+        <style>
+          body { font-family: 'Times New Roman', serif; color: #0f172a; padding: 48px; font-size: 14px; line-height: 1.6; }
+          .header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 30px; }
+          .org-title { font-size: 24px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+          .cert-title { font-size: 18px; font-weight: bold; color: #4338ca; margin-top: 10px; text-transform: uppercase; }
+          .body-text { font-size: 15px; margin: 25px 0; text-align: justify; }
+          .highlight { font-weight: bold; text-decoration: underline; }
+          .details-box { border: 1px solid #94a3b8; background: #f8fafc; padding: 18px; margin: 25px 0; border-radius: 8px; font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 13px; }
+          .sig-row { display: flex; justify-content: space-between; margin-top: 60px; padding-top: 10px; font-family: 'Helvetica Neue', Arial, sans-serif; }
+          .sig-line { border-top: 1px solid #0f172a; width: 220px; text-align: center; padding-top: 6px; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="org-title">${org.name}</div>
+          <div style="font-size:12px; color:#475569; margin-top:4px;">Tax ID (EIN): ${org.ein} • ${org.address}</div>
+          <div class="cert-title">Official Verification of Student Community Service</div>
+        </div>
+
+        <div style="font-size:13px; color:#475569; margin-bottom: 20px;">
+          Date of Issue: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </div>
+
+        <p class="body-text">
+          To Whom It May Concern (School Administration / National Honor Society / Scouting Review Board):
+        </p>
+
+        <p class="body-text">
+          This official letter certifies that <strong>${volunteerName}</strong> has actively participated as an authorized volunteer for <strong>${org.name}</strong>, a verified community entity.
+        </p>
+
+        <div class="details-box">
+          <div style="margin-bottom: 8px;"><strong>Event / Campaign:</strong> ${event.title}</div>
+          <div style="margin-bottom: 8px;"><strong>Service Date(s):</strong> ${formatDate(event.startDate)}</div>
+          <div style="margin-bottom: 8px;"><strong>Total Verified Service Hours:</strong> <span style="font-size:16px; color:#4338ca; font-weight:bold;">${hours} Hours</span></div>
+          <div><strong>Event Venue / Location:</strong> ${event.venueName} (${event.venueAddress})</div>
+        </div>
+
+        <p class="body-text">
+          During their service commitment, ${volunteerName} completed all assigned duties in good standing and adhered to all organizational conduct guidelines.
+        </p>
+
+        <div class="sig-row">
+          <div>
+            <div class="sig-line">Authorized Event Coordinator</div>
+            <div style="font-size:11px; color:#64748b; margin-top:4px;">${org.name} Leadership</div>
+          </div>
+          <div>
+            <div class="sig-line">Official Seal & Verification Date</div>
+            <div style="font-size:11px; color:#64748b; margin-top:4px;">R3Pro Verified Record #SRV-${Date.now().toString().slice(-6)}</div>
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() { window.print(); }
+        </script>
+      </body>
+    </html>
+  `;
+
+  printWindow.document.write(html);
+  printWindow.document.close();
+}

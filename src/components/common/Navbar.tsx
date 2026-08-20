@@ -53,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
             
             {/* Logo & Brand */}
             <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveTab('public_landing')}>
+              <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveTab('discovery_hub')}>
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-indigo-100">
                   <Sparkles className="w-5 h-5" />
                 </div>
@@ -112,6 +112,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
             {/* Navigation Links based on active role */}
             <nav className="flex items-center gap-1 overflow-x-auto py-2">
               <button
+                onClick={() => setActiveTab('discovery_hub')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  activeTab === 'discovery_hub'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+              >
+                <Calendar className="w-4 h-4" />
+                <span>Community Events</span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('public_landing')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
                   activeTab === 'public_landing'
@@ -119,8 +131,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <Calendar className="w-4 h-4" />
-                <span>Public Sign-Up Page</span>
+                <Users className="w-4 h-4" />
+                <span>Event Sign-Up</span>
               </button>
 
               {(activeRole === 'org_admin' || activeRole === 'event_planner') && (
@@ -143,6 +155,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
                   </button>
 
                   <button
+                    onClick={() => setActiveTab('marketing_hub')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
+                      activeTab === 'marketing_hub'
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>Marketing & Flyers</span>
+                  </button>
+
+                  <button
                     onClick={() => setActiveTab('gap_analysis')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
                       activeTab === 'gap_analysis'
@@ -151,7 +175,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
                     }`}
                   >
                     <ShieldCheck className="w-4 h-4" />
-                    <span>Gap Analysis & Intel</span>
+                    <span>Gap Analysis</span>
                   </button>
                 </>
               )}
@@ -166,7 +190,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
                   }`}
                 >
                   <Users className="w-4 h-4" />
-                  <span>Committee Lead Portal</span>
+                  <span>Committee Leads</span>
                 </button>
               )}
 
