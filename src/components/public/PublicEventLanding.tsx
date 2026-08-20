@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { 
   Calendar, MapPin, Share2, Clock, Users, HeartHandshake, 
   Store, Gift, Check, ShieldCheck, AlertTriangle, Sparkles, 
-  ExternalLink, ChevronRight, Info, Bell, Tag 
+  ExternalLink, ChevronRight, Info, Bell, Tag, ArrowRight 
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatTimeRange, formatPercentage } from '../../utils/formatters';
 import { Thermometer } from '../common/Thermometer';
@@ -187,6 +187,40 @@ export const PublicEventLanding: React.FC = () => {
           currency={currentEvent.currency}
           themeColor={currentEvent.theme.primaryColor}
         />
+
+        {/* Urgent Needs & Volunteer Drive Callout */}
+        <div id="volunteer-drive-banner" className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white p-5 rounded-2xl border border-indigo-500/40 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-xl bg-indigo-500/30 text-amber-400 flex items-center justify-center font-black text-xl shrink-0">
+              <Users className="w-6 h-6 text-indigo-300" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Volunteers Needed</span>
+                <span className="text-[10px] bg-indigo-500/30 text-indigo-200 px-2 py-0.5 rounded-full font-bold">100% Free • Family Friendly</span>
+              </div>
+              <h3 className="text-base font-bold text-white mt-0.5">
+                {totalShiftCapacity - filledShiftsCount > 0 
+                  ? `${totalShiftCapacity - filledShiftsCount} Volunteer Shifts Open across ${subParts.length} Departments`
+                  : `All ${totalShiftCapacity} shifts currently filled!`}
+              </h3>
+              <p className="text-xs text-slate-300">
+                Pick your shift below to register in under 60 seconds. High school students receive signed community service verification!
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              const el = document.getElementById('shifts-container');
+              el?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold py-3 px-6 rounded-xl text-xs sm:text-sm shadow-md transition shrink-0 flex items-center gap-2"
+          >
+            <span>Pick Shift & Sign Up</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Live Organizer Announcements Bulletin */}
         {announcements.length > 0 && (

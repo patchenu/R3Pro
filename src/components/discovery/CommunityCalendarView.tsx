@@ -184,13 +184,13 @@ export const CommunityCalendarView: React.FC<CommunityCalendarViewProps> = ({
                       key={e.id}
                       onClick={(ev) => {
                         ev.stopPropagation();
-                        setSelectedEvent(e);
+                        onSelectEvent(e);
                       }}
-                      className="p-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-[10px] font-bold leading-tight shadow-sm hover:from-indigo-700 hover:to-indigo-800 transition truncate"
-                      title={e.title}
+                      className="p-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-[10px] font-bold leading-tight shadow-sm hover:from-indigo-700 hover:to-indigo-800 transition truncate cursor-pointer transform hover:scale-[1.02]"
+                      title={`Click to view ${e.title} and volunteer`}
                     >
                       <span className="block truncate">{e.title}</span>
-                      <span className="text-[9px] text-indigo-200 font-semibold block">{e.startDate.slice(11, 16)}</span>
+                      <span className="text-[9px] text-indigo-200 font-semibold block">{e.startDate.slice(11, 16)} • Volunteer & Sign Up →</span>
                     </div>
                   );
                 })}
@@ -202,7 +202,7 @@ export const CommunityCalendarView: React.FC<CommunityCalendarViewProps> = ({
 
       {/* Selected Event Preview & Quick Sign-Up Drawer */}
       {selectedEvent ? (
-        <div className="p-5 bg-indigo-50/80 rounded-2xl border border-indigo-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider">
@@ -223,17 +223,17 @@ export const CommunityCalendarView: React.FC<CommunityCalendarViewProps> = ({
           <div className="flex items-center gap-3">
             {selectedEvent.fundraisingGoal > 0 && (
               <div className="text-right hidden sm:block">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block">Goal</span>
+                <span className="text-[10px] uppercase font-bold text-slate-500 block">Campaign Goal</span>
                 <span className="text-sm font-extrabold text-indigo-700">{formatCurrency(selectedEvent.fundraisingGoal)}</span>
               </div>
             )}
 
             <button
               onClick={() => onSelectEvent(selectedEvent)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-5 rounded-xl shadow-md shadow-indigo-200 transition flex items-center gap-1.5"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-3 px-6 rounded-xl shadow-md shadow-indigo-200 transition flex items-center gap-2"
             >
-              <span>Open & Sign Up</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>View Needs & Volunteer Now</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
