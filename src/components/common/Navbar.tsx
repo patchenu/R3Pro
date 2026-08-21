@@ -113,84 +113,60 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
               </div>
             </div>
 
-            {/* Navigation Links based on active role */}
-            <nav className="flex items-center gap-1 overflow-x-auto py-2">
+            {/* Streamlined Workspace Navigation Links */}
+            <nav className="flex items-center gap-1.5 overflow-x-auto py-2">
               <button
                 onClick={() => setActiveTab('discovery_hub')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                   activeTab === 'discovery_hub'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-semibold'
                 }`}
               >
                 <Calendar className="w-4 h-4" />
-                <span>Community Events</span>
+                <span>Community Discovery Hub</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('public_landing')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                   activeTab === 'public_landing'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-semibold'
                 }`}
               >
-                <Users className="w-4 h-4" />
-                <span>Event Sign-Up</span>
+                <Users className="w-4 h-4 text-emerald-600" />
+                <span>Event Sign-Up Showcase</span>
               </button>
 
+              {/* HIGH VISIBILITY PLANNER HUB TAB */}
               {(activeRole === 'org_admin' || activeRole === 'event_planner') && (
-                <>
-                  <button
-                    onClick={() => setActiveTab('planner_dashboard')}
-                    className={`relative px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
-                      activeTab === 'planner_dashboard'
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
-                    <BarChart3 className="w-4 h-4" />
-                    <span>Planner Hub</span>
-                    {pendingApprovalsCount > 0 && (
-                      <span className="w-4 h-4 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                        {pendingApprovalsCount}
-                      </span>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTab('marketing_hub')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
-                      activeTab === 'marketing_hub'
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
-                    <Share2 className="w-4 h-4" />
-                    <span>Marketing & Flyers</span>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTab('gap_analysis')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
-                      activeTab === 'gap_analysis'
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
-                    <ShieldCheck className="w-4 h-4" />
-                    <span>Gap Analysis</span>
-                  </button>
-                </>
+                <button
+                  onClick={() => setActiveTab('planner_dashboard')}
+                  className={`relative px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 whitespace-nowrap border ${
+                    activeTab === 'planner_dashboard'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-md ring-2 ring-indigo-200'
+                      : 'bg-indigo-50/80 hover:bg-indigo-100/80 text-indigo-900 border-indigo-200'
+                  }`}
+                  title="Complete Event Command Center: Roster, Marketing, Gaps, Vendors & Exports"
+                >
+                  <BarChart3 className="w-4 h-4 text-indigo-500" />
+                  <span>PLANNER HUB</span>
+                  {pendingApprovalsCount > 0 && (
+                    <span className="w-4 h-4 bg-amber-500 text-slate-950 text-[10px] font-black rounded-full flex items-center justify-center animate-bounce">
+                      {pendingApprovalsCount}
+                    </span>
+                  )}
+                </button>
               )}
 
               {(activeRole === 'org_admin' || activeRole === 'event_planner' || activeRole === 'committee_lead') && (
                 <button
                   onClick={() => setActiveTab('lead_portal')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                     activeTab === 'lead_portal'
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-amber-600 text-white shadow-md'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-semibold'
                   }`}
                 >
                   <Users className="w-4 h-4" />
@@ -201,10 +177,10 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
               {activeRole === 'org_admin' && (
                 <button
                   onClick={() => setActiveTab('org_admin_view')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                     activeTab === 'org_admin_view'
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-semibold'
                   }`}
                 >
                   <Building2 className="w-4 h-4" />
@@ -213,27 +189,15 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, openEve
               )}
 
               <button
-                onClick={() => setActiveTab('reports_center')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
-                  activeTab === 'reports_center'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                <FileText className="w-4 h-4" />
-                <span>Exports & IRS Receipts</span>
-              </button>
-
-              <button
                 onClick={() => setActiveTab('kiosk_mode')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                   activeTab === 'kiosk_mode'
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-slate-950 text-white shadow-md'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-semibold'
                 }`}
               >
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <span>Check-In Kiosk</span>
+                <span>Door Kiosk</span>
               </button>
             </nav>
 

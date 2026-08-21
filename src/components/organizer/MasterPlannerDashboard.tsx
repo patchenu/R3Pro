@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { 
   BarChart3, Users, DollarSign, ShieldAlert, Sparkles, 
   Plus, Settings, CheckCircle2, ArrowRight, Layers, Store, HeartHandshake,
-  Printer, FileSpreadsheet, Search, Filter, ShieldCheck, Award
+  Printer, FileSpreadsheet, Search, Filter, ShieldCheck, Award, Share2, AlertTriangle, FileText
 } from 'lucide-react';
 import { formatCurrency, formatPercentage, formatTimeRange } from '../../utils/formatters';
 import { exportRosterToCsv } from '../../utils/exportCsv';
@@ -11,22 +11,23 @@ import { printVolunteerRosterHtml, printNameBadgesHtml, printStudentServiceLette
 import { Thermometer } from '../common/Thermometer';
 import { ApprovalQueueModal } from './ApprovalQueueModal';
 import { VendorMarketplaceManager } from './VendorMarketplaceManager';
+import { EventMarketingHub } from '../marketing/EventMarketingHub';
+import { GapAnalysisDashboard } from '../intelligence/GapAnalysisDashboard';
+import { ReportsExportCenter } from './ReportsExportCenter';
 
 interface MasterPlannerDashboardProps {
   onOpenEventBuilder: () => void;
-  onOpenGapAnalysis: () => void;
-  onOpenReports: () => void;
+  onOpenGapAnalysis?: () => void;
+  onOpenReports?: () => void;
 }
 
 export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
-  onOpenEventBuilder,
-  onOpenGapAnalysis,
-  onOpenReports
+  onOpenEventBuilder
 }) => {
   const { currentEvent, currentOrg, subParts, shifts, itemSlots, registrations, donations, approvalRequests, toggleCheckIn } = useApp();
 
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
-  const [activePlannerTab, setActivePlannerTab] = useState<'overview' | 'volunteers' | 'vendors'>('overview');
+  const [activePlannerTab, setActivePlannerTab] = useState<'overview' | 'volunteers' | 'marketing' | 'gaps' | 'vendors' | 'reports'>('overview');
 
   // Volunteer Management Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -73,22 +74,22 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
-      {/* Header */}
-      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-md flex flex-wrap items-center justify-between gap-4">
+      {/* Planner Command Hub Header */}
+      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-indigo-500/20 flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-wider border border-indigo-500/30">
+            <span className="px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-sm">
               Event Planner & Chair Hub
             </span>
-            <span className="text-xs text-slate-300">
-              Organization: <strong>{currentOrg.name}</strong>
+            <span className="text-xs text-indigo-200">
+              Organization: <strong className="text-white">{currentOrg.name}</strong>
             </span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
+          <h2 className="text-2xl sm:text-4xl font-black text-white mt-1.5">
             {currentEvent.title}
           </h2>
           <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl">
-            Coordinating {subParts.length} Committee Departments, {shifts.length} Volunteer Shifts, and {formatCurrency(currentEvent.fundraisingGoal)} Campaign Target.
+            Complete command center coordinating {subParts.length} Departments, {shifts.length} Volunteer Shifts, and {formatCurrency(currentEvent.fundraisingGoal)} Campaign Target.
           </p>
         </div>
 
@@ -97,7 +98,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
           {pendingApprovalsCount > 0 && (
             <button
               onClick={() => setIsApprovalModalOpen(true)}
-              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black py-2.5 px-4 rounded-xl text-xs shadow-md transition animate-pulse"
+              className="flex items-center gap-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black py-2.5 px-4 rounded-xl text-xs shadow-md transition animate-bounce"
             >
               <ShieldAlert className="w-4 h-4" />
               <span>Approval Queue ({pendingApprovalsCount})</span>
@@ -105,14 +106,15 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
           )}
 
           <button
-            onClick={onOpenGapAnalysis}
+            onClick={() => setActivePlannerTab('gaps')}
             className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 px-4 rounded-xl text-xs border border-white/20 transition"
           >
-            <span>Gap Analysis & Health</span>
+            <AlertTriangle className="w-4 h-4 text-amber-400" />
+            <span>Gap Analysis</span>
           </button>
 
           <button
-            onClick={onOpenReports}
+            onClick={() => setActivePlannerTab('reports')}
             className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-md transition"
           >
             <Printer className="w-4 h-4" />
@@ -130,22 +132,22 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
         currency={currentEvent.currency}
       />
 
-      {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+      {/* Unified Event Planner Sub-Tabs Navigation */}
+      <div className="flex items-center gap-2 border-b-2 border-slate-200 pb-2 overflow-x-auto">
         <button
           onClick={() => setActivePlannerTab('overview')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-            activePlannerTab === 'overview' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activePlannerTab === 'overview' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
           <Layers className="w-4 h-4" />
-          <span>Committees & Department Breakdown</span>
+          <span>Committees & Budgets</span>
         </button>
 
         <button
           onClick={() => setActivePlannerTab('volunteers')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-            activePlannerTab === 'volunteers' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activePlannerTab === 'volunteers' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -153,13 +155,43 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
         </button>
 
         <button
+          onClick={() => setActivePlannerTab('marketing')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activePlannerTab === 'marketing' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <Share2 className="w-4 h-4" />
+          <span>Marketing, Flyers & Broadcast</span>
+        </button>
+
+        <button
+          onClick={() => setActivePlannerTab('gaps')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activePlannerTab === 'gaps' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" />
+          <span>Gap Analysis & Health</span>
+        </button>
+
+        <button
           onClick={() => setActivePlannerTab('vendors')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-            activePlannerTab === 'vendors' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activePlannerTab === 'vendors' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
           <Store className="w-4 h-4" />
           <span>Vendor Marketplace & Booths</span>
+        </button>
+
+        <button
+          onClick={() => setActivePlannerTab('reports')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activePlannerTab === 'reports' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          <span>Reports, Badges & IRS Receipts</span>
         </button>
       </div>
 
@@ -381,9 +413,24 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
         </div>
       )}
 
-      {/* TAB 3: Vendors & Sponsors */}
+      {/* TAB 3: MARKETING, FLYERS & OUTREACH */}
+      {activePlannerTab === 'marketing' && (
+        <EventMarketingHub />
+      )}
+
+      {/* TAB 4: GAP ANALYSIS & CAMPAIGN HEALTH */}
+      {activePlannerTab === 'gaps' && (
+        <GapAnalysisDashboard onOpenBroadcast={() => setActivePlannerTab('marketing')} />
+      )}
+
+      {/* TAB 5: VENDORS & SPONSORS */}
       {activePlannerTab === 'vendors' && (
         <VendorMarketplaceManager />
+      )}
+
+      {/* TAB 6: REPORTS, BADGES & IRS RECEIPTS */}
+      {activePlannerTab === 'reports' && (
+        <ReportsExportCenter />
       )}
 
       {/* Approval Queue Modal */}
