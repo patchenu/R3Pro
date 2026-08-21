@@ -3,14 +3,14 @@ import {
   Organization, User, Event, SubPart, Shift, ItemSlot, TicketTier, 
   Registration, Donation, VendorApplication, ApprovalRequest, 
   VolunteerCrmRecord, Announcement, AuditLog, UserRole, WaiverTemplate,
-  PaidContractor, ProBonoPledge 
+  PaidContractor, ProBonoPledge, VendorInquiry 
 } from '../types';
 import { 
   SEED_ORGANIZATIONS, SEED_USERS, SEED_EVENTS, SEED_SUBPARTS, 
   SEED_SHIFTS, SEED_ITEM_SLOTS, SEED_TICKET_TIERS, SEED_REGISTRATIONS, 
   SEED_DONATIONS, SEED_VENDOR_APPLICATIONS, SEED_APPROVAL_REQUESTS, 
   SEED_VOLUNTEER_CRM, SEED_ANNOUNCEMENTS, SEED_AUDIT_LOGS,
-  SEED_CONTRACTORS, SEED_PRO_BONO_PLEDGES 
+  SEED_CONTRACTORS, SEED_PRO_BONO_PLEDGES, SEED_VENDOR_INQUIRIES 
 } from '../data/seedData';
 import { EVENT_TEMPLATES, ORG_TEMPLATES, WAIVER_TEMPLATES_DATA } from '../data/templates';
 import { generateManageToken, generateReceiptNumber } from '../utils/formatters';
@@ -41,6 +41,7 @@ interface AppContextType {
   registrations: Registration[];
   donations: Donation[];
   vendorApplications: VendorApplication[];
+  vendorInquiries: VendorInquiry[];
   approvalRequests: ApprovalRequest[];
   volunteerCrm: VolunteerCrmRecord[];
   announcements: Announcement[];
@@ -120,6 +121,9 @@ interface AppContextType {
   updateVendorApplication: (appId: string, updates: Partial<VendorApplication>) => void;
   approveVendor: (appId: string, assignedBooth: string) => void;
   rejectVendor: (appId: string) => void;
+  payVendorInvoice: (appId: string, paymentMethod: 'stripe_card' | 'ach_transfer' | 'check_net30', paymentDetails?: any) => void;
+  submitVendorInquiry: (inquiryData: Omit<VendorInquiry, 'id' | 'createdAt'>) => VendorInquiry;
+  answerVendorInquiry: (inquiryId: string, answer: string, answeredBy: string) => void;
 
   // Paid Contractor & Service Provider Management (Accounts Payable)
   addContractor: (contractorData: Omit<PaidContractor, 'id' | 'createdAt'>) => PaidContractor;
@@ -238,6 +242,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       registrations: SEED_REGISTRATIONS,
       donations: SEED_DONATIONS,
       vendorApplications: SEED_VENDOR_APPLICATIONS,
+      vendorInquiries: SEED_VENDOR_INQUIRIES,
       approvalRequests: SEED_APPROVAL_REQUESTS,
       volunteerCrm: SEED_VOLUNTEER_CRM,
       announcements: SEED_ANNOUNCEMENTS,
@@ -1279,6 +1284,68 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('success', 'Vendor Application Updated', 'Compliance details and documents saved successfully.');
   };
 
+  const payVendorInvoice = (appId: string, paymentMethod: 'stripe_card' | 'ach_transfer' | 'check_net30', paymentDetails?: any) => {
+    const timestamp = new Date().toISOString();
+    const generatedReceipt = 'REC-' + new Date().getFullYear() + '-VND-' + Date.now().toString().slice(-4);
+    
+    setData((prev: any) => {
+      const targetApp = prev.vendorApplications.find((v: VendorApplication) => v.id === appId);
+      const tier = targetApp ? prev.ticketTiers.find((t: TicketTier) => t.id === targetApp.ticketTierId) : null;
+      const amountPaid = tier ? tier.price : 0;
+
+      return {
+        ...prev,
+        events: prev.events.map((evt: Event) => 
+          targetApp && evt.id === targetApp.eventId
+            ? { ...evt, totalRaised: evt.totalRaised + amountPaid }
+            : evt
+        ),
+        vendorApplications: prev.vendorApplications.map((v: VendorApplication) => 
+          v.id === appId 
+            ? { 
+                ...v, 
+                status: 'paid', 
+                paymentMethod, 
+                paidAt: timestamp, 
+                taxReceiptNumber: v.taxReceiptNumber || generatedReceipt 
+              } 
+            : v
+        )
+      };
+    });
+
+    showToast('success', 'Payment Successful!', `Invoice paid in full. IRS receipt ${generatedReceipt} generated.`);
+  };
+
+  const submitVendorInquiry = (inquiryData: Omit<VendorInquiry, 'id' | 'createdAt'>): VendorInquiry => {
+    const newInquiry: VendorInquiry = {
+      ...inquiryData,
+      id: 'vinq_' + Date.now(),
+      createdAt: new Date().toISOString()
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      vendorInquiries: [newInquiry, ...(prev.vendorInquiries || [])]
+    }));
+
+    showToast('success', 'Inquiry Dispatched', 'Your question has been sent to the Commercial Event Chair.');
+    return newInquiry;
+  };
+
+  const answerVendorInquiry = (inquiryId: string, answer: string, answeredBy: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      vendorInquiries: (prev.vendorInquiries || []).map((inq: VendorInquiry) => 
+        inq.id === inquiryId 
+          ? { ...inq, answer, answeredBy, answeredAt: new Date().toISOString() } 
+          : inq
+      )
+    }));
+
+    showToast('success', 'Response Published', 'Your response to the vendor inquiry was published.');
+  };
+
   // Paid Contractor & Service Provider Management (Accounts Payable)
   const addContractor = (contractorData: Omit<PaidContractor, 'id' | 'createdAt'>): PaidContractor => {
     const id = 'cont_' + Date.now();
@@ -1840,6 +1907,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       registrations: data.registrations.filter((r: Registration) => r.eventId === currentEvent.id),
       donations: data.donations.filter((d: Donation) => d.eventId === currentEvent.id),
       vendorApplications: data.vendorApplications.filter((v: VendorApplication) => v.eventId === currentEvent.id),
+      vendorInquiries: (data.vendorInquiries || []).filter((inq: VendorInquiry) => inq.eventId === currentEvent.id),
       approvalRequests: data.approvalRequests.filter((a: ApprovalRequest) => a.eventId === currentEvent.id),
       volunteerCrm: data.volunteerCrm.filter((c: VolunteerCrmRecord) => c.orgId === currentOrg.id),
       announcements: data.announcements.filter((a: Announcement) => a.eventId === currentEvent.id),
@@ -1880,6 +1948,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateVendorApplication,
       approveVendor,
       rejectVendor,
+      payVendorInvoice,
+      submitVendorInquiry,
+      answerVendorInquiry,
       addContractor,
       updateContractor,
       deleteContractor,

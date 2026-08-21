@@ -285,7 +285,26 @@ export interface VendorApplication {
   assignedBoothNumber?: string; // e.g. "Booth #A-14", "Food Truck Spot #2"
   invoiceNumber?: string;
   taxReceiptNumber?: string;
+  paymentMethod?: 'stripe_card' | 'ach_transfer' | 'check_net30' | 'offline_cash';
+  paidAt?: string;
+  logoUrl?: string;
+  tagline?: string;
   submittedAt: string;
+}
+
+export interface VendorInquiry {
+  id: string;
+  eventId: string;
+  vendorAppId?: string;
+  businessName: string;
+  authorName: string;
+  category: 'logistics_loadin' | 'electrical_power' | 'booth_placement' | 'tax_payment' | 'general';
+  question: string;
+  answer?: string;
+  answeredBy?: string;
+  answeredAt?: string;
+  isPublicFaq: boolean;
+  createdAt: string;
 }
 
 export interface ApprovalRequest {

@@ -1,7 +1,8 @@
 import { 
   Organization, User, Event, SubPart, Shift, ItemSlot, TicketTier, 
   Registration, Donation, VendorApplication, ApprovalRequest, 
-  VolunteerCrmRecord, Announcement, AuditLog, PaidContractor, ProBonoPledge 
+  VolunteerCrmRecord, Announcement, AuditLog, PaidContractor, ProBonoPledge,
+  VendorInquiry 
 } from '../types';
 
 export const SEED_ORGANIZATIONS: Organization[] = [
@@ -1306,6 +1307,64 @@ export const SEED_VENDOR_APPLICATIONS: VendorApplication[] = [
     status: 'pending_review',
     invoiceNumber: 'INV-2026-021',
     submittedAt: '2026-08-18T09:10:00'
+  }
+];
+
+export const SEED_VENDOR_INQUIRIES: VendorInquiry[] = [
+  {
+    id: 'vinq_01',
+    eventId: 'evt_fall_carnival_2026',
+    vendorAppId: 'vapp_01',
+    businessName: 'Artisan Gourmet Bakery & Treats',
+    authorName: 'Maria Rodriguez',
+    category: 'electrical_power',
+    question: 'Can we bring a quiet battery inverter for our electronic POS registers and small refrigerated display?',
+    answer: 'Yes! Self-contained battery inverters (e.g. EcoFlow, Jackery) under 60dB are completely permitted in the Artisan Lane without needing an added power hookup fee.',
+    answeredBy: 'Marcus Vance (Commercial Chair)',
+    answeredAt: '2026-08-12T10:15:00',
+    isPublicFaq: true,
+    createdAt: '2026-08-11T16:40:00'
+  },
+  {
+    id: 'vinq_02',
+    eventId: 'evt_fall_carnival_2026',
+    vendorAppId: 'vapp_02',
+    businessName: 'Taco Fiesta Mobile Kitchen',
+    authorName: 'Carlos Gomez',
+    category: 'logistics_loadin',
+    question: 'What time is the vehicle gate open for food truck staging on the asphalt court?',
+    answer: 'Gate 3 (South Athletic Entrance) will open exclusively for food trucks at 6:30 AM. Please ensure your truck is parked and leveled by 8:15 AM before pedestrian gates open.',
+    answeredBy: 'Marcus Vance (Commercial Chair)',
+    answeredAt: '2026-08-13T08:30:00',
+    isPublicFaq: true,
+    createdAt: '2026-08-12T18:00:00'
+  },
+  {
+    id: 'vinq_03',
+    eventId: 'evt_fall_carnival_2026',
+    businessName: 'General Community Vendor',
+    authorName: 'Local Business Owner',
+    category: 'tax_payment',
+    question: 'How do we obtain the official IRS 501(c)(3) tax deduction acknowledgement letter for our corporate underwriting?',
+    answer: 'Official tax deduction letters are generated automatically upon completed online checkout or recorded offline check payment. You can preview and download it anytime directly from the COI & Tax Receipts Vault tab.',
+    answeredBy: 'Elena Rostova (Org Super Admin)',
+    answeredAt: '2026-08-10T14:20:00',
+    isPublicFaq: true,
+    createdAt: '2026-08-10T11:00:00'
+  },
+  {
+    id: 'vinq_04',
+    eventId: 'evt_fall_carnival_2026',
+    vendorAppId: 'vapp_03',
+    businessName: 'Handmade Wooden Toys & Puzzles',
+    authorName: 'Jacob Miller',
+    category: 'booth_placement',
+    question: 'Are pop-up canopy weights required for 10x10 outdoor booths?',
+    answer: 'Yes, per school safety and city fire code regulations, every 10x10 canopy must be secured with at least 20 lbs of weights on each leg (water jugs or sandbags). Ground staking is not allowed on artificial turf or asphalt.',
+    answeredBy: 'Sarah Jenkins (Safety Lead)',
+    answeredAt: '2026-08-18T11:45:00',
+    isPublicFaq: true,
+    createdAt: '2026-08-18T09:30:00'
   }
 ];
 
