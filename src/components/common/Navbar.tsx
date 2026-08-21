@@ -180,51 +180,51 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* ROW 2: Primary Workspace Navigation Tabs (Full Width & Prominent) */}
+        {/* ROW 2: Primary Workspace Navigation Tabs (Clean, Cohesive, Modern) */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-2 overflow-x-auto py-2">
+          <nav className="flex items-center gap-1.5 overflow-x-auto py-2">
             
             {/* 1. Community Events Hub */}
             <button
               onClick={() => setActiveTab('discovery_hub')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeTab === 'discovery_hub'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-700 hover:bg-slate-100'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold'
               }`}
             >
-              <Calendar className="w-4 h-4" />
-              <span>Community Events Calendar</span>
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Community Calendar</span>
             </button>
 
             {/* 2. Public Event Showcase */}
             <button
               onClick={() => setActiveTab('public_landing')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeTab === 'public_landing'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-700 hover:bg-slate-100'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold'
               }`}
             >
-              <HeartHandshake className="w-4 h-4 text-rose-500" />
-              <span>Event Showcase & Shifts</span>
+              <HeartHandshake className="w-3.5 h-3.5 text-rose-500" />
+              <span>Event Sign-Up</span>
             </button>
 
-            {/* 3. PLANNER HUB (HIGH VISIBILITY COMMAND CENTER) */}
+            {/* 3. PLANNER HUB */}
             {(activeRole === 'org_admin' || activeRole === 'event_planner') && (
               <button
                 onClick={() => setActiveTab('planner_dashboard')}
-                className={`relative px-4 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-2 whitespace-nowrap border ${
+                className={`relative px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                   activeTab === 'planner_dashboard'
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md ring-2 ring-indigo-200'
-                    : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border-indigo-300'
+                    ? 'bg-indigo-600 text-white font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold'
                 }`}
                 title="Event Chair Command Center: Committees, Volunteer Manifest, Marketing & Reports"
               >
-                <BarChart3 className="w-4 h-4 text-indigo-600" />
-                <span>📊 PLANNER HUB</span>
+                <BarChart3 className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Planner Command Hub</span>
                 {pendingApprovalsCount > 0 && (
-                  <span className="w-4 h-4 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full flex items-center justify-center animate-bounce">
+                  <span className="w-4 h-4 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full flex items-center justify-center">
                     {pendingApprovalsCount}
                   </span>
                 )}
@@ -235,14 +235,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             {(activeRole === 'org_admin' || activeRole === 'event_planner' || activeRole === 'committee_lead') && (
               <button
                 onClick={() => setActiveTab('lead_portal')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                   activeTab === 'lead_portal'
-                    ? 'bg-amber-600 text-white shadow-sm'
-                    : 'text-slate-700 hover:bg-slate-100'
+                    ? 'bg-slate-900 text-white font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold'
                 }`}
               >
-                <Users className="w-4 h-4" />
-                <span>Committee Leads Portal</span>
+                <Users className="w-3.5 h-3.5" />
+                <span>Committee Leads</span>
               </button>
             )}
 
@@ -250,41 +250,41 @@ export const Navbar: React.FC<NavbarProps> = ({
             {activeRole === 'org_admin' && (
               <button
                 onClick={() => setActiveTab('org_admin_view')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                   activeTab === 'org_admin_view'
-                    ? 'bg-purple-600 text-white shadow-sm'
-                    : 'text-slate-700 hover:bg-slate-100'
+                    ? 'bg-slate-900 text-white font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold'
                 }`}
               >
-                <Building2 className="w-4 h-4" />
-                <span>Org Super Admin CRM</span>
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Org Super Admin</span>
               </button>
             )}
 
             {/* 6. Vendor & Sponsor Hub */}
             <button
               onClick={() => setActiveTab('vendor_portal')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeTab === 'vendor_portal'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-700 hover:bg-slate-100'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold'
               }`}
             >
-              <Store className="w-4 h-4 text-emerald-500" />
-              <span>Vendor & Sponsor Hub</span>
+              <Store className="w-3.5 h-3.5 text-amber-500" />
+              <span>Vendors & Sponsors</span>
             </button>
 
             {/* 7. Door Check-In Kiosk */}
             <button
               onClick={() => setActiveTab('kiosk_mode')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeTab === 'kiosk_mode'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-700 hover:bg-slate-100'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold'
               }`}
             >
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <span>Door Kiosk Station</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Door Kiosk</span>
             </button>
 
           </nav>

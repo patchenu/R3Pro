@@ -44,7 +44,8 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   } = useApp();
 
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
-  const [activePlannerTab, setActivePlannerTab] = useState<'overview' | 'volunteers' | 'items' | 'marketing' | 'gaps' | 'vendors' | 'reports'>('overview');
+  const [activePlannerTab, setActivePlannerTab] = useState<'overview' | 'volunteers' | 'vendors' | 'reports'>('overview');
+  const [activeReportSubTab, setActiveReportSubTab] = useState<'exports' | 'gaps' | 'marketing' | 'items'>('exports');
 
   // Committee & Needs Modals
   const [isAddDeptModalOpen, setIsAddDeptModalOpen] = useState(false);
@@ -567,32 +568,49 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
-      {/* 1. LIFECYCLE STAGE & COMMAND HEADER */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-indigo-500/20 space-y-6">
-        
-        {/* Top Meta Bar */}
+      {/* 1. CLEAN COMPACT EVENT CHAIR HEADER */}
+      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-black uppercase tracking-wider border border-purple-500/30">
+              <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-black uppercase tracking-wider border border-indigo-100">
                 Event Chair Command Center
               </span>
-              <span className="text-xs text-slate-400">
-                Host: <strong>{currentOrg.name}</strong>
+              <span className="text-xs text-slate-500 font-semibold">
+                {currentOrg.name}
               </span>
+              {pendingApprovalsCount > 0 && (
+                <button
+                  onClick={() => setIsApprovalModalOpen(true)}
+                  className="px-3 py-1 rounded-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer animate-bounce"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>{pendingApprovalsCount} Approvals Pending &rarr;</span>
+                </button>
+              )}
             </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-white mt-1">
+
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
               {currentEvent.title}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
-              {currentEvent.tagline || 'Manage your campaign lifecycle, department committees, volunteer rosters, and commercial sponsors.'}
-            </p>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mt-1">
+              <span>📅 {new Date(currentEvent.startDate).toLocaleDateString()}</span>
+              <span>•</span>
+              <span>📍 {currentEvent.venueName || 'Main Campus'}</span>
+              <span>•</span>
+              <span className="font-bold text-emerald-700">🎯 {formatCurrency(currentEvent.totalRaised)} of {formatCurrency(currentEvent.fundraisingGoal)}</span>
+              <span>•</span>
+              <span className="font-bold text-indigo-700">🙋 {shiftFillRate}% Staffed</span>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => setActivePlannerTab('reports')}
-              className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-3.5 rounded-xl text-xs border border-white/20 transition"
+              onClick={() => {
+                setActivePlannerTab('reports');
+                setActiveReportSubTab('exports');
+              }}
+              className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3.5 rounded-xl text-xs transition cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print Badges & Reports</span>
@@ -600,162 +618,55 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
 
             <button
               onClick={() => onOpenEventBuilder?.()}
-              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3.5 rounded-xl text-xs shadow-md transition"
+              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3.5 rounded-xl text-xs shadow-sm transition cursor-pointer"
             >
               <Settings className="w-3.5 h-3.5" />
               <span>Event Settings</span>
             </button>
           </div>
         </div>
-
-        {/* Lifecycle Stage Progress Indicator */}
-        <div className="pt-4 border-t border-white/10">
-          <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mb-2">
-            <span className="text-white uppercase tracking-wider">Campaign Lifecycle: Phase 2 of 4</span>
-            <span className="text-indigo-400">Active Recruitment & Commercial Sales</span>
-          </div>
-
-          <div className="grid grid-cols-4 gap-2">
-            <div className="p-2.5 rounded-xl bg-white/10 border border-white/15 text-center">
-              <span className="block text-[10px] font-extrabold text-emerald-400">✓ Phase 1</span>
-              <span className="block text-xs font-bold text-white mt-0.5 truncate">Planning & Setup</span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-indigo-600/60 border border-indigo-400/50 text-center shadow-inner">
-              <span className="block text-[10px] font-extrabold text-amber-300">● Phase 2 (Active)</span>
-              <span className="block text-xs font-black text-white mt-0.5 truncate">Recruit & Sales</span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center text-slate-400">
-              <span className="block text-[10px] font-bold">Phase 3</span>
-              <span className="block text-xs font-semibold mt-0.5 truncate">Day-Of Kiosk</span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center text-slate-400">
-              <span className="block text-[10px] font-bold">Phase 4</span>
-              <span className="block text-xs font-semibold mt-0.5 truncate">Post-Event 990</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. ACTION REQUIRED FOCUS QUEUE (COMMAND BY EXCEPTION) */}
-        {(pendingApprovalsCount > 0 || shifts.some(s => s.claimedCount < s.capacity * 0.5)) && (
-          <div className="p-4 bg-amber-500/15 border border-amber-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-400 text-slate-950 rounded-xl font-black shrink-0">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="text-xs font-black uppercase tracking-wider text-amber-300 block">
-                  Action Required Focus Queue
-                </span>
-                <p className="text-xs text-slate-200">
-                  {pendingApprovalsCount > 0 
-                    ? `${pendingApprovalsCount} lead request(s) exceed variable thresholds and await your authorization.` 
-                    : 'Critical volunteer shift shortages detected for this weekend.'}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              {pendingApprovalsCount > 0 && (
-                <button
-                  onClick={() => setIsApprovalModalOpen(true)}
-                  className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
-                >
-                  <ShieldAlert className="w-4 h-4" />
-                  <span>Review Approvals ({pendingApprovalsCount})</span>
-                </button>
-              )}
-
-              <button
-                onClick={() => setActivePlannerTab('gaps')}
-                className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition"
-              >
-                <span>Inspect Shortages &rarr;</span>
-              </button>
-            </div>
-          </div>
-        )}
-
       </div>
 
-      {/* Campaign Progress Thermometer */}
-      <Thermometer
-        currentAmount={currentEvent.totalRaised}
-        goalAmount={currentEvent.fundraisingGoal}
-        donorCount={donations.length + registrations.filter(r => r.donations.length > 0).length + 8}
-        volunteerFillRate={shiftFillRate}
-        currency={currentEvent.currency}
-      />
-
-      {/* UNIFIED 4-TAB BENTO NAVIGATION */}
+      {/* 2. UNIFIED 4-TAB MINIMALIST NAVIGATION */}
       <div className="flex items-center gap-2 border-b-2 border-slate-200 pb-2 overflow-x-auto">
         <button
           onClick={() => setActivePlannerTab('overview')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
             activePlannerTab === 'overview' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
           <Layers className="w-4 h-4" />
-          <span>Committees & Budgets ({subParts.length})</span>
+          <span>🏛️ Committees & Operations ({subParts.length})</span>
         </button>
 
         <button
           onClick={() => setActivePlannerTab('volunteers')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
             activePlannerTab === 'volunteers' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
           <Users className="w-4 h-4" />
-          <span>Volunteer Manifest ({allVolunteerRows.length})</span>
+          <span>🙋 Volunteer Manifest ({allVolunteerRows.length})</span>
         </button>
 
         <button
           onClick={() => setActivePlannerTab('vendors')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
             activePlannerTab === 'vendors' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
           <Store className="w-4 h-4" />
-          <span>Sponsors & Vendor Tiers ({ticketTiers.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActivePlannerTab('items')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
-            activePlannerTab === 'items' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
-          }`}
-        >
-          <Package className="w-4 h-4" />
-          <span>📦 Item Receiving Dock ({itemSlots.filter(i => i.eventId === currentEvent.id).length})</span>
-        </button>
-
-        <button
-          onClick={() => setActivePlannerTab('marketing')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
-            activePlannerTab === 'marketing' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
-          }`}
-        >
-          <Share2 className="w-4 h-4" />
-          <span>Marketing & Broadcasts</span>
-        </button>
-
-        <button
-          onClick={() => setActivePlannerTab('gaps')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
-            activePlannerTab === 'gaps' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4" />
-          <span>Gap Analysis</span>
+          <span>💎 Sponsors & Commercial Hub ({ticketTiers.length})</span>
         </button>
 
         <button
           onClick={() => setActivePlannerTab('reports')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
             activePlannerTab === 'reports' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
-          <FileText className="w-4 h-4" />
-          <span>Reports & Badges</span>
+          <BarChart3 className="w-4 h-4" />
+          <span>📊 Financials, Gaps & CPA Reports</span>
         </button>
       </div>
 
@@ -1014,160 +925,6 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
           </div>
         )}
 
-        {/* Corporate Sponsor Packages & Tickets Section */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700">
-                  <Award className="w-4 h-4" />
-                </span>
-                <h3 className="text-base font-black text-slate-900">
-                  Corporate Sponsor Packages, Vendor Spaces & Ticket Tiers ({ticketTiers.length})
-                </h3>
-              </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Manage commercial underwriting tiers, booth pitches, and admission wristbands with IRS 501(c)(3) tax deductions
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {ticketTiers.length > 1 && (
-                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                  <span className="text-[10px] font-bold text-slate-500 px-1.5 flex items-center gap-1">
-                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                    <span>Sort:</span>
-                  </span>
-                  <button
-                    onClick={() => handleSortTiers('high_to_low')}
-                    className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-900 font-bold text-[10px] rounded-lg shadow-2xs transition"
-                    title="Sort highest to lowest price"
-                  >
-                    $$$ &rarr; $ High to Low
-                  </button>
-                  <button
-                    onClick={() => handleSortTiers('low_to_high')}
-                    className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-900 font-bold text-[10px] rounded-lg shadow-2xs transition"
-                    title="Sort lowest to highest price"
-                  >
-                    $ &rarr; $$$ Low to High
-                  </button>
-                </div>
-              )}
-              <button
-                onClick={() => setActivePlannerTab('vendors')}
-                className="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition"
-              >
-                Open Full Sponsor Studio &rarr;
-              </button>
-              <button
-                onClick={() => handleOpenAddTier('sponsor_package')}
-                className="px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition flex items-center gap-1"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>+ Add Package / Tier</span>
-              </button>
-            </div>
-          </div>
-
-          {ticketTiers.length === 0 ? (
-            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-              <Award className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-              <div className="text-xs font-bold text-slate-700">No Sponsorship Packages Configured Yet</div>
-              <p className="text-[11px] text-slate-500 mt-1 mb-3">Add title sponsors or vendor pitches to raise corporate revenue.</p>
-              <button
-                onClick={() => handleOpenAddTier('sponsor_package')}
-                className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-xs"
-              >
-                + Create Sponsor Tier
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {ticketTiers.map((tier, idx) => (
-                <div
-                  key={tier.id}
-                  className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between hover:border-slate-300 transition"
-                >
-                  <div>
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-1">
-                        <span className="px-1.5 py-0.5 bg-slate-200 text-slate-600 font-mono text-[9px] rounded font-bold">
-                          #{idx + 1}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                          tier.type === 'sponsor_package' ? 'bg-indigo-100 text-indigo-800' :
-                          tier.type === 'vendor_booth' ? 'bg-amber-100 text-amber-800' :
-                          'bg-emerald-100 text-emerald-800'
-                        }`}>
-                          {tier.type.replace('_', ' ')}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {/* Shift Card Position */}
-                        <div className="flex items-center border border-slate-200 rounded-md overflow-hidden bg-white mr-1">
-                          <button
-                            onClick={() => handleMoveTier(tier.id, 'up')}
-                            disabled={idx === 0}
-                            className={`p-1 transition ${
-                              idx === 0 
-                                ? 'text-slate-300 cursor-not-allowed' 
-                                : 'text-slate-500 hover:text-indigo-700 hover:bg-indigo-50'
-                            }`}
-                            title="Shift Left / Up"
-                          >
-                            <ArrowUp className="w-2.5 h-2.5" />
-                          </button>
-                          <button
-                            onClick={() => handleMoveTier(tier.id, 'down')}
-                            disabled={idx === ticketTiers.length - 1}
-                            className={`p-1 transition border-l border-slate-200 ${
-                              idx === ticketTiers.length - 1 
-                                ? 'text-slate-300 cursor-not-allowed' 
-                                : 'text-slate-500 hover:text-indigo-700 hover:bg-indigo-50'
-                            }`}
-                            title="Shift Right / Down"
-                          >
-                            <ArrowDown className="w-2.5 h-2.5" />
-                          </button>
-                        </div>
-
-                        <button
-                          onClick={() => handleOpenEditTier(tier)}
-                          className="p-1 text-slate-400 hover:text-indigo-600 transition"
-                          title="Edit Package"
-                        >
-                          <Edit3 className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTier(tier.id)}
-                          className="p-1 text-slate-400 hover:text-rose-600 transition"
-                          title="Delete Package"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <h4 className="font-bold text-xs text-slate-900">{tier.title}</h4>
-                    <div className="text-lg font-black text-indigo-600 mt-0.5">{formatCurrency(tier.price)}</div>
-                    <div className="text-[11px] text-slate-500 mt-1 line-clamp-2">{tier.description}</div>
-                  </div>
-
-                  <div className="mt-3 pt-2.5 border-t border-slate-200 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-600 font-semibold">{tier.claimedCount} / {tier.capacity} claimed</span>
-                    <button
-                      onClick={() => handleOpenEditTier(tier)}
-                      className="font-bold text-indigo-600 hover:text-indigo-800"
-                    >
-                      Edit &rarr;
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
         {/* HIRED CONTRACTORS & PAID SERVICES (ACCOUNTS PAYABLE) SECTION */}
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-5">
@@ -1537,29 +1294,80 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
         </div>
       )}
 
-      {/* TAB 3: ITEM PLEDGES & PHYSICAL RECEIVING STATION */}
-      {activePlannerTab === 'items' && (
-        <ItemReceivingHub />
-      )}
-
-      {/* TAB 4: MARKETING, FLYERS & OUTREACH */}
-      {activePlannerTab === 'marketing' && (
-        <EventMarketingHub />
-      )}
-
-      {/* TAB 5: GAP ANALYSIS & CAMPAIGN HEALTH */}
-      {activePlannerTab === 'gaps' && (
-        <GapAnalysisDashboard onOpenBroadcast={() => setActivePlannerTab('marketing')} />
-      )}
-
-      {/* TAB 6: VENDORS & SPONSORS */}
+      {/* TAB 3: SPONSORS & COMMERCIAL HUB */}
       {activePlannerTab === 'vendors' && (
         <VendorMarketplaceManager />
       )}
 
-      {/* TAB 7: REPORTS, BADGES & IRS RECEIPTS */}
+      {/* TAB 4: FINANCIALS, GAPS & CPA REPORTS */}
       {activePlannerTab === 'reports' && (
-        <ReportsExportCenter />
+        <div className="space-y-6">
+          {/* Campaign Progress Thermometer */}
+          <Thermometer
+            currentAmount={currentEvent.totalRaised}
+            goalAmount={currentEvent.fundraisingGoal}
+            donorCount={donations.length + registrations.filter(r => r.donations.length > 0).length + 8}
+            volunteerFillRate={shiftFillRate}
+            currency={currentEvent.currency}
+          />
+
+          {/* Sub-Hub Navigation */}
+          <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
+            <button
+              onClick={() => setActiveReportSubTab('exports')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                activeReportSubTab === 'exports'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>📄 CPA Reports & 990 Ledgers</span>
+            </button>
+
+            <button
+              onClick={() => setActiveReportSubTab('gaps')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                activeReportSubTab === 'gaps'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+              <span>🚨 AI Gap Analysis</span>
+            </button>
+
+            <button
+              onClick={() => setActiveReportSubTab('marketing')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                activeReportSubTab === 'marketing'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Share2 className="w-3.5 h-3.5 text-indigo-400" />
+              <span>📢 Marketing & Broadcasts</span>
+            </button>
+
+            <button
+              onClick={() => setActiveReportSubTab('items')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                activeReportSubTab === 'items'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Package className="w-3.5 h-3.5 text-emerald-400" />
+              <span>📦 Physical Supply Receiving Dock</span>
+            </button>
+          </div>
+
+          {/* Sub-Hub Content */}
+          {activeReportSubTab === 'exports' && <ReportsExportCenter />}
+          {activeReportSubTab === 'gaps' && <GapAnalysisDashboard onOpenBroadcast={() => setActiveReportSubTab('marketing')} />}
+          {activeReportSubTab === 'marketing' && <EventMarketingHub />}
+          {activeReportSubTab === 'items' && <ItemReceivingHub />}
+        </div>
       )}
 
       {/* MODAL 1: ADD / EDIT COMMITTEE DEPARTMENT */}
