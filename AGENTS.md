@@ -358,3 +358,139 @@ This document provides system knowledge, core architectural rules, and coding st
   - Hired contractors (paid DJ, sound engineering crew, tent rentals, security personnel) are managed internally within `MasterPlannerDashboard.tsx` and `LeadPortal.tsx` as contracted operational expenses against the department's allocated budget.
 
 ---
+
+## 26. User Persona Workspaces, Decluttered UX Mental Models & Strict Access Boundaries
+
+### 26.1 Post-Login Cognitive Clarity & Workspace Partitioning
+- **Org Super Admin (`org_admin`)**:
+  - High-level governance, organization branding, executive signatories, leadership team management, 990 / CPA annual audits, and cross-campaign financial rollups.
+- **Event Planner / Chair (`event_planner`)**:
+  - Master campaign lifecycle, fundraising meters, committee delegation, variable approval queue review (budget additions > $250, shift additions > 5 spots), and commercial tier configuration.
+  - *Operational Separation*: Planners build, price, and approve commercial packages, but DO NOT book vendor spaces for themselves (only vendors apply and book).
+- **Committee / Sub-Part Lead (`committee_lead`)**:
+  - Scoped strictly to assigned operational departments (`LeadPortal.tsx`). Manages department volunteer shift rosters, supply wishlist drop-offs, attendee check-in, and committee broadcasts. Cannot mutate global event settings or other departments.
+- **Commercial Vendor & Corporate Sponsor (`vendor` / `sponsor`)**:
+  - Dedicated commercial operating studio (`VendorSponsorDashboard.tsx`). Manages booth pitches, electrical hookups, Certificate of Insurance (COI) compliance, online invoice checkout, lead scanning, rental add-ons, annual season passes, and organizer Q&A.
+- **Volunteer & Household Parent (`volunteer`)**:
+  - Frictionless personal portal. Tracks active shift passes, household family dependents, student service hour verifications, digital safety waivers, and personal `.ics` calendar sync.
+
+### 26.2 Strict Access Gating & Navigation Hygiene
+- **Door Kiosk Gating**:
+  - The Entrance & Tablet Kiosk Station (`DoorKioskView.tsx`) is strictly restricted to authorized staff (`org_admin`, `event_planner`, `committee_lead`).
+  - Public volunteers, household parents, and commercial vendors/sponsors are strictly prevented from viewing or accessing the Door Kiosk tab.
+- **Elimination of Navigation & Card Clutter**:
+  - Flattened deeply nested card layouts into clean single-level tabs.
+  - Removed duplicate sponsorship/budget cards between Planner Hub and Committee Budgets.
+- **Homepage & Landing Page Focus**:
+  - The primary landing page (`PublicEventLanding.tsx` / `App.tsx`) centers exclusively on active community campaigns and frictionless volunteer sign-up.
+  - Commercial sponsorship opportunities are positioned cleanly at the bottom of the page (`CommercialGatewayBanner.tsx`) to eliminate cognitive distraction for volunteers.
+- **Global Header Commercial Inlet**:
+  - Added a dedicated "🏪 Commercial & Sponsors" navigation link in the top bar with live tier count badges for quick vendor discovery.
+
+---
+
+## 27. Commercial Vendor & Corporate Sponsor Operating Studio (`VendorSponsorDashboard.tsx`)
+
+### 27.1 9-Tab Workspace Lifecycle Matrix
+1. **`my_passes` (My Booths & Passes)**: Active registered booths, load-in gate instructions, gate passes, and spatial courtyard layout.
+2. **`leads_hub` (Lead Scanner & Capture)**: In-booth camera QR scanner simulator, manual lead intake modal, filterable CRM table, and 1-click CSV lead export.
+3. **`equipment_addons` (Equipment & Add-Ons Store)**: Self-service rental catalog (tables, canopies with weights, 20A power drops, corner priority upgrades) with instant checkout.
+4. **`compliance` (COI & Tax Receipts Vault)**: Real Certificate of Insurance (COI) document upload, live insurance policy verification, and IRS Publication 526/561 tax receipt vault.
+5. **`brand_assets` (Brand Assets & Deliverables)**: Vector logo dropzone, marketing tagline, website URL, and live sponsorship deliverables tracker.
+6. **`season_passes` (Corporate Season Passes)**: Multi-campaign corporate season pass builder with automated 15% bundled discount and annual 501(c)(3) tax certificate.
+7. **`roi_dossier` (Sponsor ROI Dossier)**: Post-event executive sponsor ROI report generator with foot traffic analytics, impressions, and community economic valuation ($31.80/hr).
+8. **`qa_helpdesk` (Q&A Helpdesk)**: Searchable FAQ knowledgebase + live Commercial Event Chair messaging thread.
+9. **`available_packages` (All Packages)**: Commercial booth and underwriting package catalog.
+
+### 27.2 Real Interactive COI (Certificate of Insurance) Verification System
+- Replaced mock representations with a real interactive verification and document upload workflow (`handleOpenCoiModal`, `handleSaveCoi`).
+- **Data Captured**: Insurance Carrier / Agency Name, Policy Number, Policy Expiration Date, and File upload (`.pdf`, `.png`, `.jpg`).
+- **Additional Insured Certification**: Mandatory checkbox verifying that the host organization is explicitly named as an Additional Insured with at least $1,000,000 in General Liability coverage.
+- **Visual Status Engine**:
+  - `⚠️ Action Required: Missing COI` (Red pill with pulsating alert)
+  - `⏳ COI Verification in Progress` (Amber pill)
+  - `✓ COI Verified & Cleared` (Emerald pill)
+
+### 27.3 Multi-Method Online Invoice Checkout & Instant Tax Substantiation
+- Interactive invoice checkout modal supporting 3 flexible payment rails:
+  1. **Credit / Debit Card (Stripe-styled)**: Cardholder name, card number, expiration date, CVC, billing ZIP code.
+  2. **ACH Wire / Direct Bank Transfer**: Displays organization routing number and account number with auto-generated invoice reference.
+  3. **Corporate Check / Net-30 Terms**: Generates printable remittance voucher and physical mailing instructions.
+- **Immediate State Progression**:
+  - Updates vendor application status from `approved` $\rightarrow$ `paid`.
+  - Automatically generates an official IRS 501(c)(3) tax receipt number (e.g. `REC-2026-VND-001`).
+  - Computes Fair Market Value (FMV) offsets to identify tax-deductible contributions.
+  - Clears the vendor for day-of load-in gate access (`✓ Paid in Full & Confirmed`).
+
+### 27.4 Interactive Spatial Courtyard & Booth Allocation Grid
+- Visual layout schematic illustrating:
+  - **North Courtyard**: Main Stage, Bleachers, and Audio/Visual Control Booth.
+  - **Artisan Alley**: Standard 10x10 numbered artisan vendor booths with active pitch highlighting (e.g. `Booth #A-14`).
+  - **Center Plaza**: Pedestrian footpath and community activities.
+  - **Food Truck Row**: Dedicated 220V power drops with reserved bays (e.g. `Bay #2`).
+  - **Gate Operations**: Gate 1 (Pedestrian Arrival) vs Gate 3 (Heavy Vehicle Load-In & Power Transformers).
+
+---
+
+## 28. Digital Lead Capture, Equipment Rentals, Corporate Season Passes & ROI Analytics
+
+### 28.1 In-Booth Attendee QR Badge Scanner & Lead CRM Export (`leads_hub`)
+- **Interactive Camera Scanner Simulator (`QrCode`)**:
+  - Simulates scanning attendee festival passes and badges in the vendor's booth.
+  - Automatically extracts attendee name, company, email, phone, and generates instant lead capture records.
+- **Manual Lead Entry Modal**:
+  - Fast intake fallback for recording attendee details, assigning priority tiers (`🔥 Hot Lead (Ready to Buy)`, `☀️ Warm Lead (Follow-Up)`, `⭐ VIP Client`), and capturing conversational notes.
+- **Filterable & Searchable CRM Table**:
+  - Instant live keyword filtering across attendee names, emails, and notes.
+- **1-Click CSV Lead Export**:
+  - Exports a clean CSV file (`Vendor_Leads_[Event]_[Date].csv`) for instant import into Salesforce, HubSpot, or Excel.
+
+### 28.2 Self-Service Rental Equipment & Booth Add-Ons Store (`equipment_addons`)
+- **On-Demand Equipment Catalog**:
+  - **Extra 6ft Heavy-Duty Folding Table & Chairs** ($35.00)
+  - **10x10 Pop-Up Commercial Canopy Tent with 50lb Weights** ($85.00)
+  - **Dedicated 20A / 110V Electrical Power Circuit & Quad Box** ($120.00)
+  - **Premium High-Foot-Traffic Corner Pitch Upgrade** ($150.00)
+- **1-Click Instant Add-On Checkout Modal**:
+  - Quantity selector with real-time tax and subtotal computation.
+  - Selectable payment rails (Corporate Card, Net-30 Invoice, Cash/Check at Gate).
+  - Special delivery and placement instructions field (e.g., *"Place table near front left entrance"*).
+- **Active Orders Ledger**:
+  - Tracks fulfilled add-on orders with status pills (`✓ Confirmed & Assigned`) and itemized receipts.
+
+### 28.3 Multi-Campaign Corporate Season Pass Bundling & 15% Savings Model (`season_passes`)
+- **Multi-Campaign Sponsorship Bundling**:
+  - Underwrite all 3 flagship campaigns across the academic year (*Fall Carnival & STEM Fair + Spring Charity Gala + Summer Youth Sports Classic*).
+  - Automatically applies an automated **15% Multi-Event Bundled Discount** ($4,500 total value $\rightarrow$ $3,825 net contribution).
+- **Consolidated Annual IRS 501(c)(3) Tax Substantiation**:
+  - Single annual tax acknowledgement certificate covering all bundled campaigns with IRS Pub 526 compliance.
+- **Annual Underwriting Builder Modal**:
+  - Selectable tiers (*Gold Season Champion*, *Silver Season Supporter*, *Bronze Community Patron*).
+  - Real-time billing schedule selection (*Single Annual Invoice* vs *Quarterly Installments*).
+
+### 28.4 Post-Event Executive ROI Impact Dossier & Economic Valuation (`roi_dossier`)
+- **Comprehensive Marketing & Audience Reach Metrics**:
+  - **Total Estimated Festival Attendance**: 2,840 local community attendees.
+  - **Enrolled Student Families Engaged**: 680 households.
+  - **Fundraising Progress**: $48,250 raised (96.5% of $50,000 goal).
+  - **Volunteer Service**: 485 student volunteer hours contributed.
+- **Brand Exposure & Visibility Audit**:
+  - **Main Stage High-Definition LED Screen**: 24 logo rotations.
+  - **Digital Program & Schedule Scans**: 3,120 mobile views.
+  - **Community Economic Value**: $15,423 calculated using the Independent Sector standard ($31.80/hr).
+- **1-Click Printable Executive Dossier**:
+  - Formats and downloads an official Executive Post-Event ROI Attestation signed by the Organization President.
+
+---
+
+## 29. Complete System Audit & Architectural Integrity Matrix
+
+| Subsystem / Area | Key Types (`src/types/index.ts`) | App State & Dispatch (`src/context/AppContext.tsx`) | Primary Components | Verification Standard |
+| :--- | :--- | :--- | :--- | :--- |
+| **Multi-Tenant Org Governance** | `Organization`, `User`, `AuditLog` | `currentOrg`, `users`, `auditLogs`, `updateOrgBranding`, `inviteTeamMember` | `OrgExecutiveDashboard.tsx`, `TeamMemberManagerModal.tsx` | Strict `org_id` isolation, EIN deduplication, immutable audit ledger |
+| **Event Planning & Committees** | `Event`, `SubPart`, `VariableApproval` | `events`, `subParts`, `variableApprovals`, `approveVariableRequest`, `rejectVariableRequest` | `MasterPlannerDashboard.tsx`, `EventBuilderWizard.tsx`, `LeadPortal.tsx` | Variable approval thresholds (> $250 budget, > 5 shift spots), Lead scoping |
+| **Volunteer Shifts & Households** | `ShiftSlot`, `Registration`, `HouseholdMember` | `shiftSlots`, `registrations`, `householdMembers`, `addRegistration`, `checkInVolunteer` | `PublicEventLanding.tsx`, `UnifiedRegistrationModal.tsx`, `VolunteerCrm.tsx` | Zero double-booking algorithm, parental minor consent, magic token auth |
+| **Supplies & Wishlists** | `ItemSlot`, `ItemDropOffRecord` | `itemSlots`, `itemDropOffRecords`, `pledgeItemSlot`, `recordItemDropOff` | `PublicEventLanding.tsx`, `LeadPortal.tsx`, `ReportsExportCenter.tsx` | IRS Pub 526/561 non-cash FMV deduction letters, physical drop-off tracking |
+| **Commercial Vendors & Sponsors** | `VendorApplication`, `VendorInquiry`, `VendorLead`, `VendorAddOn`, `CorporateSeasonPass`, `EventImpactMetrics` | `vendorApplications`, `vendorInquiries`, `vendorLeads`, `vendorAddOns`, `corporateSeasonPasses`, `eventImpactMetrics`, `saveVendorCoi`, `processVendorPayment`, `addVendorLead`, `purchaseVendorAddOn`, `createCorporateSeasonPass` | `VendorSponsorDashboard.tsx`, `VendorMarketplaceManager.tsx`, `CommercialMarketplaceModal.tsx` | Real COI verification, multi-rail checkout, lead scanner CRM, 15% season pass discount, ROI dossier |
+| **Door Kiosk & Gate Access** | `Registration`, `TicketTier` | `checkInVolunteer`, `registerWalkUpVolunteer` | `DoorKioskView.tsx`, `MobileKioskPassModal.tsx` | Role-gated access (`org_admin`, `event_planner`, `committee_lead` only), dual-mode express check-in |
+| **IRS Tax Substantiation** | `TaxReceipt`, `DonationRecord` | `taxReceipts`, `donations`, `recordOfflineDonation`, `voidDonation` | `ReportsExportCenter.tsx`, `VendorSponsorDashboard.tsx` | Executive signatory vector rendering, IRS Pub 526/561 compliance, FMV offsets |
