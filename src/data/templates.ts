@@ -78,6 +78,7 @@ export interface EventTemplatePreset {
   icon: string;
   defaultGoal: number;
   description: string;
+  defaultDressCode?: string;
   departments: {
     name: string;
     category: 'labor_setup' | 'hospitality_food' | 'vendors_sponsors' | 'auction_fundraising' | 'registration_greeters';
@@ -119,6 +120,7 @@ export const EVENT_TEMPLATES: EventTemplatePreset[] = [
     category: 'Charity Gala',
     icon: '🏆',
     defaultGoal: 25000,
+    defaultDressCode: 'Black-Tie or Formal Evening Attire / Dark suits and formal gowns',
     description: 'Join community leaders and philanthropists for our premiere annual fundraising gala. Enjoy fine dining, keynote addresses, live entertainment, and a curated silent auction featuring luxury travel packages, memorabilia, and artisanal gifts.',
     departments: [
       {
@@ -198,6 +200,7 @@ export const EVENT_TEMPLATES: EventTemplatePreset[] = [
     category: '5K Run / Athletics',
     icon: '🏃',
     defaultGoal: 10000,
+    defaultDressCode: 'Athletic wear, sneakers, and high-visibility running gear',
     description: 'A family-friendly 5K run and 1-mile fun walk through Memorial Park. Every participant registration includes an event t-shirt, finisher medal, and contributes directly to our community emergency food pantry.',
     departments: [
       {
@@ -262,6 +265,7 @@ export const EVENT_TEMPLATES: EventTemplatePreset[] = [
     category: 'School Carnival',
     icon: '🎡',
     defaultGoal: 6000,
+    defaultDressCode: 'Lincoln High Spirit T-Shirt (provided) or casual athletic wear & sneakers',
     description: 'Our PTA Fall Carnival is the biggest family tradition of the school year! Features 16 interactive carnival game booths, giant obstacle bounce houses, face painting, bake sale treats, and our famous teachers dunk tank.',
     departments: [
       {

@@ -167,7 +167,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Normalize loaded data to ensure full compatibility with current schema
+        if (parsed.events && Array.isArray(parsed.events)) {
+          parsed.events = parsed.events.map((e: any) => ({
+            ...e,
+            dressCode: e.dressCode || 'Casual spirit wear / Comfortable attire & sneakers'
+          }));
+        }
+        if (parsed.users && Array.isArray(parsed.users)) {
+          parsed.users = parsed.users.map((u: any) => ({
+            ...u,
+            role: (u.role === 'hospitality_lead' as any) ? 'committee_lead' : u.role
+          }));
+        }
+        if (parsed.subParts && Array.isArray(parsed.subParts)) {
+          parsed.subParts = parsed.subParts.map((sp: any) => ({
+            ...sp,
+            dressCodeNotes: sp.dressCodeNotes || 'Comfortable attire & closed-toe shoes',
+            suppliesNotes: sp.suppliesNotes || 'Check in with lead at gate'
+          }));
+        }
+        if (parsed.itemSlots && Array.isArray(parsed.itemSlots)) {
+          parsed.itemSlots = parsed.itemSlots.map((item: any) => ({
+            ...item,
+            estimatedFmvPerUnit: item.estimatedFmvPerUnit !== undefined ? item.estimatedFmvPerUnit : 20
+          }));
+        }
+        if (parsed.ticketTiers && Array.isArray(parsed.ticketTiers)) {
+          parsed.ticketTiers = parsed.ticketTiers.map((tt: any) => ({
+            ...tt,
+            fairMarketValue: tt.fairMarketValue !== undefined ? tt.fairMarketValue : 0,
+            instantCheckout: tt.instantCheckout !== undefined ? tt.instantCheckout : true
+          }));
+        }
+        return parsed;
       } catch (e) {
         console.error('Failed to parse localStorage data', e);
       }
@@ -340,6 +374,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       approvalThresholdSlots: 5,
       reminderCadence: 'standard',
       allowFeeCoverage: true,
+      dressCode: 'Casual spirit wear / Comfortable attire & sneakers',
       subPartIds: []
     };
 
@@ -412,6 +447,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const randomSuffix = Math.floor(100 + Math.random() * 900);
     const eventKey = newEventData.eventKey || `EVT-${year}-${quarter}-${randomSuffix}`;
     
+    // Hydrate template departments, shifts, items, ticket tiers if customPayload or template chosen
+    const template = EVENT_TEMPLATES.find(t => t.id === templatePresetId);
+
     const event: Event = {
       id,
       orgId: currentOrg.id,
@@ -442,11 +480,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       approvalThresholdSlots: newEventData.approvalThresholdSlots || currentOrg.settings.approvalThresholdSlots,
       reminderCadence: currentOrg.settings.defaultReminderCadence,
       allowFeeCoverage: true,
+      dressCode: newEventData.dressCode || template?.defaultDressCode || 'Casual spirit wear / Comfortable attire & sneakers',
       subPartIds: []
     };
 
-    // Hydrate template departments, shifts, items, ticket tiers if customPayload or template chosen
-    const template = EVENT_TEMPLATES.find(t => t.id === templatePresetId);
     let newSubParts: SubPart[] = [];
     let newShifts: Shift[] = [];
     let newItems: ItemSlot[] = [];

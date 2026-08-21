@@ -171,6 +171,7 @@ export const SEED_EVENTS: Event[] = [
     approvalThresholdSlots: 5,
     reminderCadence: 'standard',
     allowFeeCoverage: true,
+    dressCode: 'Lincoln High Spirit T-Shirt (provided) or casual athletic wear & sneakers',
     subPartIds: ['subpart_carnival_games', 'subpart_carnival_food', 'subpart_carnival_labor', 'subpart_carnival_vendors']
   },
   {
@@ -204,6 +205,7 @@ export const SEED_EVENTS: Event[] = [
     approvalThresholdSlots: 6,
     reminderCadence: 'standard',
     allowFeeCoverage: true,
+    dressCode: 'Casual tech spirit wear / Lincoln STEM polo & comfortable sneakers',
     subPartIds: []
   },
   {
@@ -237,6 +239,7 @@ export const SEED_EVENTS: Event[] = [
     approvalThresholdSlots: 5,
     reminderCadence: 'standard',
     allowFeeCoverage: true,
+    dressCode: 'Casual spirit wear & comfortable athletic sneakers',
     subPartIds: []
   },
   {
@@ -270,6 +273,7 @@ export const SEED_EVENTS: Event[] = [
     approvalThresholdSlots: 8,
     reminderCadence: 'intensive',
     allowFeeCoverage: true,
+    dressCode: 'Black-Tie or Formal Evening Attire / Dark suits and formal gowns',
     subPartIds: []
   }
 ];
@@ -499,7 +503,8 @@ export const SEED_ITEM_SLOTS: ItemSlot[] = [
     quantityPledged: 14,
     unit: 'plates',
     dropOffLocation: 'Cafeteria Drop-off Table',
-    dropOffDeadline: 'Saturday by 8:30 AM'
+    dropOffDeadline: 'Saturday by 8:30 AM',
+    estimatedFmvPerUnit: 15
   },
   {
     id: 'item_carnival_cupcakes',
@@ -511,7 +516,8 @@ export const SEED_ITEM_SLOTS: ItemSlot[] = [
     quantityPledged: 8, // GAPS: 7 needed
     unit: 'boxes',
     dropOffLocation: 'Cafeteria Drop-off Table',
-    dropOffDeadline: 'Saturday by 8:30 AM'
+    dropOffDeadline: 'Saturday by 8:30 AM',
+    estimatedFmvPerUnit: 20
   },
   {
     id: 'item_carnival_juice',
@@ -523,7 +529,8 @@ export const SEED_ITEM_SLOTS: ItemSlot[] = [
     quantityPledged: 10,
     unit: 'cases',
     dropOffLocation: 'Cafeteria Kitchen Walk-in',
-    dropOffDeadline: 'Friday 3:00 PM or Saturday 8:00 AM'
+    dropOffDeadline: 'Friday 3:00 PM or Saturday 8:00 AM',
+    estimatedFmvPerUnit: 18
   },
   {
     id: 'item_carnival_prizes',
@@ -535,7 +542,8 @@ export const SEED_ITEM_SLOTS: ItemSlot[] = [
     quantityPledged: 6,
     unit: 'packs',
     dropOffLocation: 'PTA Supply Room 104',
-    dropOffDeadline: 'Thursday prior to event'
+    dropOffDeadline: 'Thursday prior to event',
+    estimatedFmvPerUnit: 35
   },
   {
     id: 'item_carnival_facepaint',
@@ -547,7 +555,8 @@ export const SEED_ITEM_SLOTS: ItemSlot[] = [
     quantityPledged: 1, // GAPS: 3 needed
     unit: 'kits',
     dropOffLocation: 'Courtyard Booth #1',
-    dropOffDeadline: 'Saturday 8:30 AM'
+    dropOffDeadline: 'Saturday 8:30 AM',
+    estimatedFmvPerUnit: 25
   },
   {
     id: 'item_carnival_trashbags',
@@ -559,7 +568,8 @@ export const SEED_ITEM_SLOTS: ItemSlot[] = [
     quantityPledged: 6,
     unit: 'boxes',
     dropOffLocation: 'Facilities Dock',
-    dropOffDeadline: 'Friday 3:00 PM'
+    dropOffDeadline: 'Friday 3:00 PM',
+    estimatedFmvPerUnit: 30
   },
   {
     id: 'item_carnival_canopies',
@@ -571,7 +581,8 @@ export const SEED_ITEM_SLOTS: ItemSlot[] = [
     quantityPledged: 5, // GAPS: 7 needed
     unit: 'tents',
     dropOffLocation: 'Gym Loading Dock',
-    dropOffDeadline: 'Saturday 7:00 AM'
+    dropOffDeadline: 'Saturday 7:00 AM',
+    estimatedFmvPerUnit: 120
   }
 ];
 
@@ -1285,7 +1296,7 @@ export const SEED_APPROVAL_REQUESTS: ApprovalRequest[] = [
     subPartId: 'subpart_carnival_food',
     subPartName: 'Concessions & Bake Sale',
     requestedByUserId: 'user_sarah',
-    requestedByName: 'Sarah Jenkins (Food Lead)',
+    requestedByName: 'Sarah Jenkins (Committee Lead)',
     type: 'budget_increase',
     title: 'Additional $350 for Gluten-Free & Allergy-Safe Commercial Trays',
     description: 'We had high requests for celiac-safe treats. Requesting $350 budget increase to purchase certified sealed gluten-free baked goods.',
@@ -1299,7 +1310,7 @@ export const SEED_APPROVAL_REQUESTS: ApprovalRequest[] = [
     subPartId: 'subpart_carnival_labor',
     subPartName: 'Labor & Logistics Crew',
     requestedByUserId: 'user_mike',
-    requestedByName: 'Mike Alvarez (Labor Lead)',
+    requestedByName: 'Mike Alvarez (Committee Lead)',
     type: 'shift_addition',
     title: 'Add 6 Extra Teardown Volunteers for Heavy Bleacher Relocation',
     description: 'Custodial staff requested moving the folding bleachers. Need to add 6 volunteers to the Evening Teardown shift.',
@@ -1396,7 +1407,7 @@ export const SEED_VOLUNTEER_CRM: VolunteerCrmRecord[] = [
         itemsDonated: ['4 Trays of Gluten-Free Fudge Brownies (48ct)'],
         amountDonated: 150,
         eventOutcomeRaised: 11450,
-        verifiedBy: 'Sarah Jenkins (Food Lead)'
+        verifiedBy: 'Sarah Jenkins (Committee Lead)'
       },
       {
         eventId: 'evt_spring_gala_2026',
@@ -1417,7 +1428,7 @@ export const SEED_VOLUNTEER_CRM: VolunteerCrmRecord[] = [
         hoursContributed: 8.0,
         amountDonated: 200,
         eventOutcomeRaised: 12200,
-        verifiedBy: 'Sarah Jenkins (Food Lead)'
+        verifiedBy: 'Sarah Jenkins (Committee Lead)'
       }
     ]
   },
@@ -1446,7 +1457,7 @@ export const SEED_VOLUNTEER_CRM: VolunteerCrmRecord[] = [
         itemsDonated: ['2 Cases of Gourmet Hot Dogs (80ct)', 'Propane Tanks'],
         amountDonated: 200,
         eventOutcomeRaised: 11450,
-        verifiedBy: 'Sarah Jenkins (Food Lead)'
+        verifiedBy: 'Sarah Jenkins (Committee Lead)'
       },
       {
         eventId: 'evt_sports_tournament_2026',
