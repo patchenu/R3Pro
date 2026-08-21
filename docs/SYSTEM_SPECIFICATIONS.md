@@ -59,20 +59,25 @@ graph TD
   * **Vendor & Sponsor Marketplace**: Tiered packages with intake questionnaires (Certificate of Insurance upload, EIN, power needs, booth dimensions).
   * **On-Site Tablet Check-In Kiosk**: Express door check-in with phone lookup and emergency touch waiver signatures.
 
-### 2.4 Navigation Hierarchy & Application Hub Locations
-R3Pro structures its navigation based on role-based access control (RBAC):
+### 2.4 Modern 2-Tier Navigation Hierarchy & Command Center Architecture
+To eliminate cognitive overload and make the role mental model unmistakable, R3Pro utilizes a **2-Tier Header Architecture**:
 
-| Navigation Tab / Hub | URL Route | Permitted Roles | Description & Key Capabilities |
+1. **Top Bar (Persona & Environment Simulator)**:
+   * High-contrast gradient banner with **`DEMO SIMULATOR`** yellow badge, active persona chip (*Elena Rostova - Org Super Admin*), bold role pills, sample data reset, and 1-click **`Exit Demo (Live Mode)`**.
+2. **Tier 1 (Brand, Entity Context & User Profile)**:
+   * Organization selector, active event dropdown, share public link, `+ New Event`, and authenticated user card.
+3. **Tier 2 (Primary Workspace Tabs)**:
+   * Dedicated, uncompressed workspace navigation bar:
+
+| Navigation Tab / Workspace | URL Route | Permitted Roles | Description & Key Capabilities |
 | :--- | :--- | :--- | :--- |
-| **Community Events (Discovery Hub)** | `?tab=discovery_hub` | *All (Public / Authenticated)* | Interactive 7-column month calendar, event cards, progressive CTAs driving volunteer registration. |
-| **Event Sign-Up (Public Showcase)** | `?tab=public_landing` | *All (Public / Authenticated)* | Marketing showcase, 60s volunteer shift registration, item slot drop-offs, ticket checkout, digital waivers. |
-| **Planner Hub (Event Chair Hub)** | `?tab=planner_dashboard` | `org_admin`, `event_planner` | **Central Campaign Hub**: Fundraising thermometer, Committee breakdown, **Live Volunteer Manifest & Check-In**, Vendor Marketplace, Variable Approval Queue. |
-| **Marketing & Flyers Hub** | `?tab=marketing_hub` | `org_admin`, `event_planner` | 1-Click printable event flyers, social media image generator, volunteer email broadcast dispatcher. |
-| **Gap Analysis & Health** | `?tab=gap_analysis` | `org_admin`, `event_planner` | Shift shortage scanner, understaffed critical alerts, automated volunteer broadcast re-engagement. |
+| **Community Events Calendar** | `?tab=discovery_hub` | *All (Public / Authenticated)* | Interactive 7-column month calendar, event cards, progressive CTAs driving volunteer registration. |
+| **Event Showcase & Shifts** | `?tab=public_landing` | *All (Public / Authenticated)* | Marketing showcase, 60s volunteer shift registration, item slot drop-offs, ticket checkout, digital waivers. |
+| **📊 PLANNER HUB** | `?tab=planner_dashboard` | `org_admin`, `event_planner` | **Unified Campaign Command Center**: Contains sub-tabs for *Committees & Budgets*, *Volunteer Manifest & Check-In*, *Marketing & Flyers*, *Gap Analysis & Health*, *Vendor Marketplace*, and *Reports & Badges*. |
 | **Committee Leads Portal** | `?tab=lead_portal` | `org_admin`, `event_planner`, `committee_lead` | Department-scoped lead workspace: shift capacity management, wishlist item tracking, station check-in. |
-| **Org CRM & Team Management** | `?tab=org_admin_view` | `org_admin` | Multi-event volunteer CRM, lifetime service hour tracking, committee lead invitations, audit log. |
-| **Exports & IRS Receipts** | `?tab=reports_center` | *All Leadership* | 501(c)(3) statutory donation letters, printable lanyard badge sheets, student service hour certificates, CSV ledgers. |
-| **On-Site Tablet Kiosk** | `?tab=kiosk_mode` | `kiosk`, `org_admin`, `event_planner` | Fullscreen door check-in station with camera QR scanning, phone lookup, and on-site touch waiver signing. |
+| **Org Super Admin CRM** | `?tab=org_admin_view` | `org_admin` | Multi-event volunteer CRM, lifetime service hour tracking, committee lead invitations, audit log. |
+| **Door Kiosk Station** | `?tab=kiosk_mode` | `kiosk`, `org_admin`, `event_planner` | Fullscreen door check-in station with camera QR scanning, phone lookup, and on-site touch waiver signing. |
+
 
 
 ## 3. Account Lifecycle, Auth Gates & Multi-Role Architecture
