@@ -428,20 +428,43 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
             </div>
           </div>
 
-          {/* Department Cards Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {subParts.map((sp) => {
-              const deptShifts = shifts.filter(s => s.subPartId === sp.id);
-              const deptItems = itemSlots.filter(i => i.subPartId === sp.id);
-              const deptCap = deptShifts.reduce((acc, s) => acc + s.capacity, 0);
-              const deptClaimed = deptShifts.reduce((acc, s) => acc + s.claimedCount, 0);
-              const deptFill = formatPercentage(deptClaimed, deptCap);
+          {/* Department Cards Grid or Empty State */}
+          {subParts.length === 0 ? (
+            <div className="bg-white rounded-3xl border-2 border-dashed border-slate-300 p-8 sm:p-12 text-center space-y-6 shadow-xs">
+              <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+                <Layers className="w-8 h-8" />
+              </div>
+              <div className="max-w-md mx-auto space-y-2">
+                <h4 className="text-xl font-black text-slate-900">No Committee Departments Setup Yet</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  You are starting with a blank slate for this event! Create custom committee operational areas, assign designated Department Leads with allocated budgets, and publish volunteer shifts.
+                </p>
+              </div>
 
-              return (
-                <div
-                  key={sp.id}
-                  className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4 hover:shadow-md transition relative flex flex-col justify-between"
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <button
+                  onClick={handleOpenAddDept}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold py-3 px-6 rounded-2xl text-xs shadow-md transition flex items-center gap-2"
                 >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Create First Committee Department</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {subParts.map((sp) => {
+                const deptShifts = shifts.filter(s => s.subPartId === sp.id);
+                const deptItems = itemSlots.filter(i => i.subPartId === sp.id);
+                const deptCap = deptShifts.reduce((acc, s) => acc + s.capacity, 0);
+                const deptClaimed = deptShifts.reduce((acc, s) => acc + s.claimedCount, 0);
+                const deptFill = formatPercentage(deptClaimed, deptCap);
+
+                return (
+                  <div
+                    key={sp.id}
+                    className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4 hover:shadow-md transition relative flex flex-col justify-between"
+                  >
                   <div className="space-y-4">
                     {/* Header */}
                     <div className="flex justify-between items-start">
@@ -580,8 +603,8 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
               );
             })}
           </div>
-
-        </div>
+        )}
+      </div>
       )}
 
       {/* TAB 2: LIVE VOLUNTEER MANIFEST & MANAGEMENT */}

@@ -151,4 +151,20 @@ This document provides system knowledge, core architectural rules, and coding st
      - **Option A (Self-Serve on Phone / Skip The Line)**: Large high-contrast QR code allowing volunteers to self-register on their smartphone in 30 seconds without waiting in line.
      - **Option B (Express Touchscreen Sign-Up)**: 1-minute on-tablet registration allowing walk-up volunteers to choose an open urgent shift, sign the digital safety waiver on screen, and immediately check in.
 
+---
+
+## 16. Event Creation Strategies, Blank Slate Management & Discovery Tags
+- **3 Setup Modes in `EventBuilderWizard.tsx`**:
+  1. **`🏛️ Industry Blueprints`**: Pre-loads best-practice operational departments, volunteer shifts, capacities, and item wishlists in 1 click.
+  2. **`📋 Clone from Past Event`**: Replicates previous year campaigns for annual recurrences, preserving proven committees, budgets, and volunteer roles.
+  3. **`⚡ Blank Canvas (Start from Scratch)`**: Initializes a clean event without preloaded dependencies.
+- **Blank Slate Operations in Planner Hub (`MasterPlannerDashboard.tsx`)**:
+  - If an event is created with 0 preloaded shifts/departments, the Planner uses 1-click modals:
+    - `+ Add Committee Department`: Defines name, allocated budget, designated Lead (name, phone, email, radio), and reporting gate directions.
+    - `+ Add Shift Need`: Defines volunteer slot requirements, hours, capacities, and waiver rules.
+    - `+ Add Supply Need`: Publishes in-kind item wishlist drop-offs with target counts and deadlines.
+- **Public Search & Discovery Tags (`event.tags: string[]`)**:
+  - Supports curated preset tags (`Family Friendly`, `STEM & Tech`, `Food & Bake Sale`, `Carnival & Games`, `Athletics & Sports`, `Charity Gala`, `Silent Auction`, `Student Service Hours`) and dynamic custom tags.
+  - Interactive Tag pills in `CommunityDiscoveryHub.tsx` enable instantaneous filtering and keyword search matching for public attendees.
+
 

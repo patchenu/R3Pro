@@ -4,7 +4,7 @@ import { Event, Organization } from '../../types';
 import { 
   Search, Calendar as CalendarIcon, MapPin, Users, DollarSign, 
   Sparkles, Filter, CheckCircle2, ArrowRight, ShieldCheck, HeartHandshake, 
-  Building2, Plus, Trophy, Award, TrendingUp, Grid, List, Clock 
+  Building2, Plus, Trophy, Award, TrendingUp, Grid, List, Clock, Tag, X
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatTimeRange, formatPercentage } from '../../utils/formatters';
 import { CommunityCalendarView } from './CommunityCalendarView';
@@ -26,6 +26,7 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrgType, setSelectedOrgType] = useState<string>('all');
+  const [selectedTag, setSelectedTag] = useState<string>('all');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<'all' | 'needs_volunteers' | 'fundraising' | 'family'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'calendar'>('grid');
   const [selectedMonth, setSelectedMonth] = useState<string>('September 2026');
@@ -45,10 +46,12 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
     const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           e.venueName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           org?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          e.description.toLowerCase().includes(searchQuery.toLowerCase());
+                          e.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          e.tags?.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesOrgType = selectedOrgType === 'all' || org?.type === selectedOrgType;
+    const matchesTag = selectedTag === 'all' || (e.tags && e.tags.includes(selectedTag));
 
-    if (!matchesSearch || !matchesOrgType) return false;
+    if (!matchesSearch || !matchesOrgType || !matchesTag) return false;
 
     if (selectedCategoryFilter === 'needs_volunteers') {
       const eventShifts = shifts.filter(s => s.eventId === e.id);
@@ -289,37 +292,78 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
           </div>
 
           {/* Quick Filter Chips */}
-          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
-            <span className="text-xs text-slate-400 font-semibold flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5" /> Filter By:
-            </span>
+          <div className="space-y-2 pt-1 border-t border-slate-100">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-slate-400 font-semibold flex items-center gap-1">
+                <Filter className="w-3.5 h-3.5" /> Type:
+              </span>
 
-            <button
-              onClick={() => setSelectedCategoryFilter('all')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                selectedCategoryFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              All Events ({upcomingEvents.length})
-            </button>
+              <button
+                onClick={() => setSelectedCategoryFilter('all')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                  selectedCategoryFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                All Events ({upcomingEvents.length})
+              </button>
 
-            <button
-              onClick={() => setSelectedCategoryFilter('needs_volunteers')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                selectedCategoryFilter === 'needs_volunteers' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              🙋‍♂️ Volunteers Needed
-            </button>
+              <button
+                onClick={() => setSelectedCategoryFilter('needs_volunteers')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                  selectedCategoryFilter === 'needs_volunteers' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                🙋‍♂️ Volunteers Needed
+              </button>
 
-            <button
-              onClick={() => setSelectedCategoryFilter('fundraising')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                selectedCategoryFilter === 'fundraising' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              🎯 Campaign Goals
-            </button>
+              <button
+                onClick={() => setSelectedCategoryFilter('fundraising')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                  selectedCategoryFilter === 'fundraising' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                🎯 Campaign Goals
+              </button>
+            </div>
+
+            {/* Tag Filter Row */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-xs text-purple-600 font-bold flex items-center gap-1">
+                <Tag className="w-3 h-3" /> Tags:
+              </span>
+
+              <button
+                onClick={() => setSelectedTag('all')}
+                className={`px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition ${
+                  selectedTag === 'all' ? 'bg-purple-600 text-white shadow-2xs' : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                }`}
+              >
+                All Tags
+              </button>
+
+              {['Family Friendly', 'STEM & Tech', 'Bake Sale', 'Carnival & Games', 'Charity Gala', 'Silent Auction', 'Student Service Hours'].map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTag(selectedTag === tag ? 'all' : tag)}
+                  className={`px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition ${
+                    selectedTag === tag
+                      ? 'bg-purple-600 text-white shadow-2xs ring-2 ring-purple-300'
+                      : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                  }`}
+                >
+                  #{tag}
+                </button>
+              ))}
+
+              {selectedTag !== 'all' && (
+                <button
+                  onClick={() => setSelectedTag('all')}
+                  className="text-[11px] text-slate-400 hover:text-slate-700 ml-1 flex items-center gap-0.5 font-bold"
+                >
+                  <X className="w-3 h-3" /> Clear Tag
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -378,6 +422,29 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
                       <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
                         {event.description}
                       </p>
+
+                      {/* Event Tags Badges */}
+                      {event.tags && event.tags.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                          {event.tags.map(t => (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedTag(selectedTag === t ? 'all' : t);
+                              }}
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition ${
+                                selectedTag === t
+                                  ? 'bg-purple-600 text-white'
+                                  : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                              }`}
+                            >
+                              #{t}
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
                       <div className="space-y-1 text-xs text-slate-600 pt-1">
                         <div className="flex items-center gap-1.5">

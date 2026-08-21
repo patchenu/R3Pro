@@ -382,6 +382,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       slug,
       tagline: newEventData.tagline || 'Community Event & Fundraiser',
       description: newEventData.description || 'Welcome to our event.',
+      tags: newEventData.tags || ['Community Event', 'Family Friendly'],
       startDate: newEventData.startDate || new Date(Date.now() + 86400000 * 14).toISOString(),
       endDate: newEventData.endDate || new Date(Date.now() + 86400000 * 14 + 18000000).toISOString(),
       venueName: newEventData.venueName || 'Main Community Center',

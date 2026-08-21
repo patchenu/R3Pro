@@ -67,6 +67,7 @@ export interface Event {
   slug: string;
   tagline: string;
   description: string;
+  tags?: string[]; // e.g. ["Family Friendly", "STEM", "Bake Sale"]
   startDate: string; // ISO String
   endDate: string;   // ISO String
   venueName: string;

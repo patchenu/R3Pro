@@ -90,15 +90,25 @@ To eliminate fragmentation and provide executive oversight across all historical
 ### 2.3 Persona 3: Event Chairs & Committee Leads
 * **Mental Model**: Flawless on-the-ground event execution, department delegation, shift capacity fulfillment, variable approval governance, and on-site door operations.
 * **Core Workflows**:
-  * **Turnkey Setup Templates**: Pre-loads committees, shifts, wishlists, and ticket tiers in 1 click (*Fall Festival, Charity Gala, 5K Fun Run, Sports Tournament*).
-  * **Variable Threshold Rules Engine**: Lead modifications within threshold (e.g. $< \$250$ budget or $< 5$ shift spots) auto-approve; larger changes queue for 1-click Event Chair review.
-  * **Supply & Wishlist Fulfillment**: Item slot pledge tracking with designated drop-off locations and deadlines.
-  * **Vendor & Sponsor Marketplace**: Tiered packages with intake questionnaires (Certificate of Insurance upload, EIN, power needs, booth dimensions).
-  * **On-Site Tablet Check-In & Day-Of Registration Kiosk**: Express door station featuring dual-mode operations:
-    - **`🔍 Mode 1: Check-In (I Already Signed Up Online)`**: Phone/name keypad lookup, 1-tap check-in, on-site emergency touch waiver signing, and reporting gate directions.
-    - **`🙋 Mode 2: Day-Of Walk-Up Volunteer Sign-Up ("I Want to Volunteer Day-Of")`**:
-      - **Option A (Scan on Phone / Skip The Line)**: Large high-contrast QR code allowing volunteers to self-register on their smartphone in 30 seconds without waiting in line.
-      - **Option B (Express Touchscreen Sign-Up)**: 1-minute on-tablet registration allowing walk-up volunteers to choose an open urgent shift, sign the digital safety waiver on screen, and immediately check in.
+#### 2.3.1 Campaign Creation Sources, Blank Slate Architecture & Public Search Tags
+When creating or launching a new event/campaign in the **Event Builder Wizard**, organizers have 3 distinct setup strategies:
+1. **Source Strategy 1: Curated Industry Blueprints (`EVENT_TEMPLATES`)**:
+   - Turnkey best-practice templates (*Fall Festival & Carnival, School STEM Fair & Robotics, Charity Gala & Silent Auction, 5K Fun Run & Walkathon, Youth Sports Tournament*).
+   - Preloads proven department committees, shift time slots, volunteer capacity requirements, and item wishlist needs in 1 click.
+2. **Source Strategy 2: Clone from Historical Past Events ("Duplicate / Recur Campaign")**:
+   - Allows replicating any prior event hosted by the organization (e.g. *Fall Carnival 2025* $\rightarrow$ *Fall Carnival 2026*).
+   - Copies all committee departments, lead roles, shift capacities, item slots, and budgets from the previous year while creating new dates and target goals.
+3. **Source Strategy 3: Blank Canvas (Start from Scratch)**:
+   - For novel or custom initiatives with no preloaded shifts or committees.
+   - **What Planners Do on Blank Slate**:
+     - Inside the **📊 Planner Hub**, planners utilize 1-click creation modals:
+       - **`+ Add Committee Department`**: Creates custom operational departments (*e.g. Ticket Desk, Audio/Visual, VIP Hospitality*), assigns a dedicated Department Lead with contact info, sets an allocated budget, and configures reporting gate instructions.
+       - **`+ Add Shift Need`**: Publishes volunteer roles with time windows, capacity limits, and legal waiver requirements.
+       - **`+ Add Supply Need`**: Publishes in-kind item wishlist drop-offs with target quantities and deadlines.
+
+* **Public Event Tags & Category Search Taxonomy (`tags: string[]`)**:
+  - Planners tag campaigns with curated and custom badges (*Family Friendly, STEM & Tech, Food & Bake Sale, Carnival & Games, Athletics & Sports, Arts & Music, Charity Gala, Silent Auction, Student Service Hours, Outdoors, Free Admission*).
+  - Attendees and prospective volunteers filter the **Community Discovery Hub** by interactive tag chips, clicking `#Tag` badges on event cards, or typing keywords into global search.
 
 ### 2.4 Modern 2-Tier Navigation Hierarchy & Command Center Architecture
 To eliminate cognitive overload and make the role mental model unmistakable, R3Pro utilizes a **2-Tier Header Architecture**:
