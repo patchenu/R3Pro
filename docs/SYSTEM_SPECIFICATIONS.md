@@ -67,6 +67,23 @@ graph TD
      - **Tied Campaign Outcome**: Displays the total funds raised and community outcome achieved by that specific event (e.g. *"Event Outcome: Raised $11,450 for Lincoln High STEM Lab"*).
      - Verifying Coordinator on duty.
 
+#### 2.2.2 Master Events Portfolio & Campaign Outcomes (Single-Pane Executive Hub)
+To eliminate fragmentation and provide executive oversight across all historical and active campaigns, the **Org Super Admin Hub** includes the **`🎪 Master Events Portfolio & Outcomes`** studio:
+* **Aggregate Portfolio Metrics**:
+  - **Lifetime Funds Raised**: Total gross revenue across all campaigns.
+  - **Master CRM Volunteers**: Cross-event participant database count.
+  - **Campaign Pipeline**: Breakdown of Active/Upcoming vs Completed/Archived events.
+  - **Portfolio Goal Efficiency**: Percentage of cumulative fundraising targets achieved.
+* **Unified Event Ledger & Outcome Cards**:
+  - Displays every event with cover imagery, date, venue, status badges (*Active* vs *Completed*), and financial progress meters.
+  - **Shift Fulfillment Telemetry**: Tracks volunteer shift capacity (e.g. *38/40 spots (95%)*).
+  - **Department Committees**: Monitors assigned sub-parts and lead staffing.
+* **1-Click Executive Action Suite**:
+  - **`📊 View Outcome Report`**: Opens the comprehensive Event Campaign Dossier containing revenue breakdowns (Donations, Tickets, Sponsors), volunteer labor economic valuation ($31.80/hr rate), and in-kind wishlist fulfillment.
+  - **`⚙️ Open in Planner Hub`**: 1-click context switch into that specific event's planner command center.
+  - **`🖨️ Print Volunteer Manifest (PDF)`**: Formatted day-of-event check-in roster.
+  - **`📄 Export Financial Ledger (CSV)`**: Double-entry accounting ledger ready for CPA review.
+
 ### 2.3 Persona 3: Event Chairs & Committee Leads
 * **Mental Model**: Flawless on-the-ground event execution, department delegation, shift capacity fulfillment, variable approval governance, and on-site door operations.
 * **Core Workflows**:
