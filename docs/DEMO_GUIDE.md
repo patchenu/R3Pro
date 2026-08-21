@@ -9,11 +9,23 @@ GatherRaise includes a top **Role Switcher Bar** in testing mode, allowing you t
 ### 👑 Persona 1: Elena Rostova (Org Super Admin)
 * **Organization**: Lincoln High School PTA
 * **What to Test**:
-  1. Open the **Org Super Admin CRM**: View the 450+ Volunteer CRM, lifetime hours served, and cross-event financials.
-  2. Open **🎨 Branding, Logos & Signatory**: Upload custom organization logos, choose brand color themes, and configure executive signatory vector signatures for IRS donation letters.
-  3. Open **⚖️ Legal Waivers & E-Sign Studio**: Manage custom waiver templates, test the interactive live e-signature canvas, and inspect the immutable Executed E-Signatures Audit Ledger.
-  4. Inspect the **Team Management** tab: View assigned Event Planners and Committee Leads.
-  5. Inspect **Organization Setup Templates**: See pre-configured defaults for School/PTA, Charities, and Sports Leagues.
+  1. **🎪 Master Events Portfolio & Outcomes**:
+     - View all organization campaigns (Active/Upcoming vs Completed/Archived).
+     - Inspect aggregate metrics: Lifetime Funds Raised, Master CRM profiles, and average goal efficiency %.
+     - Click **`📊 View Outcome Report`** on any event to inspect revenue stream breakdowns (Donations, Tickets, Sponsors), volunteer labor economic valuation ($31.80/hr rate), in-kind physical equipment FMV offsets, and 1-click PDF roster / CSV ledger exports.
+  2. **🙋 Volunteer & Donor CRM Directory**:
+     - Click on any volunteer card (e.g. *David Chen*, *Jessica Taylor*) to open their rich **Volunteer Profile & Impact Analysis Modal**.
+     - View their **Importance Tier** (`👑 Tier 1: Organization Pillar`), **Estimated Lifetime Economic Value ($)**, and **3-Layer Tagging Studio**.
+     - Remove any active tag with 1-click `✕`, pick from the Recommended Tag Library, or create an ad-hoc custom tag (`+ Add`).
+     - Edit coordinator internal notes and inspect the chronological **Historical Events Supported & Tied Campaign Outcomes Ledger**.
+  3. **👥 Leadership & Committee Leads Delegation**:
+     - Click **`+ Invite Leader / Committee Lead`** to grant roles (`org_admin`, `event_planner`, `committee_lead`) and scope leads to specific operational departments (*Hospitality & Food*, *Labor & Setup*, *Vendor Marketplace*, etc.).
+  4. **🎨 Branding, Logos & Signatory**:
+     - Upload custom organization logos, choose brand color themes, and configure executive signatory vector signatures for IRS donation letters.
+  5. **⚖️ Legal Waivers & E-Sign Studio**:
+     - Manage custom waiver templates, test the interactive live e-signature canvas, and inspect the immutable Executed E-Signatures Audit Ledger.
+  6. **🏛️ Organization Setup Templates**:
+     - Inspect turnkey industry blueprints (*School/PTA, Non-Profit Foundation, Youth Sports, Faith Community, Corporate Giving*).
 
 ### 📋 Persona 2: Marcus Vance (Event Planner / Chair)
 * **Event**: Annual Fall Carnival & Bake Sale ($15,000 Goal)
@@ -54,11 +66,16 @@ GatherRaise includes a top **Role Switcher Bar** in testing mode, allowing you t
   3. Sign the digital **Minor Parental Consent Waiver** using the touch signature pad.
   4. Receive instant booking confirmation with exact reporting gate, Lead phone number, what to bring, and `.ics` calendar download.
 
-### 📱 Persona 7: Day-of-Event Check-In Kiosk
+### 📱 Persona 7: Door & Gate Kiosk Station (Dual-Mode Operations)
 * **What to Test**:
   1. Switch to **Door Kiosk Station**: Fullscreen, touch-optimized kiosk.
-  2. Search for "David Chen" or "Emma" by name or phone number.
-  3. Verify signed waiver status and tap **"Check In"** with 1 touch.
+  2. **Mode 1 (`🔍 I Already Signed Up Online`)**:
+     - Search for *"David Chen"* or *"Emma"* by name or phone number.
+     - Tap **`CHECK IN NOW`** $\rightarrow$ confetti and reporting gate confirmation appear.
+     - Test on-site touch waiver signing if a participant arrives with an unsigned waiver.
+  3. **Mode 2 (`🙋 I Want to Volunteer Day-Of`)**:
+     - **Option A (Smartphone QR Code)**: Test scanning or copying the registration QR link for frictionless phone registration.
+     - **Option B (Express Touchscreen Registration)**: Enter walk-up name and phone number, pick an open shift spot (*e.g. Concessions Assistant*), draw signature on screen, and tap **Complete Walk-Up Sign-Up** for instant check-in.
 
 ### 🔄 Live Testing Mode (Exit Demo)
 * Click **"Exit Demo (Live Mode)"** in the top simulator bar to log out and experience the real unauthenticated landing page, register a new user account, and create a brand-new organization.

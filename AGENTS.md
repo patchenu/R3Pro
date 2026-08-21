@@ -118,4 +118,35 @@ This document provides system knowledge, core architectural rules, and coding st
 - **New Organization Creation**: Selecting a template pre-populates default committee departments, standard waiver requirements, suggested campaign goals, and sample recurring events.
 - **Existing Organizations**: Org Admins can review and apply industry presets to instantly batch-provision missing standard operational departments.
 
+---
+
+## 13. Master Events Portfolio & Campaign Outcomes Architecture
+- **Single-Pane Executive Hub (`OrgExecutiveDashboard.tsx`)**:
+  - Org Owners and Super Admins inspect all campaigns (Active/Upcoming vs Completed/Archived) in one centralized view.
+  - Aggregates **Lifetime Funds Raised**, **Master CRM Profiles**, **Active vs Completed Pipeline**, and **Portfolio Goal Efficiency %**.
+  - **Unified Event Dossiers**: Tracks real-time gross revenue, volunteer shift capacity fulfillment %, department committees, and wishlist pledges.
+  - **1-Click Outcome & Performance Report**: Displays revenue breakdown (Direct Giving, Tickets, Sponsors), volunteer labor economic valuation ($31.80/hr independent sector rate), and in-kind FMV offsets with 1-click PDF/CSV export buttons.
+
+---
+
+## 14. Volunteer & Donor CRM Tagging Intelligence & Impact Tie-Back
+- **3-Layer Tagging Taxonomy**:
+  1. **Automated Behavioral System Tags**: `Reliable Helper` (≥95% attendance rate), `VIP Donor` (≥$250 giving), `Parent Volunteer` (minors linked), `Alumni`.
+  2. **Standard Curated Role Library**: `Board Member`, `Past Event Chair`, `Certified First Aid/CPR`, `Food Safety/ServSafe`, `Truck Owner`, `Heavy Lifting Crew`, `High School NHS Student`, `Master Baker`.
+  3. **Ad-Hoc Custom Tags**: Coordinators can create and assign custom tags on the fly.
+- **Historical Event Outcome Tie-Back (`VolunteerEventHistory[]`)**:
+  - Chronological impact ledger documenting every shift served, hours logged, in-kind items delivered, and direct donations.
+  - Direct tie-back to the **total event financial outcome raised** (*e.g., "Event Outcome: Raised $11,450 for Lincoln High STEM Lab"*).
+- **Importance Tier Ranking**: `👑 Tier 1: Organization Pillar`, `🌟 Tier 2: Core Supporter`, `🤝 Tier 3: Contributor`, `🌱 Newcomer`.
+- **Coordinator Internal Notes & Memory**: Real-time editable engagement context.
+
+---
+
+## 15. Door & Gate Kiosk Station Dual-Mode Operations
+- **Dual-Mode Mental Model at the Entrance**:
+  1. **Mode 1: `🔍 Check-In (I Already Signed Up Online)`**: Phone/name keypad lookup, 1-tap check-in, on-site emergency touch waiver signing fallback, and reporting gate directions with confetti.
+  2. **Mode 2: `🙋 Day-Of Walk-Up Volunteer Sign-Up ("I Want to Volunteer Day-Of")`**:
+     - **Option A (Self-Serve on Phone / Skip The Line)**: Large high-contrast QR code allowing volunteers to self-register on their smartphone in 30 seconds without waiting in line.
+     - **Option B (Express Touchscreen Sign-Up)**: 1-minute on-tablet registration allowing walk-up volunteers to choose an open urgent shift, sign the digital safety waiver on screen, and immediately check in.
+
 
