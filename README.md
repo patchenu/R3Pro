@@ -62,6 +62,13 @@ R3Pro is an enterprise-grade web application combining the volunteer coordinatio
 11. **Interactive Persona Simulator & Live Environment Switcher**:
     - Switch between **Demo Mode** (sample data & instant persona switching across Elena, Marcus, Sarah, Artisan Bakery, David) and **Live Non-Demo Mode** (unauthenticated public registration, org creation gates, and real testing).
 
+12. **7-Step Guided Interactive Event Builder Wizard**:
+    - Multi-stage setup covering *1. Source Strategy & Blueprints*, *2. Campaign Essentials & Schedule*, *3. Committee Departments & Leadership Leads*, *4. Volunteer Shifts*, *5. Supply Wishlists*, *6. Sponsorship Packages & Commercial Tiers*, and *7. Discovery Tags, Rules & 1-Click Launch*.
+
+13. **Multi-Tenant Email & SMS Dispatch Studio**:
+    - Transactional email API integration (**Resend API / Postmark / AWS SES**), custom domain DKIM/SPF DNS verification, and live test dispatch sandbox.
+    - Formalized SMS 10DLC gateway roadmap backlog (Twilio / Telnyx, automated T-72h/24h/2h reminders, and SMS OTP logins).
+
 ---
 
 ## 🛠️ Local Development & Running

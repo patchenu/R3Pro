@@ -218,10 +218,32 @@ Technology Matrix:
 ├── Frontend: React 18 + TypeScript + Vite + Tailwind CSS + Lucide Icons
 ├── UI Primitives: Radix UI Headless Components + Tailwind Variants
 ├── Visual Polish: Canvas Confetti + Theme Color Variables + Framer-inspired Micro-interactions
-├── Signatures: Vector-based HTML5 Canvas Signature Pad
+├── Signatures: Vector-based HTML5 Canvas Signature Pad (DPR-normalized 1:1 precision)
 ├── QR Engine: qrcode.react (Generation) + html5-qrcode (Live Camera Scanner)
 ├── Export Engine: jsPDF + html2canvas + CSV Parser
 ├── State & Dual Persistence: LocalStorage / IndexedDB Engine + REST API / WebSocket Live Sync
-├── Security: Tenant Isolation (tenant_id), Bcrypt/Argon2id, JWT, RBAC Middleware, Zod Validation
+├── Email & Dispatch: Resend API (React Email), Postmark, AWS SES, Custom Domain DKIM/SPF CNAMEs
+├── SMS Roadmap: Twilio / Telnyx A2P 10DLC Non-Profit ISV Campaign Registration & T-72h/24h/2h alerts
+├── Security: Tenant Isolation (org_id), Bcrypt/Argon2id, JWT, RBAC Middleware, Zod Validation
 └── CI/CD: GitHub Actions (.github/workflows/ci-cd.yml) -> Vercel/Netlify + Render/Railway
 ```
+
+---
+
+## 5. Recent Platform Extensions & Functional Modules
+
+### 5.1 7-Step Interactive Guided Event Builder Wizard (`EventBuilderWizard.tsx`)
+1. **Step 1: Source Strategy & Blueprints**: Toggle Industry Blueprints, Clone Past Event, or Blank Canvas.
+2. **Step 2: Campaign Essentials & Schedule**: Title, Tagline, Target Goal ($), Start/End Datetime, Venue & Address, Cover Image.
+3. **Step 3: Committee Departments & Leadership Assignments**: Dynamic department creation, designated Lead assignments from staff with phone/email, allocated department budgets, radio channels, and reporting gates.
+4. **Step 4: Volunteer Shift Needs & Staffing Capacities**: Roles, shift hours, capacity spots, and liability waiver requirements.
+5. **Step 5: Supply & Equipment Wishlist Drop-Offs**: Physical items, quantities, units, drop-off stations, deadlines, and IRS Fair Market Value (FMV) offsets.
+6. **Step 6: Sponsorship Packages & Commercial Tiers**: Corporate underwriting packages, vendor booths (with footprint dimensions & electricity), admission tickets, and custom perk inclusions.
+7. **Step 7: Discovery Tags, Variable Approval Rules & Review**: Curated/custom tags, auto-approval thresholds, dossier review, and 1-click launch.
+
+### 5.2 Email & SMS Dispatch Studio (`OrgExecutiveDashboard.tsx`)
+* **Email API Engine**: Configure Resend API keys, Postmark, AWS SES, or Managed Cloud pool.
+* **Custom Domain DKIM/SPF Verification**: Automated CNAME DNS inspection (`resend._domainkey.domain.com` -> `dkim.resend.com`).
+* **Live Test Dispatch Sandbox**: Real-time test email dispatcher verifying $<2\text{s}$ SLA latency.
+* **SMS Gateway Roadmap Backlog**: Formalized A2P 10DLC ISV campaign registration, automated 72h/24h/2h mobile boarding pass SMS, emergency gate alerts, and 6-digit SMS OTP logins.
+

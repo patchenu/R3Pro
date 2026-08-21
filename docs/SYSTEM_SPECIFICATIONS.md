@@ -90,25 +90,42 @@ To eliminate fragmentation and provide executive oversight across all historical
 ### 2.3 Persona 3: Event Chairs & Committee Leads
 * **Mental Model**: Flawless on-the-ground event execution, department delegation, shift capacity fulfillment, variable approval governance, and on-site door operations.
 * **Core Workflows**:
-#### 2.3.1 Campaign Creation Sources, Blank Slate Architecture & Public Search Tags
-When creating or launching a new event/campaign in the **Event Builder Wizard**, organizers have 3 distinct setup strategies:
-1. **Source Strategy 1: Curated Industry Blueprints (`EVENT_TEMPLATES`)**:
-   - Turnkey best-practice templates (*Fall Festival & Carnival, School STEM Fair & Robotics, Charity Gala & Silent Auction, 5K Fun Run & Walkathon, Youth Sports Tournament*).
-   - Preloads proven department committees, shift time slots, volunteer capacity requirements, and item wishlist needs in 1 click.
-2. **Source Strategy 2: Clone from Historical Past Events ("Duplicate / Recur Campaign")**:
-   - Allows replicating any prior event hosted by the organization (e.g. *Fall Carnival 2025* $\rightarrow$ *Fall Carnival 2026*).
-   - Copies all committee departments, lead roles, shift capacities, item slots, and budgets from the previous year while creating new dates and target goals.
-3. **Source Strategy 3: Blank Canvas (Start from Scratch)**:
-   - For novel or custom initiatives with no preloaded shifts or committees.
-   - **What Planners Do on Blank Slate**:
-     - Inside the **📊 Planner Hub**, planners utilize 1-click creation modals:
-       - **`+ Add Committee Department`**: Creates custom operational departments (*e.g. Ticket Desk, Audio/Visual, VIP Hospitality*), assigns a dedicated Department Lead with contact info, sets an allocated budget, and configures reporting gate instructions.
-       - **`+ Add Shift Need`**: Publishes volunteer roles with time windows, capacity limits, and legal waiver requirements.
-       - **`+ Add Supply Need`**: Publishes in-kind item wishlist drop-offs with target quantities and deadlines.
+#### 2.3.1 7-Step Interactive Guided Event Builder Wizard Architecture
+When creating or launching a new event/campaign in the **Event Builder Wizard** (`EventBuilderWizard.tsx`), organizers are guided step-by-step through a 7-stage interactive operational setup:
 
-* **Public Event Tags & Category Search Taxonomy (`tags: string[]`)**:
-  - Planners tag campaigns with curated and custom badges (*Family Friendly, STEM & Tech, Food & Bake Sale, Carnival & Games, Athletics & Sports, Arts & Music, Charity Gala, Silent Auction, Student Service Hours, Outdoors, Free Admission*).
-  - Attendees and prospective volunteers filter the **Community Discovery Hub** by interactive tag chips, clicking `#Tag` badges on event cards, or typing keywords into global search.
+```mermaid
+flowchart LR
+    S1["1. Source Strategy<br/>(Blueprint / Clone / Blank)"] --> S2["2. Campaign Essentials<br/>(Title, Dates, Venue, Goal)"]
+    S2 --> S3["3. Committee Depts<br/>(Leads, Radio, Gates, Budget)"]
+    S3 --> S4["4. Volunteer Shifts<br/>(Roles, Times, Capacities, Waivers)"]
+    S4 --> S5["5. Wishlist Needs<br/>(Supplies, Drop-offs, FMV)"]
+    S5 --> S6["6. Sponsor Packages<br/>(Tiers, Booths, Pricing, Perks)"]
+    S6 --> S7["7. Tags & Rules<br/>(Discovery, Thresholds, Launch)"]
+```
+
+1. **Step 1: `🏛️ Source Strategy & Blueprints`**:
+   - **`🏛️ Industry Blueprints`**: Pre-loads proven turnkey departments, volunteer roles, wishlist needs, and sponsorship tiers (*Fall Carnival, School STEM Night, Charity Gala, 5K Fun Run, Youth Sports Tournament*).
+   - **`📋 Clone from Past Event`**: Replicates previous year campaigns for annual recurrences, preserving proven committees, budgets, and volunteer roles.
+   - **`⚡ Blank Canvas (Start from Scratch)`**: Initializes a clean event where the planner configures custom committees and shifts from scratch.
+2. **Step 2: `📅 Campaign Essentials & Schedule`**:
+   - Event Title, Tagline / Mission Subtitle, Target Fundraising Goal ($\$$), Start Date/Time, End Date/Time, Venue Facility Name, Street Address, and Cover Image URL.
+3. **Step 3: `👥 Committee Departments & Leadership Assignments`**:
+   - Real-time creation, editing, and deletion of operational departments (e.g. *Registration & Gate*, *VIP Hospitality & Food*, *Logistics & Sound Rig*, *Silent Auction & Raffle*).
+   - Assigns designated **Lead** from organization staff (`users`), auto-populating contact info (phone, email).
+   - Sets allocated **Department Budget ($\$$)**, **Reporting Gate Location**, and **Radio Channel**.
+4. **Step 4: `🙋 Volunteer Shift Needs & Staffing Capacities`**:
+   - Defines volunteer shift roles per committee with volunteer capacities (spots needed), timeframes, and **Liability Waiver requirements**.
+5. **Step 5: `🎁 Supply & Equipment Wishlist Drop-Offs`**:
+   - Specifies physical supplies, food/beverage items, drop-off stations, deadlines, and **IRS Fair Market Value (FMV) deduction offsets**.
+6. **Step 6: `💎 Sponsorship Packages & Commercial Tiers`**:
+   - Builds corporate underwriting tiers, artisan vendor booths (with footprint dimensions & 110V/220V power options), admission tickets, pricing, FMV deduction offsets, and perk checklists.
+7. **Step 7: `🏷️ Discovery Tags, Variable Approval Rules & Review`**:
+   - Configures public search & filter tags (`Family Friendly`, `STEM & Tech`, `Food & Bake Sale`, `Carnival & Games`, `Athletics & Sports`, `Charity Gala`, `Silent Auction`, `Student Service Hours`) and dynamic custom tags.
+   - Sets **Variable Approval Thresholds** (budget auto-approval limit $\$$ and shift spot addition limit).
+   - Displays Master Dossier Summary and executes **🚀 1-Click Launch & Publish Campaign**.
+
+* **Blank Slate Operations in Planner Hub (`MasterPlannerDashboard.tsx`)**:
+  - If starting from a blank canvas or modifying an active campaign, Planners and Leads can dynamically provision departments, shifts, wishlist items, and sponsor tiers with 1-click modals.
 
 ### 2.4 Modern 2-Tier Navigation Hierarchy & Command Center Architecture
 To eliminate cognitive overload and make the role mental model unmistakable, R3Pro utilizes a **2-Tier Header Architecture**:
@@ -464,6 +481,21 @@ Organizations and Event Chairs maintain a centralized **Legal Compliance & E-Sig
    * Automated Organization identifier prefixing: All SMS dispatches are strictly prepended with the tenant identifier:
      `[Lincoln High PTA] Your shift starts at 8:00 AM at Gate 2. Pass: https://gatherraise.com/p/x94827 Reply STOP to opt out.`
    * Inbound carrier `STOP` / `UNSUBSCRIBE` webhooks automatically update the tenant-scoped suppression table `(phone_e164, org_id, is_opted_out = true)`. Re-subscribing is supported via `START`.
+
+### 6.13 Email Provider API Integration & SMS Roadmap Backlog Hub
+1. **Email Provider API & Credentials Hub (`OrgExecutiveDashboard.tsx` -> `📧 Email & SMS Dispatch Studio`)**:
+   * **Provider Switcher**: Supports **Resend API** *(Recommended for React Email & sub-second latency)*, **Postmark** *(Dedicated Transactional Engine)*, **Amazon SES** *(High-Volume Dedicated IP Pools)*, and **GatherRaise Managed Cloud**.
+   * **API Key Vault**: Secure masked API key entry with validation states and tenant-isolated credential encryption.
+   * **DNS DKIM / SPF Alignment Checker**: Automated CNAME/TXT record inspection (e.g. `resend._domainkey.mail.lincolnpta.org` $\rightarrow$ `dkim.resend.com`) ensuring 100% SPF/DKIM/DMARC compliance.
+   * **Live Test Dispatch Sandbox**: Real-time simulation tool allowing coordinators to trigger test verification payloads and verify $<2\text{s}$ delivery latency.
+2. **SMS Multi-Tenant Gateway & A2P 10DLC Roadmap Backlog**:
+   * **Target Gateways**: Twilio, AWS SNS, Telnyx.
+   * **Backlog Items & Planned Deliverables**:
+     - *A2P 10DLC Non-Profit Campaign Registration*: Turnkey ISV onboarding for School PTAs and Charities to prevent carrier filtering.
+     - *Automated Schedule Cadence*: Automated SMS reminders at **T-72h**, **T-24h**, and **T-2h** with direct 1-tap mobile boarding pass links.
+     - *Day-Of Gate Emergency Broadcasts*: Instant SMS alerts for rain delays, gate reassignment, and urgent staffing shortages.
+     - *Passwordless 6-Digit SMS OTP*: 6-digit login passcodes sent via SMS for cross-device authentication.
+     - *Tenant-Scoped TCPA Opt-Out*: Strict carrier `STOP` / `START` keyword tracking isolated per organization.
 
 ## 7. Turnkey Industry Presets Catalog
 
