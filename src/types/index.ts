@@ -321,6 +321,7 @@ export interface VolunteerCrmRecord {
   tags: string[]; // e.g. "VIP Donor", "Certified First Aid", "Reliable Driver", "Parent Volunteer"
   lastActive: string;
   notes?: string;
+  importanceRank?: 'Tier 1 Key Pillar' | 'Tier 2 Dedicated Core' | 'Tier 3 Active Contributor' | 'New Supporter';
   eventHistory?: VolunteerEventHistory[];
 }
 

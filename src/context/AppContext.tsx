@@ -113,6 +113,11 @@ interface AppContextType {
   inviteTeamMember: (memberData: Omit<User, 'id'>) => User;
   removeTeamMember: (userId: string) => void;
 
+  // CRM Management & Tagging
+  addVolunteerTag: (volunteerId: string, tag: string) => void;
+  removeVolunteerTag: (volunteerId: string, tag: string) => void;
+  updateVolunteerNotes: (volunteerId: string, notes: string) => void;
+
   // Demo & Environment Mode
   isDemoMode: boolean;
   toggleDemoMode: (enabled?: boolean) => void;
@@ -1249,6 +1254,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('info', 'Team Member Removed', `${member.name} has been removed from organization staff.`);
   };
 
+  const addVolunteerTag = (volunteerId: string, tag: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      volunteerCrm: prev.volunteerCrm.map((v: VolunteerCrmRecord) => {
+        if (v.id === volunteerId) {
+          if (v.tags.includes(tag)) return v;
+          return { ...v, tags: [...v.tags, tag] };
+        }
+        return v;
+      })
+    }));
+    showToast('success', 'Badge Tag Added', `Tag "${tag}" assigned to volunteer profile.`);
+  };
+
+  const removeVolunteerTag = (volunteerId: string, tag: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      volunteerCrm: prev.volunteerCrm.map((v: VolunteerCrmRecord) => {
+        if (v.id === volunteerId) {
+          return { ...v, tags: v.tags.filter(t => t !== tag) };
+        }
+        return v;
+      })
+    }));
+    showToast('info', 'Tag Removed', `Tag "${tag}" removed.`);
+  };
+
+  const updateVolunteerNotes = (volunteerId: string, notes: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      volunteerCrm: prev.volunteerCrm.map((v: VolunteerCrmRecord) => {
+        if (v.id === volunteerId) {
+          return { ...v, notes };
+        }
+        return v;
+      })
+    }));
+    showToast('success', 'Notes Saved', 'Coordinator internal notes updated.');
+  };
+
   return (
     <AppContext.Provider value={{
       currentOrg,
@@ -1307,6 +1352,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateUserProfile,
       inviteTeamMember,
       removeTeamMember,
+      addVolunteerTag,
+      removeVolunteerTag,
+      updateVolunteerNotes,
       dismissToast,
       showToast,
       resetDemoData
