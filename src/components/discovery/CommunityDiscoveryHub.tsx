@@ -177,16 +177,6 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
               </>
             )}
 
-            {/* COMMERCIAL VENDORS & CORPORATE SPONSORS QUICK BUTTON */}
-            <button
-              onClick={() => onNavigateToVendorHub?.()}
-              className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3 px-5 rounded-2xl text-xs sm:text-sm transition flex items-center gap-2 shadow-lg shadow-amber-400/20"
-              title="Explore commercial vendor booths, food truck bays & sponsorship packages"
-            >
-              <Store className="w-4 h-4 text-slate-950" />
-              <span>Commercial Vendors & Sponsors</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
           </div>
 
           {/* Conditional Admin / Planner Workspace Shortcuts (Only visible if registered as Leader/Planner) */}
@@ -237,42 +227,6 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
             </div>
           </div>
 
-        </div>
-      </section>
-
-      {/* COMMERCIAL MERCHANTS, FOOD TRUCKS & SPONSORS GATEWAY BANNER */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 p-6 sm:p-7 rounded-3xl shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 border border-amber-300">
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div className="p-3 bg-slate-950 text-amber-400 rounded-2xl shadow-sm shrink-0">
-              <Store className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-slate-950 text-amber-300 text-[10px] font-black uppercase tracking-wider">
-                  Commercial Opportunities
-                </span>
-                <span className="text-xs font-bold text-slate-900">
-                  Artisans, Food Trucks & Corporate Underwriters
-                </span>
-              </div>
-              <h3 className="text-lg font-black text-slate-950 mt-1">
-                Are you a local business or vendor seeking event booth spaces?
-              </h3>
-              <p className="text-xs text-slate-800 font-medium mt-0.5">
-                Explore commercial booth pitches (with 110V/220V power), food truck bays, and corporate tax-deductible underwriting packages across all community campaigns.
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => onNavigateToVendorHub?.()}
-            className="px-6 py-3 bg-slate-950 hover:bg-slate-800 text-white font-black text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 shrink-0 self-start md:self-auto cursor-pointer"
-          >
-            <Store className="w-4 h-4 text-amber-400" />
-            <span>Commercial Vendor & Sponsor Hub</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
         </div>
       </section>
 
@@ -664,6 +618,42 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* COMMERCIAL MERCHANTS, FOOD TRUCKS & SPONSORS GATEWAY BANNER (BOTTOM OF PAGE) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <div className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 p-6 sm:p-7 rounded-3xl shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 border border-amber-300">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="p-3 bg-slate-950 text-amber-400 rounded-2xl shadow-sm shrink-0">
+              <Store className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-950 text-amber-300 text-[10px] font-black uppercase tracking-wider">
+                  Commercial Opportunities
+                </span>
+                <span className="text-xs font-bold text-slate-900">
+                  Artisans, Food Trucks & Corporate Underwriters
+                </span>
+              </div>
+              <h3 className="text-lg font-black text-slate-950 mt-1">
+                Are you a local business or vendor seeking event booth spaces?
+              </h3>
+              <p className="text-xs text-slate-800 font-medium mt-0.5">
+                Explore commercial booth pitches (with 110V/220V power), food truck bays, and corporate tax-deductible underwriting packages across all community campaigns.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => onNavigateToVendorHub?.()}
+            className="px-6 py-3 bg-slate-950 hover:bg-slate-800 text-white font-black text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 shrink-0 self-start md:self-auto cursor-pointer"
+          >
+            <Store className="w-4 h-4 text-amber-400" />
+            <span>Commercial Vendor & Sponsor Hub</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </section>
 
