@@ -334,9 +334,22 @@ Organizations maintain customized brand identities across all generated document
    * Officer Legal Name (e.g. *Elena Rostova*).
    * Officer Official Title (e.g. *PTA President & Authorized Signatory*).
    * Uploaded/drawn digital signature vector image automatically embedded on IRS 501(c)(3) cash donation receipts, in-kind non-cash contribution letters, and student service certificates.
-4. **Live Document Preview**:
-   * Instant visual preview showing how official IRS contribution letters and volunteer lanyards will render before publishing.
-
+### 6.8 Legal Waivers, Agreements & Minor Consent Studio (`LegalComplianceStudio.tsx`)
+Organizations and Event Chairs maintain a centralized **Legal Compliance & E-Signature Studio** located under the **Org Super Admin CRM** (`⚖️ Legal Waivers & E-Sign Studio` tab):
+1. **Legal Document Catalog & Custom Uploader**:
+   * **Active Legal Agreement Catalog**: Pre-loaded with turnkey agreements (*Parental Consent & Minor Volunteer Safety Agreement*, *General Volunteer Assumption of Risk & Liability Release*, *Food Handler & Hospitality Safety Agreement*, *Photo & Media Marketing Release*).
+   * **Custom Legal Document Creator**: Enables organizers to draft and publish custom agreements (e.g. *Equipment & Power Tool Operation*, *Overnight Chaperone Code of Conduct*).
+   * **Enforcement Rules & Flags**:
+     - `requiresMinorParentSignature`: Forces mandatory parental/legal guardian co-signature for participants under 18.
+     - `requiresEmergencyContact`: Mandatory emergency contact name and phone number.
+     - `ipAddress & timestamp`: Electronic vector stroke data, timestamp, and client IP captured upon execution.
+2. **Interactive Live E-Sign Preview & Sandbox Signing Pad**:
+   * Organizers can test the signer experience in real time, inspecting dynamic text formatting and signing on the live vector stroke canvas.
+3. **Immutable Executed E-Signatures Audit Ledger**:
+   * Complete audit table detailing every executed waiver across registrations.
+   * Tracks Signer Legal Name, Relationship (*Self* vs *Parent / Legal Guardian*), Agreement Title, Execution Timestamp, Client IP Address, and On-Site Door Verification Status.
+   * **1-Click Executed Certificate Inspector**: Displays the complete legal prose alongside the exact recorded digital vector signature stroke and timestamp.
+   * **Print / Export Compliance Audit Ledger**: 1-click print-ready PDF/HTML report formatted for school district legal teams and commercial insurance underwriters.
 
 ## 7. Turnkey Industry Presets Catalog
 
