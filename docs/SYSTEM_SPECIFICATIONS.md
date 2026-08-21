@@ -80,6 +80,24 @@ To eliminate cognitive overload and make the role mental model unmistakable, R3P
 
 
 
+### 2.5 Committee Department & Operational Need Creation Tooling (`MasterPlannerDashboard.tsx`)
+Within the **Committees & Budgets** tab of the Planner Hub, Event Chairs and Super Admins have complete operational tools to dynamically partition the event and publish volunteer/supply requirements:
+1. **`+ Add Committee Department` Modal**:
+   * **Scope & Categorization**: Define operational department name and category (`labor_setup`, `hospitality_food`, `vendors_sponsors`, `auction_fundraising`, `registration_greeters`, `other`).
+   * **Lead Delegation**: Assign or specify Lead Coordinator Name, Phone, Email, and Radio Channel for day-of-event dispatch.
+   * **Budget Allocation**: Set designated department budget ($) which updates live campaign progress meters.
+   * **Logistics & Notes**: Configure designated reporting gates (e.g. *North Gate Desk #1*), dress code requirements, and provided supplies.
+2. **`+ Add Volunteer Shift Need` Modal**:
+   * Target Committee Department selection.
+   * Role Title, description/tasks, start & end date/times, and volunteer capacity.
+   * Legal digital waiver enforcement toggle.
+3. **`+ Add Supply & Equipment Wishlist Need` Modal**:
+   * Target Committee Department selection.
+   * Item Description, category (Supplies, Equipment, Food, Logistics), quantity needed, unit of measure.
+   * Drop-off location, deadline timestamp, and estimated Fair Market Value (FMV) per unit for automated IRS in-kind donor tax receipts.
+4. **Edit / Adjust Budget on Department Cards**:
+   * 1-click **`Edit Budget & Gate`** action on every department card to modify allocations or remove committees in real time.
+
 ## 3. Account Lifecycle, Auth Gates & Multi-Role Architecture
 
 ```mermaid
