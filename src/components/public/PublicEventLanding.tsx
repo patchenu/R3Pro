@@ -262,39 +262,6 @@ export const PublicEventLanding: React.FC = () => {
           </div>
         )}
 
-        {/* Commercial Sponsor, Merchant & Food Truck Dedicated Gateway Banner */}
-        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-7 shadow-lg border border-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-5">
-          <div className="flex items-center gap-4">
-            <div className="w-13 h-13 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
-              <Store className="w-7 h-7" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
-                  <Award className="w-3 h-3" />
-                  <span>Commercial & Corporate Gateway</span>
-                </span>
-                <span className="text-xs text-indigo-300 font-semibold">• 501(c)(3) Tax Deductible</span>
-              </div>
-              <h3 className="text-lg sm:text-xl font-black text-white mt-1">
-                Are you a Local Merchant, Artisan, Food Truck or Corporate Sponsor?
-              </h3>
-              <p className="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
-                Book 10x10 artisan booth spaces, food truck bays with 110V/220V power, or corporate underwriting packages with premier brand perks and official tax receipts.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsCommercialModalOpen(true)}
-            className="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-2xl shadow-md transition flex items-center gap-2 shrink-0 group cursor-pointer"
-          >
-            <Store className="w-4 h-4 text-slate-950" />
-            <span>Open Commercial & Sponsor Portal</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-
         {/* Department / Category Filter Tabs */}
         <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
@@ -841,6 +808,39 @@ export const PublicEventLanding: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Commercial Sponsor, Merchant & Food Truck Dedicated Gateway Banner (Bottom of Page) */}
+        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-7 shadow-lg border border-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-5 mt-6">
+          <div className="flex items-center gap-4">
+            <div className="w-13 h-13 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
+              <Store className="w-7 h-7" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
+                  <Award className="w-3 h-3" />
+                  <span>Commercial & Corporate Gateway</span>
+                </span>
+                <span className="text-xs text-indigo-300 font-semibold">• 501(c)(3) Tax Deductible</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-black text-white mt-1">
+                Are you a Local Merchant, Artisan, Food Truck or Corporate Sponsor?
+              </h3>
+              <p className="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
+                Book 10x10 artisan booth spaces, food truck bays with 110V/220V power, or corporate underwriting packages with premier brand perks and official tax receipts.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsCommercialModalOpen(true)}
+            className="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-2xl shadow-md transition flex items-center gap-2 shrink-0 group cursor-pointer"
+          >
+            <Store className="w-4 h-4 text-slate-950" />
+            <span>Open Commercial & Sponsor Portal</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
 
       </div>
 
