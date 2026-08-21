@@ -9,22 +9,28 @@ GatherRaise includes a top **Role Switcher Bar** in testing mode, allowing you t
 ### 👑 Persona 1: Elena Rostova (Org Super Admin)
 * **Organization**: Lincoln High School PTA
 * **What to Test**:
-  1. Open the **Org Executive Dashboard**: View the 450+ Volunteer CRM, lifetime hours served, and cross-event financials.
-  2. Inspect the **Team Management** tab: View assigned Event Planners and Committee Leads.
-  3. Inspect **Organization Templates**: See pre-configured defaults for School/PTA, Charities, and Sports Leagues.
+  1. Open the **Org Super Admin CRM**: View the 450+ Volunteer CRM, lifetime hours served, and cross-event financials.
+  2. Open **🎨 Branding, Logos & Signatory**: Upload custom organization logos, choose brand color themes, and configure executive signatory vector signatures for IRS donation letters.
+  3. Open **⚖️ Legal Waivers & E-Sign Studio**: Manage custom waiver templates, test the interactive live e-signature canvas, and inspect the immutable Executed E-Signatures Audit Ledger.
+  4. Inspect the **Team Management** tab: View assigned Event Planners and Committee Leads.
+  5. Inspect **Organization Setup Templates**: See pre-configured defaults for School/PTA, Charities, and Sports Leagues.
 
 ### 📋 Persona 2: Marcus Vance (Event Planner / Chair)
 * **Event**: Annual Fall Carnival & Bake Sale ($15,000 Goal)
 * **What to Test**:
-  1. Open the **Master Planner Command Center**: Review live thermometer, overall shift completion rate, and department budget gauges.
-  2. Open the **Gap Analysis Dashboard**: Inspect automated alerts for critical shifts under 50% capacity within 48h.
-  3. Review the **1-Click Approval Queue**: Review budget increase requests or extra shift requests submitted by department leads.
-  4. Access the **Reports & Export Center**: Generate formatted PDF rosters, IRS 501(c)(3) statements, and name badge sheets.
+  1. Open the **📊 PLANNER HUB**:
+     - **Committees & Budgets**: Click `+ Add Committee Department` to create a new committee, or click `+ Add Shift Need` / `+ Add Supply Need`.
+     - **Volunteer Manifest & Check-In**: View all assigned volunteers with 1-click student service hour letters and express check-in.
+     - **📦 Item Pledges & Receiving**: Track physical arrival of donated items, record receiving notes/timestamps, and generate official IRS In-Kind Non-Cash Acknowledgement Letters (IRS Pub 526/561).
+     - **Marketing, Flyers & Broadcast**: Generate print flyers and social broadcast payloads.
+     - **Gap Analysis & Health**: Inspect automated shortage alerts for shifts <50% filled.
+     - **Vendor Marketplace & Booths**: Assign booth numbers and issue corporate invoices.
+     - **Reports, Badges & IRS Receipts**: Generate 6-up Avery badge sheets, financial CSVs, and compliance audit ledgers.
 
 ### 🍔 Persona 3: Sarah Jenkins (Food & Hospitality Lead)
 * **Department**: Concessions & Bake Sale
 * **What to Test**:
-  1. Open the **Lead Workspace**: Notice that Sarah only sees Food shifts, bake sale drop-offs, and her $1,200 budget.
+  1. Open the **Committee Leads Portal**: Notice that Sarah only sees Food shifts, bake sale drop-offs, and her $1,200 budget.
   2. Add a new shift or expense exceeding the $250 threshold to observe it route to Marcus's Approval Queue.
   3. Open the **Department Broadcast Modal**: Send a simulated SMS/Email blast strictly to the 12 food volunteers.
   4. Open the **Station QR Scanner**: Scan a volunteer pass to mark them as arrived.
@@ -43,13 +49,16 @@ GatherRaise includes a top **Role Switcher Bar** in testing mode, allowing you t
 
 ### 🙋 Persona 6: David Chen (Parent / Volunteer / Donor)
 * **What to Test**:
-  1. Open the **Public Event Page**: Pick a 9:00 AM Setup shift + register his daughter Emma as a helper.
+  1. Open the **Event Showcase & Shifts**: Pick a 9:00 AM Setup shift + register his daughter Emma as a helper.
   2. Pledge 2 boxes of cookies + donate $50 (with 2.9% fee cover).
   3. Sign the digital **Minor Parental Consent Waiver** using the touch signature pad.
   4. Receive instant booking confirmation with exact reporting gate, Lead phone number, what to bring, and `.ics` calendar download.
 
 ### 📱 Persona 7: Day-of-Event Check-In Kiosk
 * **What to Test**:
-  1. Switch to **Tablet Kiosk Mode**: Fullscreen, touch-optimized kiosk.
+  1. Switch to **Door Kiosk Station**: Fullscreen, touch-optimized kiosk.
   2. Search for "David Chen" or "Emma" by name or phone number.
   3. Verify signed waiver status and tap **"Check In"** with 1 touch.
+
+### 🔄 Live Testing Mode (Exit Demo)
+* Click **"Exit Demo (Live Mode)"** in the top simulator bar to log out and experience the real unauthenticated landing page, register a new user account, and create a brand-new organization.

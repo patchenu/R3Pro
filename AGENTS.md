@@ -74,3 +74,24 @@ This document provides system knowledge, core architectural rules, and coding st
 - **Student Community Service Hours**:
   - Service hours are verified by the authorized Event Coordinator and bundled into printable, signed verification certificates for high school and scouting requirements.
 
+---
+
+## 7. In-Kind Property, Equipment & Supply Drop-Off Model
+- Supply and equipment wishlist items (`ItemSlot`) track pledged vs delivered quantities.
+- Physical drop-offs record receiving volunteer names, timestamps, and donor condition notes.
+- Generates official IRS Publication 526/561 non-cash contribution acknowledgement letters with Fair Market Value (FMV) offsets and statutory non-cash disclosure clauses.
+
+---
+
+## 8. Organization Branding & Executive Signatory Hub
+- Organizations upload official logos (PNG/SVG converted to base64 Data URLs) and define primary color palettes.
+- Executive officer signatures (name, title, vector image) are securely rendered on IRS donation receipts, in-kind acknowledgement letters, and student service certificates.
+
+---
+
+## 9. Legal Waivers, Agreements & E-Sign Compliance Studio
+- Centralized studio for creating and customizing legal documents (*Minor Consent, General Liability, Food Safety, Photo/Media*).
+- Live e-sign preview sandbox for testing vector canvas signature capture.
+- Executed e-signatures compliance audit ledger tracking all signed agreements with 1-click export for insurance underwriters.
+
+
