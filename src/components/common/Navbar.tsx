@@ -261,31 +261,36 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* 6. Vendor & Sponsor Hub */}
-            <button
-              onClick={() => setActiveTab('vendor_portal')}
-              className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                activeTab === 'vendor_portal'
-                  ? 'bg-slate-900 text-white font-bold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold'
-              }`}
-            >
-              <Store className="w-3.5 h-3.5 text-amber-500" />
-              <span>Vendors & Sponsors</span>
-            </button>
+            {/* 6. Vendor & Sponsor Hub (Only visible to Vendors or Admins/Planners) */}
+            {(activeRole === 'vendor' || activeRole === 'org_admin' || activeRole === 'event_planner') && (
+              <button
+                onClick={() => setActiveTab('vendor_portal')}
+                className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === 'vendor_portal'
+                    ? 'bg-slate-900 text-white font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold'
+                }`}
+              >
+                <Store className="w-3.5 h-3.5 text-amber-500" />
+                <span>Vendors & Sponsors</span>
+              </button>
+            )}
 
-            {/* 7. Door Check-In Kiosk */}
-            <button
-              onClick={() => setActiveTab('kiosk_mode')}
-              className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                activeTab === 'kiosk_mode'
-                  ? 'bg-slate-900 text-white font-bold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold'
-              }`}
-            >
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Door Kiosk</span>
-            </button>
+            {/* 7. Door Check-In Kiosk (Only visible to Event Planners, Admins, or Kiosk Station) */}
+            {(activeRole === 'org_admin' || activeRole === 'event_planner' || activeRole === 'kiosk') && (
+              <button
+                onClick={() => setActiveTab('kiosk_mode')}
+                className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === 'kiosk_mode'
+                    ? 'bg-slate-900 text-white font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold'
+                }`}
+                title="Launch On-Site Door Kiosk Station for Express Tablet Check-In"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Door Kiosk</span>
+              </button>
+            )}
 
           </nav>
         </div>
