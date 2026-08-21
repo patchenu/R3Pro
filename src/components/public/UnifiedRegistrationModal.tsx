@@ -6,9 +6,9 @@ import { SignaturePad } from '../common/SignaturePad';
 import { 
   Users, UserPlus, Trash2, Calendar, Gift, HeartHandshake, 
   CreditCard, ShieldCheck, AlertCircle, Sparkles, Check, ChevronRight,
-  Cake, Key, Lock, HelpCircle, CheckCircle, UserCheck, Clock
+  Key, Lock, HelpCircle, CheckCircle, UserCheck, Clock
 } from 'lucide-react';
-import { formatCurrency, formatTimeRange, calculateAge, formatBirthDate } from '../../utils/formatters';
+import { formatCurrency, formatTimeRange, calculateAge } from '../../utils/formatters';
 import { WAIVER_TEMPLATES_DATA } from '../../data/templates';
 
 interface UnifiedRegistrationModalProps {
@@ -403,7 +403,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
                 Primary Contact & Volunteer Information
               </h4>
               <span className="text-[11px] text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded-md flex items-center gap-1">
-                <Cake className="w-3 h-3 text-pink-500" />
+                <Calendar className="w-3 h-3 text-indigo-500" />
                 <span>Age: {calculateAge(primaryBirthDate) || 'Adult'}</span>
               </span>
             </div>
@@ -447,7 +447,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
-                  <Cake className="w-3 h-3 text-pink-500" />
+                  <Calendar className="w-3 h-3 text-slate-500" />
                   <span>Date of Birth *</span>
                 </label>
                 <input
@@ -463,8 +463,8 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
               </div>
             </div>
 
-            <p className="text-[10px] text-slate-400 italic">
-              🎂 Captures birthday for community milestone recognition and volunteer birthday greetings.
+            <p className="text-[10px] text-slate-400">
+              Used to verify age eligibility and liability waiver requirements.
             </p>
           </div>
 
@@ -568,7 +568,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
 
                     <div>
                       <label className="block text-[10px] font-semibold text-slate-600 flex items-center gap-1">
-                        <Cake className="w-3 h-3 text-pink-500" />
+                        <Calendar className="w-3 h-3 text-slate-500" />
                         <span>Date of Birth *</span>
                       </label>
                       <input

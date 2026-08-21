@@ -170,10 +170,10 @@ This document provides system knowledge, core architectural rules, and coding st
 ---
 
 ## 17. Birthday Milestone Intelligence, Canvas Signature Accuracy & Frictionless Account Claiming
-- **Birthday Capture & Volunteer CRM Milestone Recognition**:
-  - Sign-up captures **Date of Birth (`birthDate`, YYYY-MM-DD)** instead of static age numbers.
-  - Dynamically calculates current age (`calculateAge`) and automatically determines minor status (`isMinor = age < 18`) for legal parental waiver enforcement.
-  - Feeds into automated annual birthday greeting dispatch campaigns and volunteer milestone recognition workflows.
+- **Birthday Capture & Surprise Volunteer CRM Milestone Recognition**:
+  - Sign-up captures **Date of Birth (`birthDate`, YYYY-MM-DD)** quietly for age verification, minor status (`isMinor = age < 18`), and parental waiver compliance.
+  - Automatically enrolls the volunteer into the organization's CRM automated milestone greeting workflows behind the scenes.
+  - Public milestone enrollment notices and teaser outputs are suppressed from the volunteer's view to preserve the surprise element for annual greetings and milestone recognition.
 - **Digital Canvas Vector Stroke Precision (No Pointer Offset)**:
   - Responsive canvas signature pads (`SignaturePad.tsx`) dynamically synchronize buffer resolution (`canvas.width` / `canvas.height`) with bounding client rect dimensions and Device Pixel Ratio (DPR).
   - Normalizes touch and mouse pointer coordinates 1:1 with CSS pixels, eliminating pointer misalignment and drawing offsets.

@@ -4,9 +4,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import { 
   CheckCircle2, Calendar, MapPin, Phone, ShieldCheck, 
   Download, Printer, HeartHandshake, ArrowRight, Share2,
-  Cake, Key, Lock, Check
+  Key, Lock, Check
 } from 'lucide-react';
-import { formatDate, formatTimeRange, formatCurrency, formatBirthDate, calculateAge } from '../../utils/formatters';
+import { formatDate, formatTimeRange, formatCurrency } from '../../utils/formatters';
 import { generateIcsFile, getGoogleCalendarUrl } from '../../utils/calendar';
 
 interface ConfirmationCardProps {
@@ -66,7 +66,6 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
   };
 
   const totalDonations = registration.donations.reduce((sum, d) => sum + d.amount, 0);
-  const primaryDob = registration.birthDate || registration.members[0]?.birthDate;
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden max-w-2xl mx-auto animate-in zoom-in-95 duration-300">
@@ -109,26 +108,6 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
             </p>
           </div>
         </div>
-
-        {/* Birthday Milestone Program Notice */}
-        {primaryDob && (
-          <div className="p-3.5 bg-pink-50/60 rounded-2xl border border-pink-200 text-xs text-pink-900 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center shrink-0">
-                <Cake className="w-4 h-4" />
-              </div>
-              <div>
-                <strong>Volunteer Birthday Milestone Enrolled:</strong>
-                <span className="block text-[11px] text-pink-800">
-                  Birthday: {formatBirthDate(primaryDob)} (Age: {calculateAge(primaryDob)}). You will receive annual birthday greetings & impact recognition!
-                </span>
-              </div>
-            </div>
-            <span className="px-2 py-0.5 rounded-md bg-pink-200/80 text-pink-800 text-[10px] font-extrabold uppercase shrink-0">
-              Active
-            </span>
-          </div>
-        )}
 
         {/* Claimed Shifts with Reporting Instructions */}
         {registration.shiftClaims.length > 0 && (
