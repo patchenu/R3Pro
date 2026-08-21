@@ -2,7 +2,8 @@ import {
   Organization, User, Event, SubPart, Shift, ItemSlot, TicketTier, 
   Registration, Donation, VendorApplication, ApprovalRequest, 
   VolunteerCrmRecord, Announcement, AuditLog, PaidContractor, ProBonoPledge,
-  VendorInquiry 
+  VendorInquiry, VendorLead, VendorAddOn, VendorAddOnOrder, 
+  CorporateSeasonPass, EventImpactMetrics 
 } from '../types';
 
 export const SEED_ORGANIZATIONS: Organization[] = [
@@ -1367,6 +1368,165 @@ export const SEED_VENDOR_INQUIRIES: VendorInquiry[] = [
     createdAt: '2026-08-18T09:30:00'
   }
 ];
+
+export const SEED_VENDOR_LEADS: VendorLead[] = [
+  {
+    id: 'lead_01',
+    eventId: 'evt_fall_carnival_2026',
+    vendorAppId: 'vapp_01',
+    businessName: 'Artisan Gourmet Bakery & Treats',
+    attendeeName: 'Jessica Taylor',
+    email: 'jtaylor@springfieldtech.com',
+    phone: '(555) 789-1234',
+    companyOrRole: 'HR Director, Springfield Tech',
+    interestTier: 'hot',
+    notes: 'Requested a quote for 150 holiday gift pastry boxes for employee appreciation week in December.',
+    capturedAt: '2026-08-20T11:15:00'
+  },
+  {
+    id: 'lead_02',
+    eventId: 'evt_fall_carnival_2026',
+    vendorAppId: 'vapp_01',
+    businessName: 'Artisan Gourmet Bakery & Treats',
+    attendeeName: 'David Chen',
+    email: 'dchen@bayviewlaw.com',
+    phone: '(555) 456-7890',
+    companyOrRole: 'Managing Partner',
+    interestTier: 'vip',
+    notes: 'Looking for custom sourdough and dessert catering for annual partner retreat. High budget.',
+    capturedAt: '2026-08-20T13:40:00'
+  },
+  {
+    id: 'lead_03',
+    eventId: 'evt_fall_carnival_2026',
+    vendorAppId: 'vapp_02',
+    businessName: 'Taco Fiesta Mobile Kitchen',
+    attendeeName: 'Amanda Lopez',
+    email: 'amanda.lopez@lincolnpta.org',
+    phone: '(555) 234-5678',
+    companyOrRole: 'Youth Soccer League President',
+    interestTier: 'warm',
+    notes: 'Inquired about food truck availability for Spring 2027 weekend soccer tournament series.',
+    capturedAt: '2026-08-20T14:20:00'
+  }
+];
+
+export const SEED_VENDOR_ADDONS: VendorAddOn[] = [
+  {
+    id: 'addon_table_chairs',
+    title: 'Heavy-Duty 8ft Folding Table & 2 Chairs',
+    description: 'Commercial 8ft banquet table with clean vinyl table cover and two padded folding chairs delivered directly to your pitch.',
+    price: 25,
+    category: 'furniture',
+    iconName: 'Armchair'
+  },
+  {
+    id: 'addon_canopy_weights',
+    title: '10x10 Commercial Pop-Up Canopy + Weights',
+    description: 'Fire-retardant 10x10 commercial shade canopy set up with certified 20lb leg safety weights.',
+    price: 50,
+    category: 'shelter',
+    iconName: 'Tent'
+  },
+  {
+    id: 'addon_power_circuit',
+    title: 'Dedicated 20A / 110V Dedicated Circuit Drop',
+    description: 'Individual 20-amp grounded quad electrical outlet box with GFCI protection for heavy POS and refrigeration.',
+    price: 40,
+    category: 'power',
+    iconName: 'Zap'
+  },
+  {
+    id: 'addon_corner_placement',
+    title: 'Premium Corner Pitch / High-Traffic Guarantee',
+    description: 'Guaranteed double-sided open corner booth situated along primary pedestrian intersection pathways.',
+    price: 75,
+    category: 'placement',
+    iconName: 'Sparkles'
+  },
+  {
+    id: 'addon_tote_bag_logo',
+    title: 'Full-Color Logo on 2,500 Event Tote Bags',
+    description: 'Your company branding printed in full color on every canvas festival bag handed out at public gate entry.',
+    price: 150,
+    category: 'marketing',
+    iconName: 'ShoppingBag'
+  }
+];
+
+export const SEED_VENDOR_ADDON_ORDERS: VendorAddOnOrder[] = [
+  {
+    id: 'aord_01',
+    vendorAppId: 'vapp_01',
+    eventId: 'evt_fall_carnival_2026',
+    addOnId: 'addon_table_chairs',
+    addOnTitle: 'Heavy-Duty 8ft Folding Table & 2 Chairs',
+    quantity: 1,
+    unitPrice: 25,
+    totalPrice: 25,
+    status: 'paid',
+    orderedAt: '2026-08-12T11:00:00'
+  },
+  {
+    id: 'aord_02',
+    vendorAppId: 'vapp_01',
+    eventId: 'evt_fall_carnival_2026',
+    addOnId: 'addon_corner_placement',
+    addOnTitle: 'Premium Corner Pitch / High-Traffic Guarantee',
+    quantity: 1,
+    unitPrice: 75,
+    totalPrice: 75,
+    status: 'paid',
+    orderedAt: '2026-08-12T11:00:00'
+  }
+];
+
+export const SEED_CORPORATE_SEASON_PASSES: CorporateSeasonPass[] = [
+  {
+    id: 'pass_2026_01',
+    orgId: 'org_lincoln_pta',
+    sponsorName: 'Apex Financial Advisors & Wealth Management',
+    contactName: 'Robert Vance',
+    contactEmail: 'robert@apexwealth.com',
+    contactPhone: '(555) 890-1234',
+    einTaxId: '84-9102938',
+    fiscalYear: '2026-2027 Academic Year',
+    tierName: 'District Diamond Community Underwriter',
+    bundledEventIds: ['evt_fall_carnival_2026', 'evt_spring_gala_2027', 'evt_stem_expo_2027'],
+    bundledEventTitles: ['Fall Carnival & Harvest Festival 2026', 'Annual Spring Gala & Silent Auction 2027', 'STEM & Robotics Community Expo 2027'],
+    grossAmount: 12000,
+    discountPercent: 15,
+    netPaid: 10200,
+    status: 'active',
+    taxReceiptNumber: 'ANN-REC-2026-0842',
+    perksSummary: [
+      'Top-tier marquee banner logo placement across all 3 flagship events',
+      '8 Complimentary VIP Passes & Dinner Gala Tickets with reserved seating',
+      'Exclusive company recognition during superintendent & principal opening addresses',
+      'Dedicated exhibit space at all STEM and community events throughout the year'
+    ],
+    logoUrl: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=120&auto=format&fit=crop&q=80',
+    createdAt: '2026-07-15T09:30:00'
+  }
+];
+
+export const SEED_EVENT_IMPACT_METRICS: Record<string, EventImpactMetrics> = {
+  evt_fall_carnival_2026: {
+    eventId: 'evt_fall_carnival_2026',
+    eventTitle: 'Fall Carnival & Harvest Festival 2026',
+    eventDate: '2026-10-17',
+    totalAttendeesEstimated: 2840,
+    familiesEngaged: 1250,
+    totalDollarsRaised: 28450,
+    fundraisingGoal: 25000,
+    goalAchievementPercent: 113.8,
+    studentVolunteersEngaged: 85,
+    totalVolunteerHoursLogged: 412,
+    digitalProgramImpressions: 4850,
+    mainStageScreenRotations: 160,
+    boothFootTrafficAverage: 650
+  }
+};
 
 export const SEED_APPROVAL_REQUESTS: ApprovalRequest[] = [
   {

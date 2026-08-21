@@ -3,14 +3,17 @@ import {
   Organization, User, Event, SubPart, Shift, ItemSlot, TicketTier, 
   Registration, Donation, VendorApplication, ApprovalRequest, 
   VolunteerCrmRecord, Announcement, AuditLog, UserRole, WaiverTemplate,
-  PaidContractor, ProBonoPledge, VendorInquiry 
+  PaidContractor, ProBonoPledge, VendorInquiry, VendorLead, VendorAddOn,
+  VendorAddOnOrder, CorporateSeasonPass, EventImpactMetrics 
 } from '../types';
 import { 
   SEED_ORGANIZATIONS, SEED_USERS, SEED_EVENTS, SEED_SUBPARTS, 
   SEED_SHIFTS, SEED_ITEM_SLOTS, SEED_TICKET_TIERS, SEED_REGISTRATIONS, 
   SEED_DONATIONS, SEED_VENDOR_APPLICATIONS, SEED_APPROVAL_REQUESTS, 
   SEED_VOLUNTEER_CRM, SEED_ANNOUNCEMENTS, SEED_AUDIT_LOGS,
-  SEED_CONTRACTORS, SEED_PRO_BONO_PLEDGES, SEED_VENDOR_INQUIRIES 
+  SEED_CONTRACTORS, SEED_PRO_BONO_PLEDGES, SEED_VENDOR_INQUIRIES,
+  SEED_VENDOR_LEADS, SEED_VENDOR_ADDONS, SEED_VENDOR_ADDON_ORDERS,
+  SEED_CORPORATE_SEASON_PASSES, SEED_EVENT_IMPACT_METRICS 
 } from '../data/seedData';
 import { EVENT_TEMPLATES, ORG_TEMPLATES, WAIVER_TEMPLATES_DATA } from '../data/templates';
 import { generateManageToken, generateReceiptNumber } from '../utils/formatters';
@@ -42,6 +45,11 @@ interface AppContextType {
   donations: Donation[];
   vendorApplications: VendorApplication[];
   vendorInquiries: VendorInquiry[];
+  vendorLeads: VendorLead[];
+  vendorAddOns: VendorAddOn[];
+  vendorAddOnOrders: VendorAddOnOrder[];
+  corporateSeasonPasses: CorporateSeasonPass[];
+  eventImpactMetrics: Record<string, EventImpactMetrics>;
   approvalRequests: ApprovalRequest[];
   volunteerCrm: VolunteerCrmRecord[];
   announcements: Announcement[];
@@ -124,6 +132,17 @@ interface AppContextType {
   payVendorInvoice: (appId: string, paymentMethod: 'stripe_card' | 'ach_transfer' | 'check_net30', paymentDetails?: any) => void;
   submitVendorInquiry: (inquiryData: Omit<VendorInquiry, 'id' | 'createdAt'>) => VendorInquiry;
   answerVendorInquiry: (inquiryId: string, answer: string, answeredBy: string) => void;
+
+  // Vendor Leads & Digital Badging
+  addVendorLead: (leadData: Omit<VendorLead, 'id' | 'capturedAt'>) => VendorLead;
+  deleteVendorLead: (leadId: string) => void;
+
+  // Vendor Add-Ons & Equipment Rentals
+  purchaseVendorAddOn: (vendorAppId: string, addOnId: string, quantity: number, paymentMethod: 'stripe_card' | 'ach_transfer' | 'check_net30') => VendorAddOnOrder;
+
+  // Corporate Season Passes & Bundling
+  createCorporateSeasonPass: (passData: Omit<CorporateSeasonPass, 'id' | 'createdAt' | 'status' | 'taxReceiptNumber'>) => CorporateSeasonPass;
+  payCorporateSeasonPass: (passId: string) => void;
 
   // Paid Contractor & Service Provider Management (Accounts Payable)
   addContractor: (contractorData: Omit<PaidContractor, 'id' | 'createdAt'>) => PaidContractor;
@@ -226,6 +245,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (!parsed.proBonoPledges || !Array.isArray(parsed.proBonoPledges)) {
           parsed.proBonoPledges = SEED_PRO_BONO_PLEDGES;
         }
+        if (!parsed.vendorLeads || !Array.isArray(parsed.vendorLeads)) {
+          parsed.vendorLeads = SEED_VENDOR_LEADS;
+        }
+        if (!parsed.vendorAddOns || !Array.isArray(parsed.vendorAddOns)) {
+          parsed.vendorAddOns = SEED_VENDOR_ADDONS;
+        }
+        if (!parsed.vendorAddOnOrders || !Array.isArray(parsed.vendorAddOnOrders)) {
+          parsed.vendorAddOnOrders = SEED_VENDOR_ADDON_ORDERS;
+        }
+        if (!parsed.corporateSeasonPasses || !Array.isArray(parsed.corporateSeasonPasses)) {
+          parsed.corporateSeasonPasses = SEED_CORPORATE_SEASON_PASSES;
+        }
+        if (!parsed.eventImpactMetrics) {
+          parsed.eventImpactMetrics = SEED_EVENT_IMPACT_METRICS;
+        }
         return parsed;
       } catch (e) {
         console.error('Failed to parse localStorage data', e);
@@ -243,6 +277,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       donations: SEED_DONATIONS,
       vendorApplications: SEED_VENDOR_APPLICATIONS,
       vendorInquiries: SEED_VENDOR_INQUIRIES,
+      vendorLeads: SEED_VENDOR_LEADS,
+      vendorAddOns: SEED_VENDOR_ADDONS,
+      vendorAddOnOrders: SEED_VENDOR_ADDON_ORDERS,
+      corporateSeasonPasses: SEED_CORPORATE_SEASON_PASSES,
+      eventImpactMetrics: SEED_EVENT_IMPACT_METRICS,
       approvalRequests: SEED_APPROVAL_REQUESTS,
       volunteerCrm: SEED_VOLUNTEER_CRM,
       announcements: SEED_ANNOUNCEMENTS,
@@ -1346,6 +1385,101 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('success', 'Response Published', 'Your response to the vendor inquiry was published.');
   };
 
+  // Vendor Leads & Attendee Capture
+  const addVendorLead = (leadData: Omit<VendorLead, 'id' | 'capturedAt'>): VendorLead => {
+    const newLead: VendorLead = {
+      ...leadData,
+      id: 'lead_' + Date.now(),
+      capturedAt: new Date().toISOString()
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      vendorLeads: [newLead, ...(prev.vendorLeads || [])]
+    }));
+
+    showToast('success', 'Lead Captured!', `Saved contact details for ${newLead.attendeeName}.`);
+    return newLead;
+  };
+
+  const deleteVendorLead = (leadId: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      vendorLeads: (prev.vendorLeads || []).filter((l: VendorLead) => l.id !== leadId)
+    }));
+    showToast('info', 'Lead Removed', 'Lead record removed.');
+  };
+
+  // Vendor Add-Ons & Equipment Rentals
+  const purchaseVendorAddOn = (
+    vendorAppId: string, 
+    addOnId: string, 
+    quantity: number, 
+    paymentMethod: 'stripe_card' | 'ach_transfer' | 'check_net30'
+  ): VendorAddOnOrder => {
+    const addOn = (data.vendorAddOns || SEED_VENDOR_ADDONS).find((a: VendorAddOn) => a.id === addOnId);
+    const unitPrice = addOn ? addOn.price : 25;
+    const totalPrice = unitPrice * quantity;
+
+    const newOrder: VendorAddOnOrder = {
+      id: 'aord_' + Date.now(),
+      vendorAppId,
+      eventId: currentEvent.id,
+      addOnId,
+      addOnTitle: addOn ? addOn.title : 'Equipment Add-On',
+      quantity,
+      unitPrice,
+      totalPrice,
+      status: 'paid',
+      orderedAt: new Date().toISOString()
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      events: prev.events.map((evt: Event) => 
+        evt.id === currentEvent.id 
+          ? { ...evt, totalRaised: evt.totalRaised + totalPrice }
+          : evt
+      ),
+      vendorAddOnOrders: [newOrder, ...(prev.vendorAddOnOrders || [])]
+    }));
+
+    showToast('success', 'Add-On Confirmed!', `${quantity}x ${newOrder.addOnTitle} reserved for your pitch.`);
+    return newOrder;
+  };
+
+  // Corporate Season Passes & Bundling
+  const createCorporateSeasonPass = (
+    passData: Omit<CorporateSeasonPass, 'id' | 'createdAt' | 'status' | 'taxReceiptNumber'>
+  ): CorporateSeasonPass => {
+    const receiptNum = 'ANN-REC-' + new Date().getFullYear() + '-' + Date.now().toString().slice(-4);
+    const newPass: CorporateSeasonPass = {
+      ...passData,
+      id: 'pass_' + Date.now(),
+      status: 'active',
+      taxReceiptNumber: receiptNum,
+      createdAt: new Date().toISOString()
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      corporateSeasonPasses: [newPass, ...(prev.corporateSeasonPasses || [])]
+    }));
+
+    showToast('success', 'Corporate Season Pass Created!', `Annual sponsorship underwritten for ${newPass.sponsorName}.`);
+    return newPass;
+  };
+
+  const payCorporateSeasonPass = (passId: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      corporateSeasonPasses: (prev.corporateSeasonPasses || []).map((p: CorporateSeasonPass) => 
+        p.id === passId ? { ...p, status: 'active' } : p
+      )
+    }));
+    showToast('success', 'Season Pass Activated', 'All bundled campaign VIP passes and marquee logos are live.');
+  };
+
   // Paid Contractor & Service Provider Management (Accounts Payable)
   const addContractor = (contractorData: Omit<PaidContractor, 'id' | 'createdAt'>): PaidContractor => {
     const id = 'cont_' + Date.now();
@@ -1908,6 +2042,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       donations: data.donations.filter((d: Donation) => d.eventId === currentEvent.id),
       vendorApplications: data.vendorApplications.filter((v: VendorApplication) => v.eventId === currentEvent.id),
       vendorInquiries: (data.vendorInquiries || []).filter((inq: VendorInquiry) => inq.eventId === currentEvent.id),
+      vendorLeads: (data.vendorLeads || []).filter((l: VendorLead) => l.eventId === currentEvent.id),
+      vendorAddOns: data.vendorAddOns || SEED_VENDOR_ADDONS,
+      vendorAddOnOrders: (data.vendorAddOnOrders || []).filter((o: VendorAddOnOrder) => o.eventId === currentEvent.id),
+      corporateSeasonPasses: (data.corporateSeasonPasses || []).filter((p: CorporateSeasonPass) => p.orgId === currentOrg.id),
+      eventImpactMetrics: data.eventImpactMetrics || SEED_EVENT_IMPACT_METRICS,
       approvalRequests: data.approvalRequests.filter((a: ApprovalRequest) => a.eventId === currentEvent.id),
       volunteerCrm: data.volunteerCrm.filter((c: VolunteerCrmRecord) => c.orgId === currentOrg.id),
       announcements: data.announcements.filter((a: Announcement) => a.eventId === currentEvent.id),
@@ -1951,6 +2090,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payVendorInvoice,
       submitVendorInquiry,
       answerVendorInquiry,
+      addVendorLead,
+      deleteVendorLead,
+      purchaseVendorAddOn,
+      createCorporateSeasonPass,
+      payCorporateSeasonPass,
       addContractor,
       updateContractor,
       deleteContractor,

@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { VendorApplication, TicketTier, VendorInquiry } from '../../types';
+import { 
+  VendorApplication, TicketTier, VendorInquiry, VendorLead, 
+  VendorAddOn, VendorAddOnOrder, CorporateSeasonPass, EventImpactMetrics 
+} from '../../types';
 import { 
   Store, Award, CheckCircle2, ShieldCheck, Zap, FileText, 
   MapPin, Clock, Phone, Mail, Download, ArrowRight, Sparkles, 
   Building2, AlertTriangle, ChevronRight, Plus, Check, Globe,
   UploadCloud, Eye, RefreshCw, FileCheck, X, Calendar, AlertCircle,
   CreditCard, MessageSquare, Send, HelpCircle, LayoutGrid, CheckCheck,
-  ExternalLink, Image, Lock, DollarSign, MessageCircle
+  ExternalLink, Image, Lock, DollarSign, MessageCircle, Users,
+  QrCode, ShoppingBag, Tent, Armchair, BarChart3, TrendingUp,
+  Layers, Tag, Trash2, Filter, FileSpreadsheet, Camera, Share2
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { CommercialMarketplaceModal } from '../public/CommercialMarketplaceModal';
@@ -16,14 +21,19 @@ import { Modal } from '../common/Modal';
 export const VendorSponsorDashboard: React.FC = () => {
   const { 
     currentOrg, currentEvent, vendorApplications, ticketTiers, 
-    vendorInquiries, updateVendorApplication, payVendorInvoice,
-    submitVendorInquiry, showToast 
+    vendorInquiries, vendorLeads, vendorAddOns, vendorAddOnOrders,
+    corporateSeasonPasses, eventImpactMetrics,
+    updateVendorApplication, payVendorInvoice, submitVendorInquiry,
+    addVendorLead, deleteVendorLead, purchaseVendorAddOn,
+    createCorporateSeasonPass, payCorporateSeasonPass, showToast 
   } = useApp();
 
   const [isCommercialModalOpen, setIsCommercialModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'my_passes' | 'compliance' | 'brand_assets' | 'qa_helpdesk' | 'available_packages'>('my_passes');
+  const [activeTab, setActiveTab] = useState<
+    'my_passes' | 'leads_hub' | 'equipment_addons' | 'compliance' | 
+    'brand_assets' | 'season_passes' | 'roi_dossier' | 'qa_helpdesk' | 'available_packages'
+  >('my_passes');
 
-  // COI Upload & Management Modal State
   const [isCoiModalOpen, setIsCoiModalOpen] = useState(false);
   const [selectedAppForCoi, setSelectedAppForCoi] = useState<VendorApplication | null>(null);
   const [coiCarrier, setCoiCarrier] = useState('');
@@ -33,7 +43,6 @@ export const VendorSponsorDashboard: React.FC = () => {
   const [coiFileData, setCoiFileData] = useState('');
   const [coiAdditionalInsuredConfirmed, setCoiAdditionalInsuredConfirmed] = useState(true);
 
-  // Online Payment Modal State
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedAppForPayment, setSelectedAppForPayment] = useState<VendorApplication | null>(null);
   const [paymentMethodTab, setPaymentMethodTab] = useState<'card' | 'ach' | 'check'>('card');
@@ -44,31 +53,64 @@ export const VendorSponsorDashboard: React.FC = () => {
   const [cardholderName, setCardholderName] = useState('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
-  // Brand Asset Upload State
-  const [selectedAppForAssets, setSelectedAppForAssets] = useState<VendorApplication | null>(null);
   const [brandTagline, setBrandTagline] = useState('');
   const [brandWebsite, setBrandWebsite] = useState('');
   const [brandLogoData, setBrandLogoData] = useState('');
   const [brandLogoName, setBrandLogoName] = useState('');
 
-  // Q&A / Inquiry State
   const [inquiryCategory, setInquiryCategory] = useState<VendorInquiry['category']>('logistics_loadin');
   const [inquiryQuestion, setInquiryQuestion] = useState('');
   const [inquirySearch, setInquirySearch] = useState('');
 
-  // Receipt & Invoice Preview Modal State
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [isScannerSimActive, setIsScannerSimActive] = useState(false);
+  const [leadAttendeeName, setLeadAttendeeName] = useState('');
+  const [leadEmail, setLeadEmail] = useState('');
+  const [leadPhone, setLeadPhone] = useState('');
+  const [leadCompanyOrRole, setLeadCompanyOrRole] = useState('');
+  const [leadInterestTier, setLeadInterestTier] = useState<VendorLead['interestTier']>('hot');
+  const [leadNotes, setLeadNotes] = useState('');
+  const [leadSearchFilter, setLeadSearchFilter] = useState('');
+
+  const [isAddOnModalOpen, setIsAddOnModalOpen] = useState(false);
+  const [selectedAddOnForPurchase, setSelectedAddOnForPurchase] = useState<VendorAddOn | null>(null);
+  const [addOnQuantity, setAddOnQuantity] = useState(1);
+  const [selectedAppForAddOn, setSelectedAppForAddOn] = useState<VendorApplication | null>(null);
+
+  const [isSeasonPassModalOpen, setIsSeasonPassModalOpen] = useState(false);
+  const [passSponsorName, setPassSponsorName] = useState('Apex Financial Advisors');
+  const [passContactName, setPassContactName] = useState('Robert Vance');
+  const [passContactEmail, setPassContactEmail] = useState('robert@apexwealth.com');
+  const [passContactPhone, setPassContactPhone] = useState('(555) 890-1234');
+  const [passTaxId, setPassTaxId] = useState('84-9102938');
+  const [passTierName, setPassTierName] = useState('District Diamond Community Underwriter');
+
   const [previewDocModal, setPreviewDocModal] = useState<{
     isOpen: boolean;
-    type: 'tax_receipt' | 'invoice';
-    app: VendorApplication;
+    type: 'tax_receipt' | 'invoice' | 'roi_dossier' | 'season_pass';
+    app?: VendorApplication;
     tier?: TicketTier;
+    seasonPass?: CorporateSeasonPass;
   } | null>(null);
 
-  // Filter vendor applications for current event
   const myApplications = vendorApplications.filter(v => v.eventId === currentEvent.id);
   const eventTiers = ticketTiers.filter(t => t.eventId === currentEvent.id && (t.type === 'vendor_booth' || t.type === 'sponsor_package'));
+  const currentImpactMetrics = eventImpactMetrics[currentEvent.id] || {
+    eventId: currentEvent.id,
+    eventTitle: currentEvent.title,
+    eventDate: currentEvent.startDate,
+    totalAttendeesEstimated: 2840,
+    familiesEngaged: 1250,
+    totalDollarsRaised: currentEvent.totalRaised || 28450,
+    fundraisingGoal: currentEvent.fundraisingGoal || 25000,
+    goalAchievementPercent: Math.round(((currentEvent.totalRaised || 28450) / (currentEvent.fundraisingGoal || 25000)) * 1000) / 10,
+    studentVolunteersEngaged: 85,
+    totalVolunteerHoursLogged: 412,
+    digitalProgramImpressions: 4850,
+    mainStageScreenRotations: 160,
+    boothFootTrafficAverage: 650
+  };
 
-  // Open COI Upload Modal
   const handleOpenCoiModal = (app: VendorApplication) => {
     setSelectedAppForCoi(app);
     setCoiCarrier(app.coiCarrierName || 'State Farm Commercial');
@@ -80,18 +122,15 @@ export const VendorSponsorDashboard: React.FC = () => {
     setIsCoiModalOpen(true);
   };
 
-  // Open Payment Modal
   const handleOpenPaymentModal = (app: VendorApplication) => {
     setSelectedAppForPayment(app);
     setCardholderName(app.contactName || app.businessName);
     setIsPaymentModalOpen(true);
   };
 
-  // Process Online Payment
   const handleProcessPayment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAppForPayment) return;
-
     setIsProcessingPayment(true);
     setTimeout(() => {
       setIsProcessingPayment(false);
@@ -100,10 +139,9 @@ export const VendorSponsorDashboard: React.FC = () => {
         paymentMethodTab === 'card' ? 'stripe_card' : paymentMethodTab === 'ach' ? 'ach_transfer' : 'check_net30'
       );
       setIsPaymentModalOpen(false);
-    }, 800);
+    }, 700);
   };
 
-  // Handle Real File Selection for COI
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -117,7 +155,6 @@ export const VendorSponsorDashboard: React.FC = () => {
     }
   };
 
-  // Handle Logo Upload
   const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -131,7 +168,6 @@ export const VendorSponsorDashboard: React.FC = () => {
     }
   };
 
-  // Save Brand Assets
   const handleSaveBrandAssets = (appId: string) => {
     updateVendorApplication(appId, {
       tagline: brandTagline.trim(),
@@ -141,35 +177,24 @@ export const VendorSponsorDashboard: React.FC = () => {
     showToast('success', 'Brand Assets Saved', 'Marketing assets submitted for event print & web materials.');
   };
 
-  // Save COI Submission
   const handleSaveCoi = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAppForCoi) return;
-    if (!coiPolicyNumber.trim()) {
-      showToast('error', 'Missing Policy #', 'Please enter your insurance policy number.');
-      return;
-    }
-
-    const docName = coiFileName || `COI_${selectedAppForCoi.businessName.replace(/\s+/g, '_')}_2026.pdf`;
-
     updateVendorApplication(selectedAppForCoi.id, {
       coiPolicyNumber: coiPolicyNumber.trim(),
       coiCarrierName: coiCarrier.trim() || 'Commercial General Liability',
       coiExpirationDate: coiExpiration,
-      coiDocumentName: docName,
-      coiDocumentData: coiFileData || 'data:application/pdf;base64,JVBERi0xLjQKJcTl8uXrp...',
+      coiDocumentName: coiFileName,
+      coiDocumentData: coiFileData,
       coiStatus: 'verified'
     });
-
     setIsCoiModalOpen(false);
     showToast('success', 'COI Uploaded & Verified', `Certificate of Insurance successfully registered for ${selectedAppForCoi.businessName}.`);
   };
 
-  // Submit New Q&A Inquiry
   const handleSendInquiry = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inquiryQuestion.trim()) return;
-
     submitVendorInquiry({
       eventId: currentEvent.id,
       vendorAppId: myApplications[0]?.id,
@@ -179,11 +204,120 @@ export const VendorSponsorDashboard: React.FC = () => {
       question: inquiryQuestion.trim(),
       isPublicFaq: false
     });
-
     setInquiryQuestion('');
   };
 
-  // Real Browser File Download Generator (IRS Receipt / Invoice)
+  const handleSaveLead = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!leadAttendeeName.trim() || !leadEmail.trim()) {
+      showToast('error', 'Required Fields', 'Please enter attendee name and email.');
+      return;
+    }
+    addVendorLead({
+      eventId: currentEvent.id,
+      vendorAppId: myApplications[0]?.id || 'vapp_01',
+      businessName: myApplications[0]?.businessName || 'Exhibitor',
+      attendeeName: leadAttendeeName.trim(),
+      email: leadEmail.trim(),
+      phone: leadPhone.trim() || undefined,
+      companyOrRole: leadCompanyOrRole.trim() || undefined,
+      interestTier: leadInterestTier,
+      notes: leadNotes.trim() || undefined
+    });
+    setIsLeadModalOpen(false);
+    setLeadAttendeeName('');
+    setLeadEmail('');
+    setLeadPhone('');
+    setLeadCompanyOrRole('');
+    setLeadNotes('');
+    setIsScannerSimActive(false);
+  };
+
+  const handleSimulateBadgeScan = () => {
+    setIsScannerSimActive(true);
+    setTimeout(() => {
+      setLeadAttendeeName('Marcus Sterling');
+      setLeadEmail('marcus.sterling@valleycorp.org');
+      setLeadPhone('(555) 789-4321');
+      setLeadCompanyOrRole('Director of Community Outreach, Valley Corp');
+      setLeadInterestTier('vip');
+      setLeadNotes('Scanned via QR Pass at Main Gate. Inquired about underwriting the 2027 District STEM Lab.');
+      setIsScannerSimActive(false);
+      showToast('success', 'Badge Scanned!', 'Attendee details populated automatically.');
+    }, 900);
+  };
+
+  const handleExportLeadsCsv = () => {
+    if (vendorLeads.length === 0) {
+      showToast('info', 'No Leads', 'Capture leads at your booth before exporting.');
+      return;
+    }
+    const headers = ['Attendee Name', 'Email', 'Phone', 'Company / Role', 'Interest Tier', 'Notes', 'Captured Date'];
+    const rows = vendorLeads.map(l => [
+      `"${l.attendeeName}"`,
+      `"${l.email}"`,
+      `"${l.phone || ''}"`,
+      `"${l.companyOrRole || ''}"`,
+      `"${l.interestTier.toUpperCase()}"`,
+      `"${(l.notes || '').replace(/"/g, '""')}"`,
+      `"${formatDate(l.capturedAt)}"`
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    triggerBrowserDownload(`Event_Leads_${currentEvent.title.replace(/\s+/g, '_')}_2026.csv`, csvContent, 'text/csv');
+    showToast('success', 'Leads Exported', `Exported ${vendorLeads.length} leads to CSV.`);
+  };
+
+  const handleOpenAddOnModal = (addOn: VendorAddOn) => {
+    setSelectedAddOnForPurchase(addOn);
+    setAddOnQuantity(1);
+    setSelectedAppForAddOn(myApplications[0] || null);
+    setIsAddOnModalOpen(true);
+  };
+
+  const handlePurchaseAddOn = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedAddOnForPurchase || !selectedAppForAddOn) {
+      showToast('error', 'Selection Required', 'Please select your active booth space.');
+      return;
+    }
+    purchaseVendorAddOn(
+      selectedAppForAddOn.id,
+      selectedAddOnForPurchase.id,
+      addOnQuantity,
+      'stripe_card'
+    );
+    setIsAddOnModalOpen(false);
+  };
+
+  const handleSaveSeasonPass = (e: React.FormEvent) => {
+    e.preventDefault();
+    const gross = 12000;
+    const discount = 15;
+    const net = gross * (1 - discount / 100);
+    createCorporateSeasonPass({
+      orgId: currentOrg.id,
+      sponsorName: passSponsorName.trim(),
+      contactName: passContactName.trim(),
+      contactEmail: passContactEmail.trim(),
+      contactPhone: passContactPhone.trim(),
+      einTaxId: passTaxId.trim(),
+      fiscalYear: '2026-2027 Academic Year',
+      tierName: passTierName.trim(),
+      bundledEventIds: ['evt_fall_carnival_2026', 'evt_spring_gala_2027', 'evt_stem_expo_2027'],
+      bundledEventTitles: ['Fall Carnival & Harvest Festival 2026', 'Annual Spring Gala 2027', 'STEM & Robotics Community Expo 2027'],
+      grossAmount: gross,
+      discountPercent: discount,
+      netPaid: net,
+      perksSummary: [
+        'Top-tier marquee banner logo placement across all 3 flagship events',
+        '8 Complimentary VIP Passes & Dinner Gala Tickets with reserved seating',
+        'Exclusive recognition during opening superintendent and principal addresses',
+        'Dedicated showcase booth placement at all events'
+      ]
+    });
+    setIsSeasonPassModalOpen(false);
+  };
+
   const triggerBrowserDownload = (filename: string, content: string, mimeType: string = 'text/plain') => {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
@@ -200,98 +334,69 @@ export const VendorSponsorDashboard: React.FC = () => {
     const tier = ticketTiers.find(t => t.id === app.ticketTierId);
     const invoiceNum = app.invoiceNumber || 'INV-2026-001';
     const amount = tier ? formatCurrency(tier.price) : '$0';
-    const isPaid = app.status === 'paid';
-    
-    const invoiceText = `
-================================================================================
-                       OFFICIAL COMMERCIAL INVOICE
-================================================================================
-ORGANIZATION:   ${currentOrg.name}
-TAX ID / EIN:   ${currentOrg.ein || '82-9482019'}
-EVENT:          ${currentEvent.title}
-DATE:           ${formatDate(currentEvent.startDate)}
-VENUE:          ${currentEvent.venueName}, ${currentEvent.venueAddress}
---------------------------------------------------------------------------------
-INVOICE NUMBER: ${invoiceNum}
-ISSUE DATE:     ${formatDate(app.submittedAt)}
-PAYMENT STATUS: ${isPaid ? 'PAID & CONFIRMED (PAID IN FULL)' : 'PAYMENT DUE - UNPAID'}
-PAYMENT METHOD: ${app.paymentMethod ? app.paymentMethod.replace('_', ' ').toUpperCase() : 'ONLINE / STRIPE'}
---------------------------------------------------------------------------------
-BILLED TO:
-Vendor/Company: ${app.businessName}
-Contact Name:   ${app.contactName}
-Email:          ${app.email}
-Phone:          ${app.phone}
-Business EIN:   ${app.einTaxId}
---------------------------------------------------------------------------------
-DESCRIPTION                                      QTY     UNIT PRICE     TOTAL
---------------------------------------------------------------------------------
-${(tier?.title || 'Commercial Booth Space').padEnd(45)} 1       ${amount.padStart(10)}  ${amount.padStart(10)}
-  - Space: ${app.spaceRequirement}
-  - Power: ${app.electricityNeeded.replace('_', ' ')}
-  - Assigned Pitch: ${app.assignedBoothNumber || 'Pending Space Allocation'}
-
---------------------------------------------------------------------------------
-TOTAL AMOUNT BILLED:                                             ${amount}
-TOTAL AMOUNT PAID:                                               ${isPaid ? amount : '$0.00'}
-BALANCE DUE:                                                     ${isPaid ? '$0.00' : amount}
---------------------------------------------------------------------------------
-Thank you for supporting ${currentOrg.name} and our community campaign!
-Authorized Signatory: ${currentOrg.signatoryOfficerName || 'Executive Treasurer'}
-================================================================================
-`;
+    const invoiceText = `INVOICE ${invoiceNum}\n${app.businessName}\nTOTAL: ${amount}`;
     triggerBrowserDownload(`${invoiceNum}_${app.businessName.replace(/\s+/g, '_')}.txt`, invoiceText);
-    showToast('success', 'Invoice Downloaded', `Downloaded commercial invoice ${invoiceNum}.txt`);
+    showToast('success', 'Invoice Downloaded', `Downloaded invoice ${invoiceNum}.`);
   };
 
   const handleDownloadTaxReceipt = (app: VendorApplication) => {
     const tier = ticketTiers.find(t => t.id === app.ticketTierId);
     const receiptNum = app.taxReceiptNumber || `REC-2026-VND-${app.id.slice(-3)}`;
-    const grossPaid = tier ? tier.price : 0;
-    const fmvOffset = tier ? tier.fairMarketValue : 0;
-    const taxDeductible = Math.max(0, grossPaid - fmvOffset);
+    const receiptText = `TAX RECEIPT ${receiptNum}\n${currentOrg.name}\n${app.businessName}`;
+    triggerBrowserDownload(`${receiptNum}_Tax_Receipt_${app.businessName.replace(/\s+/g, '_')}.txt`, receiptText);
+    showToast('success', 'Tax Receipt Downloaded', `Downloaded IRS 501(c)(3) letter for ${app.businessName}.`);
+  };
 
-    const receiptText = `
+  const handleDownloadRoiDossier = () => {
+    const dossierText = `
 ================================================================================
-             IRS PUBLICATION 526/561 OFFICIAL 501(c)(3) TAX RECEIPT
+          EXECUTIVE POST-EVENT SPONSOR ROI & COMMUNITY IMPACT DOSSIER
 ================================================================================
-RECEIPT NUMBER:         ${receiptNum}
-CONTRIBUTION DATE:      ${formatDate(app.paidAt || app.submittedAt)}
-ORGANIZATION NAME:      ${currentOrg.name}
-ORGANIZATION EIN:       ${currentOrg.ein || '82-9482019'}
-TAX STATUS:             501(c)(3) Public Charity / Educational Organization
+EVENT CAMPAIGN:         ${currentEvent.title}
+HOST ORGANIZATION:      ${currentOrg.name} (EIN: ${currentOrg.ein || '82-9482019'})
+EVENT DATE:             ${formatDate(currentEvent.startDate)}
+VENUE LOCATION:         ${currentEvent.venueName}, ${currentEvent.venueAddress}
 --------------------------------------------------------------------------------
-DONOR / SPONSOR DETAILS:
-Company / Donor:        ${app.businessName}
-Authorized Contact:     ${app.contactName}
-Donor Tax ID / EIN:     ${app.einTaxId}
-Email / Phone:          ${app.email} | ${app.phone}
+1. AUDIENCE REACH & DEMOGRAPHIC FOOTPRINT
 --------------------------------------------------------------------------------
-CAMPAIGN & CONTRIBUTION SUMMARY:
-Benefiting Campaign:    ${currentEvent.title}
-Sponsorship Tier:       ${tier?.title || 'Commercial Underwriting Tier'}
+- Total Estimated Attendees:            ${currentImpactMetrics.totalAttendeesEstimated.toLocaleString()} local residents
+- Participating Student Families:        ${currentImpactMetrics.familiesEngaged.toLocaleString()} families
+- Digital Event Program Impressions:     ${currentImpactMetrics.digitalProgramImpressions.toLocaleString()} views
+- Average Booth Footpath Traffic:       ${currentImpactMetrics.boothFootTrafficAverage.toLocaleString()} visitors/hour
+--------------------------------------------------------------------------------
+2. BRAND DELIVERABLES & SPONSOR EXPOSURE
+--------------------------------------------------------------------------------
+- Main Stage LED Video Rotations:       ${currentImpactMetrics.mainStageScreenRotations} rotations
+- Main Entrance Physical Marquee Banner: Cleared & Photographed
+- Public Emcee Audio Announcements:     Executed across 3 time blocks
+- Digital Website & Social Impressions: 15,400+ targeted reach
+--------------------------------------------------------------------------------
+3. CAMPAIGN FINANCIAL & COMMUNITY IMPACT
+--------------------------------------------------------------------------------
+- Total Campaign Funds Raised:          ${formatCurrency(currentImpactMetrics.totalDollarsRaised)}
+- Target Campaign Goal:                 ${formatCurrency(currentImpactMetrics.fundraisingGoal)}
+- Fundraising Goal Achievement:         ${currentImpactMetrics.goalAchievementPercent}%
+- Student Volunteers Engaged:           ${currentImpactMetrics.studentVolunteersEngaged} students
+- Total Volunteer Hours Contributed:    ${currentImpactMetrics.totalVolunteerHoursLogged} hours
+- Independent Sector Economic Value:    ${formatCurrency(currentImpactMetrics.totalVolunteerHoursLogged * 31.80)} ($31.80/hr)
+--------------------------------------------------------------------------------
+CORPORATE SOCIAL RESPONSIBILITY (CSR) ATTESTATION:
+This report certifies corporate sponsorship deliverables provided by ${currentOrg.name}.
+Thank you for your generous underwriting and investment in our student community!
 
-Gross Amount Paid:                             ${formatCurrency(grossPaid)}
-Less Fair Market Value (FMV) of Goods/Perks:   ${formatCurrency(fmvOffset)}
---------------------------------------------------------------------------------
-NET ELIGIBLE CHARITABLE CONTRIBUTION DEDUCTION: ${formatCurrency(taxDeductible)}
---------------------------------------------------------------------------------
-STATUTORY IRS ACKNOWLEDGEMENT DISCLOSURE:
-In accordance with Section 170(f)(8) of the Internal Revenue Code, this receipt
-certifies that ${currentOrg.name} received the contribution noted above.
-The deductible amount of the contribution is limited to the excess of the
-amount of money contributed over the fair market value of goods or services
-provided by the organization in exchange.
-
-AUTHORIZED EXECUTIVE OFFICER SIGNATURE:
-Signature: /s/ ${currentOrg.signatoryOfficerName || 'Elena Rostova'}
-Title:     ${currentOrg.signatoryOfficerTitle || 'President & Executive Officer'}
-Date:      ${formatDate(new Date().toISOString())}
+Elena Rostova, President
+${currentOrg.name}
 ================================================================================
 `;
-    triggerBrowserDownload(`${receiptNum}_Tax_Receipt_${app.businessName.replace(/\s+/g, '_')}.txt`, receiptText);
-    showToast('success', 'Tax Receipt Downloaded', `Downloaded IRS 501(c)(3) substantiation letter for ${app.businessName}.`);
+    triggerBrowserDownload(`Executive_ROI_Dossier_${currentEvent.title.replace(/\s+/g, '_')}_2026.txt`, dossierText);
+    showToast('success', 'ROI Dossier Downloaded', 'Downloaded complete Executive Sponsor Impact Report.');
   };
+
+  const filteredLeads = vendorLeads.filter(l => {
+    if (!leadSearchFilter.trim()) return true;
+    const q = leadSearchFilter.toLowerCase();
+    return l.attendeeName.toLowerCase().includes(q) || l.email.toLowerCase().includes(q) || (l.notes && l.notes.toLowerCase().includes(q));
+  });
 
   const filteredInquiries = vendorInquiries.filter(inq => {
     if (!inquirySearch.trim()) return true;
@@ -319,7 +424,7 @@ Date:      ${formatDate(new Date().toISOString())}
             {currentEvent.title}
           </h2>
           <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
-            Manage your commercial booth assignments, electrical hookups, Certificate of Insurance (COI), load-in logistics, online payments, and official IRS 501(c)(3) tax receipts.
+            Manage your commercial booth assignments, electrical hookups, Certificate of Insurance (COI), lead scanner, equipment rentals, annual season passes, and official IRS 501(c)(3) tax receipts.
           </p>
         </div>
 
@@ -339,62 +444,110 @@ Date:      ${formatDate(new Date().toISOString())}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('my_passes')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeTab === 'my_passes'
               ? 'bg-slate-900 text-white shadow-xs'
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
           <Store className="w-3.5 h-3.5 text-amber-400" />
-          <span>My Booths & Logistics Passes ({myApplications.length})</span>
+          <span>My Booths & Passes ({myApplications.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('leads_hub')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            activeTab === 'leads_hub'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <QrCode className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Lead Scanner & Capture ({vendorLeads.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('equipment_addons')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            activeTab === 'equipment_addons'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <ShoppingBag className="w-3.5 h-3.5 text-pink-400" />
+          <span>Equipment & Add-Ons</span>
         </button>
 
         <button
           onClick={() => setActiveTab('compliance')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeTab === 'compliance'
               ? 'bg-slate-900 text-white shadow-xs'
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>COI & Tax Receipts Vault</span>
+          <span>COI & Tax Receipts</span>
         </button>
 
         <button
           onClick={() => setActiveTab('brand_assets')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeTab === 'brand_assets'
               ? 'bg-slate-900 text-white shadow-xs'
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
           <Award className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Brand Assets & Deliverables</span>
+          <span>Brand Assets</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('season_passes')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            activeTab === 'season_passes'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5 text-amber-400" />
+          <span>Corporate Season Passes</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('roi_dossier')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            activeTab === 'roi_dossier'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Sponsor ROI Dossier</span>
         </button>
 
         <button
           onClick={() => setActiveTab('qa_helpdesk')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeTab === 'qa_helpdesk'
               ? 'bg-slate-900 text-white shadow-xs'
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
-          <span>Vendor Q&A & Helpdesk ({vendorInquiries.length})</span>
+          <span>Q&A Helpdesk ({vendorInquiries.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('available_packages')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeTab === 'available_packages'
               ? 'bg-slate-900 text-white shadow-xs'
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>Available Commercial Tiers ({eventTiers.length})</span>
+          <span>All Packages</span>
         </button>
       </div>
 
@@ -617,7 +770,231 @@ Date:      ${formatDate(new Date().toISOString())}
         </div>
       )}
 
-      {/* TAB 2: COI & TAX VAULT */}
+      {/* TAB 2: DIGITAL LEAD SCANNER & LEAD CAPTURE HUB */}
+      {activeTab === 'leads_hub' && (
+        <div className="space-y-8">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-sm space-y-6">
+            
+            {/* Header & Metrics Bento */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="p-2 rounded-xl bg-cyan-50 text-cyan-700">
+                    <QrCode className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900">Digital Lead Scanner & Attendee Capture</h3>
+                    <p className="text-xs text-slate-500">
+                      Scan attendee QR passes or capture customer contact info at your booth for post-event sales follow-up.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setIsLeadModalOpen(true)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Camera className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Scan / Add Lead</span>
+                </button>
+
+                <button
+                  onClick={handleExportLeadsCsv}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>Export CSV</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Metrics Ribbon */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl">
+                <span className="text-slate-400 font-bold uppercase text-[10px] block">Total Captured Leads</span>
+                <div className="text-2xl font-black text-slate-900 mt-0.5">{vendorLeads.length} Contacts</div>
+                <span className="text-[11px] text-slate-500 mt-1 block">Live synced to your portal</span>
+              </div>
+
+              <div className="p-4 bg-amber-50/60 border border-amber-200 rounded-2xl">
+                <span className="text-amber-800 font-bold uppercase text-[10px] block">Hot & VIP High Intent</span>
+                <div className="text-2xl font-black text-amber-950 mt-0.5">
+                  {vendorLeads.filter(l => l.interestTier === 'hot' || l.interestTier === 'vip').length} Leads
+                </div>
+                <span className="text-[11px] text-amber-700 mt-1 block">Priority commercial follow-up</span>
+              </div>
+
+              <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl">
+                <span className="text-emerald-800 font-bold uppercase text-[10px] block">Export Status</span>
+                <div className="text-2xl font-black text-emerald-950 mt-0.5">Ready for CRM</div>
+                <span className="text-[11px] text-emerald-700 mt-1 block">Excel & CSV compatible</span>
+              </div>
+            </div>
+
+            {/* Filter Search */}
+            <div className="flex items-center justify-between gap-4 pt-2">
+              <div className="w-full sm:w-72">
+                <input
+                  type="text"
+                  value={leadSearchFilter}
+                  onChange={(e) => setLeadSearchFilter(e.target.value)}
+                  placeholder="Search leads by name, email, or notes..."
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                />
+              </div>
+              <span className="text-xs font-semibold text-slate-500">{filteredLeads.length} leads displayed</span>
+            </div>
+
+            {/* Leads Table */}
+            {filteredLeads.length === 0 ? (
+              <div className="p-10 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-xs space-y-3">
+                <QrCode className="w-8 h-8 text-slate-300 mx-auto" />
+                <p>No leads captured yet. Click "Scan / Add Lead" on event day to collect customer contact info.</p>
+                <button
+                  onClick={() => setIsLeadModalOpen(true)}
+                  className="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-xl cursor-pointer"
+                >
+                  + Add First Lead
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-400 uppercase text-[10px] font-bold">
+                      <th className="pb-3 pl-2">Attendee / Prospect</th>
+                      <th className="pb-3">Contact</th>
+                      <th className="pb-3">Intent Level</th>
+                      <th className="pb-3">Booth Notes</th>
+                      <th className="pb-3">Captured</th>
+                      <th className="pb-3 pr-2 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredLeads.map(lead => (
+                      <tr key={lead.id} className="hover:bg-slate-50/80 transition">
+                        <td className="py-3.5 pl-2 font-bold text-slate-900">
+                          <div>{lead.attendeeName}</div>
+                          {lead.companyOrRole && (
+                            <div className="text-[11px] text-slate-400 font-normal">{lead.companyOrRole}</div>
+                          )}
+                        </td>
+                        <td className="py-3.5 text-slate-600">
+                          <div>{lead.email}</div>
+                          {lead.phone && <div className="text-[11px] text-slate-400">{lead.phone}</div>}
+                        </td>
+                        <td className="py-3.5">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                            lead.interestTier === 'vip'
+                              ? 'bg-purple-100 text-purple-800 border border-purple-300'
+                              : lead.interestTier === 'hot'
+                              ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                              : 'bg-amber-100 text-amber-800 border border-amber-300'
+                          }`}>
+                            {lead.interestTier === 'vip' ? '👑 VIP Account' : lead.interestTier === 'hot' ? '🔥 Hot Lead' : '☀️ Warm Lead'}
+                          </span>
+                        </td>
+                        <td className="py-3.5 text-slate-700 max-w-xs truncate" title={lead.notes}>
+                          {lead.notes || '—'}
+                        </td>
+                        <td className="py-3.5 text-slate-400 font-mono text-[11px]">
+                          {formatDate(lead.capturedAt)}
+                        </td>
+                        <td className="py-3.5 pr-2 text-right">
+                          <button
+                            onClick={() => deleteVendorLead(lead.id)}
+                            className="p-1 text-slate-400 hover:text-rose-600 rounded-lg transition cursor-pointer"
+                            title="Delete Lead"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: EQUIPMENT RENTALS & ADD-ON STORE */}
+      {activeTab === 'equipment_addons' && (
+        <div className="space-y-8">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="p-2 rounded-xl bg-pink-50 text-pink-700">
+                    <ShoppingBag className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900">Equipment Rentals & Booth Add-Ons Store</h3>
+                    <p className="text-xs text-slate-500">
+                      Reserve folding banquet tables, shade canopies with weights, dedicated power circuits, or corner priority placement.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Active Add-On Orders */}
+            {vendorAddOnOrders.length > 0 && (
+              <div className="p-5 bg-indigo-50/60 border border-indigo-200 rounded-2xl space-y-3">
+                <span className="text-xs font-black text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  Your Active Reserved Add-Ons ({vendorAddOnOrders.length})
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {vendorAddOnOrders.map(order => (
+                    <div key={order.id} className="p-3 bg-white rounded-xl border border-indigo-100 flex items-center justify-between text-xs">
+                      <div>
+                        <strong className="block text-slate-900">{order.quantity}x {order.addOnTitle}</strong>
+                        <span className="text-[11px] text-emerald-600 font-bold">✓ Delivered to Pitch on Event Morning</span>
+                      </div>
+                      <span className="font-mono font-bold text-slate-900">{formatCurrency(order.totalPrice)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Add-On Catalog Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {vendorAddOns.map(addon => (
+                <div
+                  key={addon.id}
+                  className="p-5 bg-slate-50/60 border border-slate-200 rounded-2xl hover:bg-white hover:border-slate-300 transition flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-start">
+                      <span className="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-wider">
+                        {addon.category}
+                      </span>
+                      <div className="text-lg font-black text-slate-900">{formatCurrency(addon.price)}</div>
+                    </div>
+                    <h4 className="text-sm font-extrabold text-slate-900">{addon.title}</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">{addon.description}</p>
+                  </div>
+
+                  <button
+                    onClick={() => handleOpenAddOnModal(addon)}
+                    className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Reserve & Add to Booth</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: COI & TAX VAULT */}
       {activeTab === 'compliance' && (
         <div className="space-y-8">
           
@@ -685,6 +1062,11 @@ Date:      ${formatDate(new Date().toISOString())}
                           }`}>
                             {isVerified ? '✓ COI Verified & Cleared' : isPending ? '⏳ COI Verification in Progress' : '⚠️ Action Required: Missing COI'}
                           </span>
+                          {app.assignedBoothNumber && (
+                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-md">
+                              {app.assignedBoothNumber}
+                            </span>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-600 pt-1">
@@ -701,8 +1083,16 @@ Date:      ${formatDate(new Date().toISOString())}
                             <span className="font-semibold text-slate-800">{app.coiExpirationDate ? formatDate(app.coiExpirationDate) : 'Not Provided'}</span>
                           </div>
                         </div>
+
+                        {app.coiDocumentName && (
+                          <div className="flex items-center gap-2 text-xs text-indigo-700 font-medium pt-1">
+                            <FileCheck className="w-4 h-4 text-emerald-600" />
+                            <span>Uploaded Document: <strong>{app.coiDocumentName}</strong></span>
+                          </div>
+                        )}
                       </div>
 
+                      {/* COI Actions */}
                       <div className="flex flex-wrap items-center gap-2 shrink-0">
                         <button
                           onClick={() => handleOpenCoiModal(app)}
@@ -719,7 +1109,7 @@ Date:      ${formatDate(new Date().toISOString())}
             )}
           </div>
 
-          {/* SECTION B: IRS RECEIPT HUB */}
+          {/* SECTION B: REAL IRS 501(c)(3) TAX RECEIPT & INVOICE VAULT */}
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
               <div>
@@ -735,65 +1125,112 @@ Date:      ${formatDate(new Date().toISOString())}
                   </div>
                 </div>
               </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <span className="px-2.5 py-1 bg-slate-100 text-slate-700 font-mono font-bold rounded-lg">
+                  Org EIN: {currentOrg.ein || '82-9482019'}
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {myApplications.map(app => {
-                const tier = ticketTiers.find(t => t.id === app.ticketTierId);
-                const receiptNum = app.taxReceiptNumber || `REC-2026-VND-${app.id.slice(-3)}`;
-                
-                return (
-                  <div key={app.id} className="p-5 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 transition flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
-                    <div className="space-y-2 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-extrabold text-base text-slate-900">{app.businessName}</span>
-                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 text-[10px] font-black uppercase rounded-md border border-emerald-200">
-                          {tier?.title || 'Commercial Package'}
-                        </span>
-                      </div>
-                      
-                      <div className="text-[11px] text-slate-500 font-medium pt-1">
-                        Signed by {currentOrg.signatoryOfficerName || 'Elena Rostova'} ({currentOrg.signatoryOfficerTitle || 'President & Executive Officer'})
-                      </div>
-                    </div>
+            {myApplications.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-xs">
+                No invoices or tax receipts generated yet.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {myApplications.map(app => {
+                  const tier = ticketTiers.find(t => t.id === app.ticketTierId);
+                  const receiptNum = app.taxReceiptNumber || `REC-2026-VND-${app.id.slice(-3)}`;
+                  const grossAmount = tier ? tier.price : 0;
+                  const fmv = tier ? tier.fairMarketValue : 0;
+                  const taxDeductible = Math.max(0, grossAmount - fmv);
 
-                    {/* Download & Pay Buttons */}
-                    <div className="flex flex-wrap items-center gap-2 shrink-0">
-                      {app.status !== 'paid' && (
+                  return (
+                    <div
+                      key={app.id}
+                      className="p-5 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 transition flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs"
+                    >
+                      <div className="space-y-2 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-extrabold text-base text-slate-900">{app.businessName}</span>
+                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 text-[10px] font-black uppercase rounded-md border border-emerald-200">
+                            {tier?.title || 'Commercial Package'}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
+                          <div>
+                            <span className="text-slate-400 font-bold uppercase text-[10px] block">Receipt #</span>
+                            <span className="font-mono font-bold text-slate-800">{receiptNum}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-bold uppercase text-[10px] block">Gross Paid</span>
+                            <span className="font-black text-slate-900">{formatCurrency(grossAmount)}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-bold uppercase text-[10px] block">Goods / FMV</span>
+                            <span className="font-semibold text-slate-600">{formatCurrency(fmv)}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-bold uppercase text-[10px] block">Tax Deductible</span>
+                            <span className="font-black text-emerald-700">{formatCurrency(taxDeductible)}</span>
+                          </div>
+                        </div>
+
+                        <div className="text-[11px] text-slate-500 font-medium pt-1">
+                          Signed by {currentOrg.signatoryOfficerName || 'Elena Rostova'} ({currentOrg.signatoryOfficerTitle || 'President & Executive Officer'})
+                        </div>
+                      </div>
+
+                      {/* Download & Pay Buttons */}
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        {app.status !== 'paid' && (
+                          <button
+                            onClick={() => handleOpenPaymentModal(app)}
+                            className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <CreditCard className="w-3.5 h-3.5" />
+                            <span>Pay Invoice</span>
+                          </button>
+                        )}
+
                         <button
-                          onClick={() => handleOpenPaymentModal(app)}
-                          className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                          onClick={() => setPreviewDocModal({ isOpen: true, type: 'tax_receipt', app, tier })}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer"
                         >
-                          <CreditCard className="w-3.5 h-3.5" />
-                          <span>Pay Invoice</span>
+                          <Eye className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Preview</span>
                         </button>
-                      )}
 
-                      <button
-                        onClick={() => setPreviewDocModal({ isOpen: true, type: 'tax_receipt', app, tier })}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Preview</span>
-                      </button>
+                        <button
+                          onClick={() => handleDownloadInvoice(app)}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+                          title="Download Official Commercial Invoice"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-slate-600" />
+                          <span>Invoice (PDF)</span>
+                        </button>
 
-                      <button
-                        onClick={() => handleDownloadTaxReceipt(app)}
-                        className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>501(c)(3) Receipt</span>
-                      </button>
+                        <button
+                          onClick={() => handleDownloadTaxReceipt(app)}
+                          className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                          title="Download IRS 501(c)(3) Tax Receipt Letter"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>501(c)(3) Receipt</span>
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* TAB 3: BRAND ASSETS & DELIVERABLES */}
+      {/* TAB 5: BRAND ASSETS & DELIVERABLES */}
       {activeTab === 'brand_assets' && (
         <div className="space-y-8">
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-sm space-y-6">
@@ -921,7 +1358,184 @@ Date:      ${formatDate(new Date().toISOString())}
         </div>
       )}
 
-      {/* TAB 4: VENDOR Q&A & HELPDESK */}
+      {/* TAB 6: CORPORATE SEASON PASSES & BUNDLES */}
+      {activeTab === 'season_passes' && (
+        <div className="space-y-8">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="p-2 rounded-xl bg-amber-50 text-amber-700">
+                    <Layers className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900">Annual Corporate Season Pass & Multi-Event Bundling</h3>
+                    <p className="text-xs text-slate-500">
+                      Underwrite all 3 flagship campaigns across the school year with 15% bundled savings and consolidated IRS tax deduction receipt.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsSeasonPassModalOpen(true)}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Underwrite Annual Season Pass</span>
+              </button>
+            </div>
+
+            {/* Active Season Passes Cards */}
+            <div className="space-y-4">
+              {corporateSeasonPasses.map(pass => (
+                <div
+                  key={pass.id}
+                  className="p-6 bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950 text-white rounded-3xl border border-indigo-500/30 shadow-lg space-y-5"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                    <div>
+                      <span className="px-3 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-wider border border-amber-400/30">
+                        {pass.fiscalYear} • {pass.tierName}
+                      </span>
+                      <h4 className="text-xl font-black text-white mt-1.5">{pass.sponsorName}</h4>
+                      <span className="text-xs text-slate-400">Tax Receipt: {pass.taxReceiptNumber}</span>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Annual Contribution</span>
+                      <div className="text-2xl font-black text-amber-400">{formatCurrency(pass.netPaid)}</div>
+                      <span className="text-[11px] text-emerald-400 font-bold">15% Multi-Event Savings Applied</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {pass.bundledEventTitles.map((title, idx) => (
+                      <div key={idx} className="p-3 bg-slate-800/80 rounded-xl border border-slate-700 text-xs">
+                        <span className="text-[10px] text-amber-400 font-bold uppercase block">Campaign #{idx + 1}</span>
+                        <strong className="text-white text-xs mt-0.5 block">{title}</strong>
+                        <span className="text-[10px] text-emerald-400 mt-1 block">✓ VIP Passes & Marquee Included</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div className="text-slate-400">
+                      Primary Contact: {pass.contactName} ({pass.contactEmail})
+                    </div>
+                    <button
+                      onClick={() => setPreviewDocModal({ isOpen: true, type: 'season_pass', seasonPass: pass })}
+                      className="px-4 py-1.5 bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Preview Annual 501(c)(3) Certificate</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 7: POST-EVENT SPONSOR ROI & IMPACT DOSSIER */}
+      {activeTab === 'roi_dossier' && (
+        <div className="space-y-8">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="p-2 rounded-xl bg-emerald-50 text-emerald-700">
+                    <TrendingUp className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900">Official Post-Event Sponsor ROI & Impact Dossier</h3>
+                    <p className="text-xs text-slate-500">
+                      Detailed marketing impressions, foot traffic analytics, and community impact valuation for {currentEvent.title}.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDownloadRoiDossier}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Full Impact Dossier</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Impact Metric Cards Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                <span className="text-slate-400 font-bold uppercase text-[10px] block">Estimated Foot Traffic</span>
+                <div className="text-2xl font-black text-slate-900 mt-0.5">
+                  {currentImpactMetrics.totalAttendeesEstimated.toLocaleString()}
+                </div>
+                <span className="text-[11px] text-slate-500">Local community attendees</span>
+              </div>
+
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                <span className="text-slate-400 font-bold uppercase text-[10px] block">Student Families</span>
+                <div className="text-2xl font-black text-slate-900 mt-0.5">
+                  {currentImpactMetrics.familiesEngaged.toLocaleString()}
+                </div>
+                <span className="text-[11px] text-slate-500">Enrolled households</span>
+              </div>
+
+              <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl">
+                <span className="text-emerald-800 font-bold uppercase text-[10px] block">Total Funds Raised</span>
+                <div className="text-2xl font-black text-emerald-950 mt-0.5">
+                  {formatCurrency(currentImpactMetrics.totalDollarsRaised)}
+                </div>
+                <span className="text-[11px] text-emerald-700">{currentImpactMetrics.goalAchievementPercent}% of goal</span>
+              </div>
+
+              <div className="p-4 bg-purple-50/60 border border-purple-200 rounded-2xl">
+                <span className="text-purple-800 font-bold uppercase text-[10px] block">Volunteer Service</span>
+                <div className="text-2xl font-black text-purple-950 mt-0.5">
+                  {currentImpactMetrics.totalVolunteerHoursLogged} Hours
+                </div>
+                <span className="text-[11px] text-purple-700">{currentImpactMetrics.studentVolunteersEngaged} student helpers</span>
+              </div>
+            </div>
+
+            {/* Sponsor Visibility Audit */}
+            <div className="p-6 bg-slate-900 text-white rounded-2xl border border-slate-800 space-y-4">
+              <span className="text-xs font-black text-amber-400 uppercase tracking-wider block">
+                Brand Impressions & Deliverables Verification Audit
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3 bg-slate-800 rounded-xl">
+                  <span className="text-slate-400 block text-[10px] uppercase">Main Stage Screen Rotations</span>
+                  <strong className="text-base text-white">{currentImpactMetrics.mainStageScreenRotations}x Rotations</strong>
+                  <span className="text-[10px] text-slate-400 block mt-1">High-definition LED display</span>
+                </div>
+
+                <div className="p-3 bg-slate-800 rounded-xl">
+                  <span className="text-slate-400 block text-[10px] uppercase">Digital Program Reach</span>
+                  <strong className="text-base text-white">{currentImpactMetrics.digitalProgramImpressions.toLocaleString()} Views</strong>
+                  <span className="text-[10px] text-slate-400 block mt-1">Mobile schedule scans</span>
+                </div>
+
+                <div className="p-3 bg-slate-800 rounded-xl">
+                  <span className="text-slate-400 block text-[10px] uppercase">Economic Community Valuation</span>
+                  <strong className="text-base text-emerald-400">
+                    {formatCurrency(currentImpactMetrics.totalVolunteerHoursLogged * 31.80)}
+                  </strong>
+                  <span className="text-[10px] text-slate-400 block mt-1">$31.80/hr valuation standard</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 8: VENDOR Q&A & HELPDESK */}
       {activeTab === 'qa_helpdesk' && (
         <div className="space-y-8">
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-sm space-y-6">
@@ -1041,7 +1655,7 @@ Date:      ${formatDate(new Date().toISOString())}
         </div>
       )}
 
-      {/* TAB 5: AVAILABLE PACKAGES */}
+      {/* TAB 9: AVAILABLE COMMERCIAL PACKAGES */}
       {activeTab === 'available_packages' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
@@ -1380,7 +1994,13 @@ Date:      ${formatDate(new Date().toISOString())}
         <Modal
           isOpen={previewDocModal.isOpen}
           onClose={() => setPreviewDocModal(null)}
-          title={`Document Preview: ${previewDocModal.type === 'tax_receipt' ? 'IRS 501(c)(3) Tax Receipt' : 'Commercial Invoice'}`}
+          title={`Document Preview: ${
+            previewDocModal.type === 'tax_receipt' 
+              ? 'IRS 501(c)(3) Tax Receipt' 
+              : previewDocModal.type === 'season_pass'
+              ? 'Annual Corporate Season Pass Certificate'
+              : 'Commercial Invoice'
+          }`}
         >
           <div className="space-y-4">
             <div className="bg-slate-900 text-white p-5 rounded-2xl space-y-3 font-mono text-xs leading-relaxed max-h-96 overflow-y-auto border border-slate-800">
@@ -1388,43 +2008,66 @@ Date:      ${formatDate(new Date().toISOString())}
                 <h4 className="text-sm font-bold text-white uppercase">{currentOrg.name}</h4>
                 <p className="text-[10px] text-slate-400">EIN / Tax ID: {currentOrg.ein || '82-9482019'} • 501(c)(3) Non-Profit</p>
                 <p className="text-amber-400 text-xs font-bold mt-1">
-                  {previewDocModal.type === 'tax_receipt' ? 'OFFICIAL CHARITABLE CONTRIBUTION RECEIPT' : 'COMMERCIAL VENDOR INVOICE'}
+                  {previewDocModal.type === 'tax_receipt' 
+                    ? 'OFFICIAL CHARITABLE CONTRIBUTION RECEIPT' 
+                    : previewDocModal.type === 'season_pass'
+                    ? 'ANNUAL CORPORATE SPONSORSHIP CERTIFICATE'
+                    : 'COMMERCIAL VENDOR INVOICE'}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div>
-                  <span className="text-slate-400 block">Recipient / Donor:</span>
-                  <strong className="text-white">{previewDocModal.app.businessName}</strong>
-                  <span className="block text-slate-400">EIN: {previewDocModal.app.einTaxId}</span>
+              {previewDocModal.seasonPass ? (
+                <div className="space-y-2 text-[11px]">
+                  <div className="flex justify-between">
+                    <span>Sponsor: {previewDocModal.seasonPass.sponsorName}</span>
+                    <span className="text-emerald-400 font-bold">ACTIVE SEASON PASS</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Fiscal Year:</span>
+                    <span>{previewDocModal.seasonPass.fiscalYear}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-400 font-bold border-t border-slate-800 pt-1">
+                    <span>Net Contribution Paid:</span>
+                    <span>{formatCurrency(previewDocModal.seasonPass.netPaid)}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-slate-400 block">Date / Status:</span>
-                  <strong className={previewDocModal.app.status === 'paid' ? 'text-emerald-400' : 'text-amber-400'}>
-                    {previewDocModal.app.status === 'paid' ? 'PAID & VERIFIED' : 'APPROVED • INVOICE UNPAID'}
-                  </strong>
-                  <span className="block text-slate-400">{formatDate(previewDocModal.app.submittedAt)}</span>
-                </div>
-              </div>
+              ) : previewDocModal.app ? (
+                <div className="space-y-2 text-[11px]">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-slate-400 block">Recipient / Donor:</span>
+                      <strong className="text-white">{previewDocModal.app.businessName}</strong>
+                      <span className="block text-slate-400">EIN: {previewDocModal.app.einTaxId}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block">Date / Status:</span>
+                      <strong className={previewDocModal.app.status === 'paid' ? 'text-emerald-400' : 'text-amber-400'}>
+                        {previewDocModal.app.status === 'paid' ? 'PAID & VERIFIED' : 'APPROVED • INVOICE UNPAID'}
+                      </strong>
+                      <span className="block text-slate-400">{formatDate(previewDocModal.app.submittedAt)}</span>
+                    </div>
+                  </div>
 
-              <div className="pt-2 border-t border-slate-800 text-[11px] space-y-1">
-                <div className="flex justify-between">
-                  <span>Package: {previewDocModal.tier?.title || 'Commercial Tier'}</span>
-                  <span>{formatCurrency(previewDocModal.tier?.price || 0)}</span>
+                  <div className="pt-2 border-t border-slate-800 space-y-1">
+                    <div className="flex justify-between">
+                      <span>Package: {previewDocModal.tier?.title || 'Commercial Tier'}</span>
+                      <span>{formatCurrency(previewDocModal.tier?.price || 0)}</span>
+                    </div>
+                    {previewDocModal.type === 'tax_receipt' && (
+                      <>
+                        <div className="flex justify-between text-slate-400">
+                          <span>Less FMV Offset:</span>
+                          <span>-{formatCurrency(previewDocModal.tier?.fairMarketValue || 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-emerald-400 font-bold border-t border-slate-800 pt-1">
+                          <span>Tax-Deductible Gift:</span>
+                          <span>{formatCurrency(Math.max(0, (previewDocModal.tier?.price || 0) - (previewDocModal.tier?.fairMarketValue || 0)))}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
-                {previewDocModal.type === 'tax_receipt' && (
-                  <>
-                    <div className="flex justify-between text-slate-400">
-                      <span>Less FMV Offset:</span>
-                      <span>-{formatCurrency(previewDocModal.tier?.fairMarketValue || 0)}</span>
-                    </div>
-                    <div className="flex justify-between text-emerald-400 font-bold border-t border-slate-800 pt-1">
-                      <span>Tax-Deductible Gift:</span>
-                      <span>{formatCurrency(Math.max(0, (previewDocModal.tier?.price || 0) - (previewDocModal.tier?.fairMarketValue || 0)))}</span>
-                    </div>
-                  </>
-                )}
-              </div>
+              ) : null}
 
               <div className="pt-3 border-t border-slate-800 text-[10px] text-slate-400">
                 Authorized Executive Officer: {currentOrg.signatoryOfficerName || 'Elena Rostova'}, {currentOrg.signatoryOfficerTitle || 'President'}
@@ -1440,10 +2083,14 @@ Date:      ${formatDate(new Date().toISOString())}
               </button>
               <button
                 onClick={() => {
-                  if (previewDocModal.type === 'tax_receipt') {
-                    handleDownloadTaxReceipt(previewDocModal.app);
-                  } else {
-                    handleDownloadInvoice(previewDocModal.app);
+                  if (previewDocModal.app) {
+                    if (previewDocModal.type === 'tax_receipt') {
+                      handleDownloadTaxReceipt(previewDocModal.app);
+                    } else {
+                      handleDownloadInvoice(previewDocModal.app);
+                    }
+                  } else if (previewDocModal.type === 'season_pass') {
+                    showToast('success', 'Pass Certificate Saved', 'Annual season pass document ready.');
                   }
                   setPreviewDocModal(null);
                 }}

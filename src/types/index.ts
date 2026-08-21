@@ -307,6 +307,80 @@ export interface VendorInquiry {
   createdAt: string;
 }
 
+export interface VendorLead {
+  id: string;
+  eventId: string;
+  vendorAppId: string;
+  businessName: string;
+  attendeeName: string;
+  email: string;
+  phone?: string;
+  companyOrRole?: string;
+  interestTier: 'hot' | 'warm' | 'vip';
+  notes?: string;
+  capturedAt: string;
+}
+
+export interface VendorAddOn {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  category: 'furniture' | 'shelter' | 'power' | 'placement' | 'marketing';
+  iconName: string;
+}
+
+export interface VendorAddOnOrder {
+  id: string;
+  vendorAppId: string;
+  eventId: string;
+  addOnId: string;
+  addOnTitle: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  status: 'paid' | 'pending';
+  orderedAt: string;
+}
+
+export interface CorporateSeasonPass {
+  id: string;
+  orgId: string;
+  sponsorName: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  einTaxId: string;
+  fiscalYear: string; // e.g. "2026-2027"
+  tierName: string; // e.g. "Premier Community Underwriter"
+  bundledEventIds: string[];
+  bundledEventTitles: string[];
+  grossAmount: number;
+  discountPercent: number; // e.g. 15 for 15% off
+  netPaid: number;
+  status: 'active' | 'pending_payment';
+  taxReceiptNumber: string;
+  perksSummary: string[];
+  logoUrl?: string;
+  createdAt: string;
+}
+
+export interface EventImpactMetrics {
+  eventId: string;
+  eventTitle: string;
+  eventDate: string;
+  totalAttendeesEstimated: number;
+  familiesEngaged: number;
+  totalDollarsRaised: number;
+  fundraisingGoal: number;
+  goalAchievementPercent: number;
+  studentVolunteersEngaged: number;
+  totalVolunteerHoursLogged: number;
+  digitalProgramImpressions: number;
+  mainStageScreenRotations: number;
+  boothFootTrafficAverage: number;
+}
+
 export interface ApprovalRequest {
   id: string;
   eventId: string;
