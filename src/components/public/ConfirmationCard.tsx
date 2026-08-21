@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Registration, Event, SubPart, Shift } from '../../types';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
   CheckCircle2, Calendar, MapPin, Phone, ShieldCheck, 
-  Download, Printer, HeartHandshake, ArrowRight, Share2 
+  Download, Printer, HeartHandshake, ArrowRight, Share2,
+  Cake, Key, Lock, Check
 } from 'lucide-react';
-import { formatDate, formatTimeRange, formatCurrency } from '../../utils/formatters';
+import { formatDate, formatTimeRange, formatCurrency, formatBirthDate, calculateAge } from '../../utils/formatters';
 import { generateIcsFile, getGoogleCalendarUrl } from '../../utils/calendar';
 
 interface ConfirmationCardProps {
@@ -23,6 +24,9 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
   shifts,
   onClose
 }) => {
+  const [accountPassword, setAccountPassword] = useState('');
+  const [isPasswordSaved, setIsPasswordSaved] = useState(false);
+
   const shiftMap = new Map(shifts.map(s => [s.id, s]));
   const subPartMap = new Map(subParts.map(sp => [sp.id, sp]));
 
@@ -54,7 +58,15 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
     });
   };
 
+  const handleSavePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (accountPassword.length >= 6) {
+      setIsPasswordSaved(true);
+    }
+  };
+
   const totalDonations = registration.donations.reduce((sum, d) => sum + d.amount, 0);
+  const primaryDob = registration.birthDate || registration.members[0]?.birthDate;
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden max-w-2xl mx-auto animate-in zoom-in-95 duration-300">
@@ -93,10 +105,30 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
             </span>
             <h4 className="text-base font-bold text-slate-900 mt-0.5">Show this QR Code at the Entrance</h4>
             <p className="text-xs text-slate-500 mt-1">
-              Keep this screen open or save the confirmation link. You can also self check-in using your phone number <strong>{registration.primaryPhone}</strong> at the front door tablet kiosk.
+              Keep this screen open or save your confirmation link. You can also self check-in using your phone number <strong>{registration.primaryPhone}</strong> at the entrance tablet kiosk.
             </p>
           </div>
         </div>
+
+        {/* Birthday Milestone Program Notice */}
+        {primaryDob && (
+          <div className="p-3.5 bg-pink-50/60 rounded-2xl border border-pink-200 text-xs text-pink-900 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center shrink-0">
+                <Cake className="w-4 h-4" />
+              </div>
+              <div>
+                <strong>Volunteer Birthday Milestone Enrolled:</strong>
+                <span className="block text-[11px] text-pink-800">
+                  Birthday: {formatBirthDate(primaryDob)} (Age: {calculateAge(primaryDob)}). You will receive annual birthday greetings & impact recognition!
+                </span>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 rounded-md bg-pink-200/80 text-pink-800 text-[10px] font-extrabold uppercase shrink-0">
+              Active
+            </span>
+          </div>
+        )}
 
         {/* Claimed Shifts with Reporting Instructions */}
         {registration.shiftClaims.length > 0 && (
@@ -175,6 +207,48 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
           </div>
         )}
 
+        {/* Optional Account Creation / Set Password Card */}
+        <div className="p-4 bg-slate-100/80 rounded-2xl border border-slate-200 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Key className="w-4 h-4 text-indigo-600" />
+              <h5 className="text-xs font-bold text-slate-900">Want to save your profile & service history?</h5>
+            </div>
+            <span className="text-[10px] text-slate-400 font-semibold">Optional</span>
+          </div>
+
+          <p className="text-[11px] text-slate-500 leading-relaxed">
+            Create a password to claim your volunteer account ({registration.primaryEmail}) to track cumulative service hours, download verified school certificates, and save your family information.
+          </p>
+
+          {isPasswordSaved ? (
+            <div className="p-2.5 bg-emerald-100 text-emerald-900 rounded-xl text-xs font-bold flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-600" />
+              <span>Password set successfully! Your volunteer profile is saved.</span>
+            </div>
+          ) : (
+            <form onSubmit={handleSavePassword} className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="password"
+                  value={accountPassword}
+                  onChange={(e) => setAccountPassword(e.target.value)}
+                  placeholder="Set password (min 6 characters)"
+                  className="w-full pl-8 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:border-indigo-600"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={accountPassword.length < 6}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition"
+              >
+                Save Password
+              </button>
+            </form>
+          )}
+        </div>
+
         {/* Donations & Tax Receipt */}
         {totalDonations > 0 && (
           <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-200 flex justify-between items-center">
@@ -226,3 +300,4 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
     </div>
   );
 };
+

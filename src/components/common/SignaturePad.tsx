@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { RotateCcw, PenTool, Type, Check } from 'lucide-react';
 
 interface SignaturePadProps {
@@ -8,22 +8,79 @@ interface SignaturePadProps {
 
 export const SignaturePad: React.FC<SignaturePadProps> = ({ signerName, onSignatureCapture }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
   const [mode, setMode] = useState<'draw' | 'type'>('draw');
   const [typedSignature, setTypedSignature] = useState(signerName || '');
 
-  useEffect(() => {
+  // Synchronize canvas resolution with rendered display size
+  const syncCanvasResolution = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
 
-    ctx.strokeStyle = '#1e1b4b';
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-  }, [mode]);
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    
+    // Save image data if already drawn
+    let tempImg: ImageData | null = null;
+    const ctx = canvas.getContext('2d');
+    if (ctx && canvas.width > 0 && canvas.height > 0 && hasDrawn) {
+      tempImg = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+
+    if (ctx) {
+      ctx.scale(dpr, dpr);
+      ctx.strokeStyle = '#1e1b4b';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      if (tempImg) {
+        // Redraw if there was previous content
+        ctx.putImageData(tempImg, 0, 0);
+      }
+    }
+  }, [hasDrawn]);
+
+  useEffect(() => {
+    if (mode === 'draw') {
+      // Small timeout to allow modal animation to stabilize layout dimensions
+      const timer = setTimeout(() => {
+        syncCanvasResolution();
+      }, 50);
+
+      window.addEventListener('resize', syncCanvasResolution);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('resize', syncCanvasResolution);
+      };
+    }
+  }, [mode, syncCanvasResolution]);
+
+  const getCanvasCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+    const clientX = 'touches' in e 
+      ? (e.touches[0] ? e.touches[0].clientX : e.changedTouches[0]?.clientX || 0)
+      : e.clientX;
+    const clientY = 'touches' in e 
+      ? (e.touches[0] ? e.touches[0].clientY : e.changedTouches[0]?.clientY || 0)
+      : e.clientY;
+
+    // Direct 1:1 CSS coordinates since context is scaled by DPR
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+  };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -31,12 +88,10 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ signerName, onSignat
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const { x, y } = getCanvasCoordinates(e);
 
     ctx.beginPath();
-    ctx.moveTo(clientX - rect.left, clientY - rect.top);
+    ctx.moveTo(x, y);
     setIsDrawing(true);
     setHasDrawn(true);
   };
@@ -48,11 +103,9 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ signerName, onSignat
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const { x, y } = getCanvasCoordinates(e);
 
-    ctx.lineTo(clientX - rect.left, clientY - rect.top);
+    ctx.lineTo(x, y);
     ctx.stroke();
   };
 
@@ -71,7 +124,11 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ signerName, onSignat
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
     setHasDrawn(false);
     onSignatureCapture('', false);
   };
@@ -82,7 +139,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ signerName, onSignat
   };
 
   return (
-    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200" ref={containerRef}>
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
           <PenTool className="w-3.5 h-3.5 text-indigo-600" />
@@ -122,8 +179,6 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ signerName, onSignat
           <div className="relative bg-white rounded-lg border-2 border-dashed border-slate-300 overflow-hidden cursor-crosshair">
             <canvas
               ref={canvasRef}
-              width={480}
-              height={140}
               onMouseDown={startDrawing}
               onMouseMove={draw}
               onMouseUp={stopDrawing}
@@ -131,11 +186,12 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ signerName, onSignat
               onTouchStart={startDrawing}
               onTouchMove={draw}
               onTouchEnd={stopDrawing}
-              className="w-full h-[120px] touch-none"
+              style={{ width: '100%', height: '130px', display: 'block' }}
+              className="touch-none select-none"
             />
             {!hasDrawn && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-xs text-slate-400 font-medium">
-                Sign with mouse or finger here
+                Sign with mouse, trackpad, or finger here
               </div>
             )}
             <div className="absolute bottom-2 left-3 text-[10px] text-slate-400 pointer-events-none">
@@ -151,7 +207,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ signerName, onSignat
               <RotateCcw className="w-3 h-3" />
               Clear Signature
             </button>
-            <span className="text-[11px] text-slate-600">
+            <span className="text-[11px] text-slate-600 font-medium">
               {hasDrawn ? '✓ Signature captured' : 'Awaiting signature'}
             </span>
           </div>
@@ -174,3 +230,4 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ signerName, onSignat
     </div>
   );
 };
+

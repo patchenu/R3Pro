@@ -4,10 +4,10 @@ import { VolunteerCrmRecord, VolunteerEventHistory } from '../../types';
 import { 
   Users, Award, HeartHandshake, Clock, Search, 
   Tag, Send, Sparkles, Filter, CheckCircle2, Calendar, 
-  DollarSign, Eye, ShieldCheck, ChevronRight, Package, Info, UserCheck, Plus, X 
+  DollarSign, Eye, ShieldCheck, ChevronRight, Package, Info, UserCheck, Plus, X, Cake 
 } from 'lucide-react';
 import { Modal } from '../common/Modal';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import { formatCurrency, formatDate, formatBirthDate, calculateAge } from '../../utils/formatters';
 
 export const VolunteerCrm: React.FC = () => {
   const { currentOrg, volunteerCrm, addVolunteerTag, removeVolunteerTag, updateVolunteerNotes, showToast } = useApp();
@@ -273,6 +273,14 @@ export const VolunteerCrm: React.FC = () => {
                     <strong>Specialty Skills:</strong> {volunteer.skills.join(', ')}
                   </div>
                 )}
+
+                {/* Birthday Milestone Tag */}
+                {volunteer.birthDate && (
+                  <div className="mt-2 text-[10px] text-pink-700 bg-pink-50/80 px-2 py-0.5 rounded-md inline-flex items-center gap-1 font-semibold border border-pink-200/60">
+                    <Cake className="w-3 h-3 text-pink-500" />
+                    <span>🎂 Birthday: {formatBirthDate(volunteer.birthDate)} (Age: {calculateAge(volunteer.birthDate)})</span>
+                  </div>
+                )}
               </div>
 
               {/* Lifetime Stats Footer */}
@@ -366,6 +374,21 @@ export const VolunteerCrm: React.FC = () => {
                 <span className="text-base font-black text-emerald-600">{selectedVolunteer.attendanceRate}%</span>
               </div>
             </div>
+
+            {/* Volunteer Birthday & Milestone Greeting Automation */}
+            {selectedVolunteer.birthDate && (
+              <div className="p-3 bg-pink-50/70 rounded-xl border border-pink-200 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Cake className="w-4 h-4 text-pink-600 shrink-0" />
+                  <span className="font-bold text-pink-900 text-xs">
+                    Date of Birth: {formatBirthDate(selectedVolunteer.birthDate)} (Current Age: {calculateAge(selectedVolunteer.birthDate)})
+                  </span>
+                </div>
+                <span className="text-[10px] font-extrabold text-pink-700 bg-pink-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+                  <span>🎂 Automated Birthday Greetings Active</span>
+                </span>
+              </div>
+            )}
 
             {/* TAG MANAGEMENT STUDIO (AUTOMATED + CUSTOM MANUAL TAGS) */}
             <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3">

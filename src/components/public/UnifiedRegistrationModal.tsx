@@ -5,9 +5,10 @@ import { Modal } from '../common/Modal';
 import { SignaturePad } from '../common/SignaturePad';
 import { 
   Users, UserPlus, Trash2, Calendar, Gift, HeartHandshake, 
-  CreditCard, ShieldCheck, AlertCircle, Sparkles, Check, ChevronRight 
+  CreditCard, ShieldCheck, AlertCircle, Sparkles, Check, ChevronRight,
+  Cake, Key, Lock, HelpCircle
 } from 'lucide-react';
-import { formatCurrency, formatTimeRange } from '../../utils/formatters';
+import { formatCurrency, formatTimeRange, calculateAge, formatBirthDate } from '../../utils/formatters';
 import { WAIVER_TEMPLATES_DATA } from '../../data/templates';
 
 interface UnifiedRegistrationModalProps {
@@ -37,8 +38,13 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
   const [primaryName, setPrimaryName] = useState('');
   const [primaryEmail, setPrimaryEmail] = useState('');
   const [primaryPhone, setPrimaryPhone] = useState('');
+  const [primaryBirthDate, setPrimaryBirthDate] = useState('1990-06-15');
   const [notes, setNotes] = useState('');
   
+  // Optional Account Creation Password State
+  const [createAccount, setCreateAccount] = useState(false);
+  const [accountPassword, setAccountPassword] = useState('');
+
   // Family & Group Members State
   const [members, setMembers] = useState<{
     name: string;
@@ -46,6 +52,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
     phone: string;
     relationship: 'Self' | 'Child' | 'Spouse' | 'Team Member';
     isMinor: boolean;
+    birthDate?: string;
     age?: number;
     emergencyContactName: string;
     emergencyContactPhone: string;
@@ -57,6 +64,8 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
       phone: '',
       relationship: 'Self',
       isMinor: false,
+      birthDate: '1990-06-15',
+      age: 36,
       emergencyContactName: '',
       emergencyContactPhone: '',
       dietaryNotes: ''
@@ -105,6 +114,8 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
 
   // Add Family Member
   const addFamilyMember = () => {
+    const defaultDob = '2012-08-14';
+    const computedAge = calculateAge(defaultDob) || 14;
     setMembers(prev => [
       ...prev,
       {
@@ -112,8 +123,9 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
         email: '',
         phone: '',
         relationship: 'Child',
-        isMinor: true,
-        age: 14,
+        isMinor: computedAge < 18,
+        birthDate: defaultDob,
+        age: computedAge,
         emergencyContactName: primaryName,
         emergencyContactPhone: primaryPhone,
         dietaryNotes: ''
@@ -134,6 +146,17 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
       if (index === 0 && field === 'name') setPrimaryName(value);
       if (index === 0 && field === 'email') setPrimaryEmail(value);
       if (index === 0 && field === 'phone') setPrimaryPhone(value);
+      if (index === 0 && field === 'birthDate') {
+        setPrimaryBirthDate(value);
+        const computed = calculateAge(value);
+        updated[0].age = computed;
+        updated[0].isMinor = computed !== undefined && computed < 18;
+      }
+      if (field === 'birthDate') {
+        const computed = calculateAge(value);
+        updated[index].age = computed;
+        updated[index].isMinor = computed !== undefined && computed < 18;
+      }
       return updated;
     });
   };
@@ -193,6 +216,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
       primaryName,
       primaryEmail,
       primaryPhone,
+      birthDate: primaryBirthDate,
       notes,
       members,
       shiftSelections: shiftAssignments.map(sa => ({ shiftId: sa.shiftId, groupMemberIndex: sa.memberIndex })),
@@ -251,13 +275,19 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
         <form onSubmit={handleStep1Submit} className="space-y-6">
           
           {/* Primary Contact */}
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">
-              <Users className="w-4 h-4 text-indigo-600" />
-              Primary Contact & Volunteer Information
-            </h4>
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-indigo-600" />
+                Primary Contact & Volunteer Information
+              </h4>
+              <span className="text-[11px] text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                <Cake className="w-3 h-3 text-pink-500" />
+                <span>Age: {calculateAge(primaryBirthDate) || 'Adult'}</span>
+              </span>
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Full Legal Name *</label>
                 <input
@@ -283,7 +313,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Mobile Phone (For SMS Reminders) *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Mobile Phone *</label>
                 <input
                   type="tel"
                   required
@@ -293,18 +323,39 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
                   className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
                 />
               </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
+                  <Cake className="w-3 h-3 text-pink-500" />
+                  <span>Date of Birth *</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={primaryBirthDate}
+                  onChange={(e) => {
+                    setPrimaryBirthDate(e.target.value);
+                    updateMember(0, 'birthDate', e.target.value);
+                  }}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                />
+              </div>
             </div>
+
+            <p className="text-[10px] text-slate-400 italic">
+              🎂 Captures birthday for community milestone recognition and volunteer birthday greetings.
+            </p>
           </div>
 
           {/* Additional Family / Group Members */}
           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
             <div className="flex justify-between items-center mb-3">
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                   <UserPlus className="w-4 h-4 text-emerald-600" />
                   Family & Group Members (Optional)
                 </h4>
-                <p className="text-[11px] text-slate-500">Sign up your children or team members under your contact.</p>
+                <p className="text-[11px] text-slate-500">Sign up your children or team members under your primary contact.</p>
               </div>
 
               <button
@@ -319,10 +370,23 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
 
             {members.slice(1).map((member, idx) => {
               const actualIdx = idx + 1;
+              const memAge = calculateAge(member.birthDate);
+              const isMinorMem = memAge !== undefined && memAge < 18;
+
               return (
                 <div key={actualIdx} className="bg-white p-3 rounded-xl border border-slate-200 mb-3 space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-indigo-900">Member #{actualIdx + 1}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-indigo-900">Member #{actualIdx + 1}</span>
+                      {memAge !== undefined && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                          isMinorMem ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                        }`}>
+                          Age: {memAge} {isMinorMem ? '(Minor Waiver Required)' : '(Adult)'}
+                        </span>
+                      )}
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => removeFamilyMember(actualIdx)}
@@ -350,24 +414,25 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
                       <select
                         value={member.relationship}
                         onChange={(e) => updateMember(actualIdx, 'relationship', e.target.value)}
-                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-medium"
                       >
-                        <option value="Child">Child (Minor)</option>
+                        <option value="Child">Child (Dependent)</option>
                         <option value="Spouse">Spouse / Partner</option>
                         <option value="Team Member">Team Member</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-semibold text-slate-600">Age / Minor Status</label>
+                      <label className="block text-[10px] font-semibold text-slate-600 flex items-center gap-1">
+                        <Cake className="w-3 h-3 text-pink-500" />
+                        <span>Date of Birth *</span>
+                      </label>
                       <input
-                        type="number"
-                        min={5}
-                        max={99}
-                        value={member.age || ''}
-                        onChange={(e) => updateMember(actualIdx, 'age', parseInt(e.target.value) || 0)}
-                        placeholder="Age"
-                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs"
+                        type="date"
+                        required
+                        value={member.birthDate || '2012-08-14'}
+                        onChange={(e) => updateMember(actualIdx, 'birthDate', e.target.value)}
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-medium"
                       />
                     </div>
 
@@ -655,6 +720,47 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
                   />
                   <span>Make this donation anonymous on public leaderboards.</span>
                 </label>
+              </div>
+            )}
+          </div>
+
+          {/* Optional Password / Account Creation Card */}
+          <div className="p-4 bg-slate-100 rounded-2xl border border-slate-200/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={createAccount}
+                  onChange={(e) => setCreateAccount(e.target.checked)}
+                  className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                />
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Key className="w-3.5 h-3.5 text-indigo-600" />
+                  Save Volunteer Profile & Create Password (Optional)
+                </span>
+              </label>
+              <span className="text-[10px] text-slate-400 font-semibold">1-Click Access</span>
+            </div>
+
+            <p className="text-[11px] text-slate-500 pl-6 leading-relaxed">
+              Save your contact & family info for future events and track all verified service hours and certificates in your personal GatherRaise dashboard.
+            </p>
+
+            {createAccount && (
+              <div className="pl-6 pt-2 animate-in fade-in space-y-2">
+                <div className="max-w-xs">
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Create Account Password</label>
+                  <div className="relative">
+                    <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="password"
+                      value={accountPassword}
+                      onChange={(e) => setAccountPassword(e.target.value)}
+                      placeholder="Minimum 6 characters"
+                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
               </div>
             )}
           </div>

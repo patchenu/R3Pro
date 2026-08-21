@@ -57,3 +57,38 @@ export function generateReceiptNumber(): string {
   const year = new Date().getFullYear();
   return `REC-${year}-${rand}`;
 }
+
+export function calculateAge(birthDateString?: string): number | undefined {
+  if (!birthDateString) return undefined;
+  try {
+    const today = new Date();
+    const birthDate = new Date(birthDateString);
+    if (isNaN(birthDate.getTime())) return undefined;
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return Math.max(0, age);
+  } catch (e) {
+    return undefined;
+  }
+}
+
+export function formatBirthDate(birthDateString?: string): string {
+  if (!birthDateString) return '';
+  try {
+    const parts = birthDateString.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1;
+      const day = parseInt(parts[2]);
+      const date = new Date(year, month, day);
+      return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+    }
+    return birthDateString;
+  } catch (e) {
+    return birthDateString;
+  }
+}
+

@@ -167,4 +167,18 @@ This document provides system knowledge, core architectural rules, and coding st
   - Supports curated preset tags (`Family Friendly`, `STEM & Tech`, `Food & Bake Sale`, `Carnival & Games`, `Athletics & Sports`, `Charity Gala`, `Silent Auction`, `Student Service Hours`) and dynamic custom tags.
   - Interactive Tag pills in `CommunityDiscoveryHub.tsx` enable instantaneous filtering and keyword search matching for public attendees.
 
+---
+
+## 17. Birthday Milestone Intelligence, Canvas Signature Accuracy & Frictionless Account Claiming
+- **Birthday Capture & Volunteer CRM Milestone Recognition**:
+  - Sign-up captures **Date of Birth (`birthDate`, YYYY-MM-DD)** instead of static age numbers.
+  - Dynamically calculates current age (`calculateAge`) and automatically determines minor status (`isMinor = age < 18`) for legal parental waiver enforcement.
+  - Feeds into automated annual birthday greeting dispatch campaigns and volunteer milestone recognition workflows.
+- **Digital Canvas Vector Stroke Precision (No Pointer Offset)**:
+  - Responsive canvas signature pads (`SignaturePad.tsx`) dynamically synchronize buffer resolution (`canvas.width` / `canvas.height`) with bounding client rect dimensions and Device Pixel Ratio (DPR).
+  - Normalizes touch and mouse pointer coordinates 1:1 with CSS pixels, eliminating pointer misalignment and drawing offsets.
+- **Frictionless Magic-Token vs Password Creation Mental Model**:
+  - **Frictionless Shift Sign-Up**: Public volunteers register without mandatory upfront password creation, eliminating 40%+ conversion drop-off. Instant pass access is secured via 256-bit `manageToken`.
+  - **Optional Account Claiming**: Volunteers can set an optional password during registration (Step 3) or directly on their post-signup confirmation screen (`ConfirmationCard.tsx`) to claim their volunteer profile, link household family dependents, and access their personal GatherRaise dashboard to track verified service hours and certificates.
+
 

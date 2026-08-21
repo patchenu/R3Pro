@@ -165,6 +165,7 @@ export interface GroupMember {
   phone?: string;
   relationship: 'Self' | 'Child' | 'Spouse' | 'Team Member' | 'Friend';
   isMinor: boolean;
+  birthDate?: string; // YYYY-MM-DD for birthday milestone emails & automated age calculation
   age?: number;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
@@ -192,6 +193,7 @@ export interface Registration {
   primaryName: string;
   primaryEmail: string;
   primaryPhone: string;
+  birthDate?: string; // YYYY-MM-DD
   manageToken: string; // 256-bit high entropy token
   createdAt: string;
   status: 'confirmed' | 'cancelled';
@@ -315,6 +317,7 @@ export interface VolunteerCrmRecord {
   name: string;
   email: string;
   phone: string;
+  birthDate?: string; // YYYY-MM-DD
   lifetimeHours: number;
   lifetimeDonations: number;
   eventsParticipated: number;

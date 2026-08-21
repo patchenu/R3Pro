@@ -58,8 +58,9 @@ interface AppContextType {
     primaryName: string;
     primaryEmail: string;
     primaryPhone: string;
+    birthDate?: string;
     notes?: string;
-    members: { name: string; email?: string; phone?: string; relationship: any; isMinor: boolean; age?: number; emergencyContactName?: string; emergencyContactPhone?: string; dietaryNotes?: string; }[];
+    members: { name: string; email?: string; phone?: string; birthDate?: string; relationship: any; isMinor: boolean; age?: number; emergencyContactName?: string; emergencyContactPhone?: string; dietaryNotes?: string; }[];
     shiftSelections: { shiftId: string; groupMemberIndex: number }[];
     itemSelections: { itemSlotId: string; quantity: number }[];
     ticketSelections: { ticketTierId: string; quantity: number }[];
@@ -486,8 +487,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     primaryName: string;
     primaryEmail: string;
     primaryPhone: string;
+    birthDate?: string;
     notes?: string;
-    members: { name: string; email?: string; phone?: string; relationship: any; isMinor: boolean; age?: number; emergencyContactName?: string; emergencyContactPhone?: string; dietaryNotes?: string; }[];
+    members: { name: string; email?: string; phone?: string; birthDate?: string; relationship: any; isMinor: boolean; age?: number; emergencyContactName?: string; emergencyContactPhone?: string; dietaryNotes?: string; }[];
     shiftSelections: { shiftId: string; groupMemberIndex: number }[];
     itemSelections: { itemSlotId: string; quantity: number }[];
     ticketSelections: { ticketTierId: string; quantity: number }[];
@@ -517,6 +519,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       name: m.name,
       email: m.email || payload.primaryEmail,
       phone: m.phone || payload.primaryPhone,
+      birthDate: m.birthDate,
       relationship: m.relationship,
       isMinor: m.isMinor,
       age: m.age,
@@ -576,6 +579,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       primaryName: payload.primaryName,
       primaryEmail: payload.primaryEmail,
       primaryPhone: payload.primaryPhone,
+      birthDate: payload.birthDate,
       manageToken,
       createdAt: timestamp,
       status: 'confirmed',

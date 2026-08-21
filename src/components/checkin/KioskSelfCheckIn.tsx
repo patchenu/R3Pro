@@ -5,10 +5,11 @@ import { QRCodeSVG } from 'qrcode.react';
 import { 
   Tablet, Search, CheckCircle2, ShieldCheck, 
   MapPin, Phone, UserCheck, AlertCircle, ArrowLeft, QrCode,
-  UserPlus, Sparkles, Clock, Copy, ExternalLink, Smartphone, Check, ChevronRight
+  UserPlus, Sparkles, Clock, Copy, ExternalLink, Smartphone, Check, ChevronRight, Cake
 } from 'lucide-react';
 import { SignaturePad } from '../common/SignaturePad';
 import { WAIVER_TEMPLATES_DATA } from '../../data/templates';
+import { calculateAge, formatBirthDate } from '../../utils/formatters';
 import confetti from 'canvas-confetti';
 
 export const KioskSelfCheckIn: React.FC = () => {
@@ -31,6 +32,7 @@ export const KioskSelfCheckIn: React.FC = () => {
   const [walkupName, setWalkupName] = useState('');
   const [walkupPhone, setWalkupPhone] = useState('');
   const [walkupEmail, setWalkupEmail] = useState('');
+  const [walkupBirthDate, setWalkupBirthDate] = useState('1996-03-22');
   const [selectedShiftId, setSelectedShiftId] = useState<string>('');
   const [walkupSignature, setWalkupSignature] = useState<string>('');
   const [isSubmittingWalkup, setIsSubmittingWalkup] = useState(false);
@@ -138,13 +140,16 @@ export const KioskSelfCheckIn: React.FC = () => {
       primaryName: walkupName.trim(),
       primaryEmail: email,
       primaryPhone: walkupPhone.trim(),
+      birthDate: walkupBirthDate,
       notes: 'Day-of Walk-up Registration at Door Check-In Kiosk',
       members: [{
         name: walkupName.trim(),
         email: email,
         phone: walkupPhone.trim(),
+        birthDate: walkupBirthDate,
+        age: calculateAge(walkupBirthDate) || 30,
         relationship: 'self',
-        isMinor: false
+        isMinor: (calculateAge(walkupBirthDate) || 30) < 18
       }],
       shiftSelections: [{ shiftId: selectedShiftId, groupMemberIndex: 0 }],
       itemSelections: [],
@@ -539,13 +544,29 @@ export const KioskSelfCheckIn: React.FC = () => {
                     />
                   </div>
 
-                  <input
-                    type="email"
-                    value={walkupEmail}
-                    onChange={(e) => setWalkupEmail(e.target.value)}
-                    placeholder="Email Address (Optional for Service Certificate)"
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-semibold placeholder-slate-500 text-xs focus:border-emerald-500 focus:outline-none"
-                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input
+                      type="email"
+                      value={walkupEmail}
+                      onChange={(e) => setWalkupEmail(e.target.value)}
+                      placeholder="Email Address (Optional)"
+                      className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-semibold placeholder-slate-500 text-xs focus:border-emerald-500 focus:outline-none"
+                    />
+
+                    <div className="relative">
+                      <div className="flex items-center gap-1 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] text-pink-400 font-bold">
+                        <Cake className="w-3 h-3 text-pink-400" />
+                        <span>Age: {calculateAge(walkupBirthDate) || 'Adult'}</span>
+                      </div>
+                      <input
+                        type="date"
+                        required
+                        value={walkupBirthDate}
+                        onChange={(e) => setWalkupBirthDate(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-semibold text-xs focus:border-emerald-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* 2. Choose Open Shift */}

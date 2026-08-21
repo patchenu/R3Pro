@@ -402,6 +402,18 @@ Organizations and Event Chairs maintain a centralized **Legal Compliance & E-Sig
    * **1-Click Executed Certificate Inspector**: Displays the complete legal prose alongside the exact recorded digital vector signature stroke and timestamp.
    * **Print / Export Compliance Audit Ledger**: 1-click print-ready PDF/HTML report formatted for school district legal teams and commercial insurance underwriters.
 
+### 6.9 Birthday Milestone Intelligence, Precision Vector Signing & Frictionless Claiming
+1. **Volunteer Date of Birth (DOB) Capture & Auto-Age Resolution**:
+   * Captures Date of Birth (`birthDate`, `YYYY-MM-DD`) for primary registrants and household dependents.
+   * Auto-computes current age and dynamically checks legal minor status ($< 18$) for parental consent enforcement.
+   * Enrolls volunteers in automated annual birthday greeting dispatch campaigns and volunteer recognition workflows.
+2. **Dynamic Canvas Vector Stroke Coordinate Synchronization (`SignaturePad.tsx`)**:
+   * Synchronizes internal canvas buffer resolution (`canvas.width` / `canvas.height`) with rendered DOM client rect and high-DPI device pixel ratio (DPR).
+   * Maps mouse and touch pointer events with 1:1 pixel accuracy, eliminating coordinate misalignment.
+3. **Frictionless Pass Management vs Password Account Claiming**:
+   * Eliminates forced upfront password friction during sign-up by issuing a 256-bit cryptographically secure `manageToken`.
+   * Offers optional password creation upon signup completion (`ConfirmationCard.tsx` and registration Step 3) to claim volunteer profiles, link family dependents, and access the volunteer portal to track verified service hours and certificates.
+
 ## 7. Turnkey Industry Presets Catalog
 
 ### 7.1 Organization Presets
