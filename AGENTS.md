@@ -260,3 +260,26 @@ This document provides system knowledge, core architectural rules, and coding st
 | **Financial Ledger** (`ReportsExportCenter.tsx`) | Donations, Grants, Checks | `+ Record Offline Contribution` | Real-time reconciliation | `🗑️ Void / Delete Donation Record` |
 
 ---
+
+## 22. Volunteer Shift Time Slot Setup, Preferred Schedule Windows & Overlap Guard
+
+### 22.1 Multi-Time-Slot Shift Architecture
+- **Granular Time Window Specification**:
+  - Every shift is defined by explicit **`startTime`** and **`endTime`** datetime stamps rather than defaulting to event-wide windows.
+  - Quick Time Slot Presets (*"🌅 Morning (8:00 AM – 11:00 AM)"*, *"☀️ Midday Peak (11:00 AM – 2:00 PM)"*, *"🌤️ Afternoon Rush (2:00 PM – 5:00 PM)"*, *"🌙 Evening / Teardown (5:00 PM – 8:00 PM)"*, *"⏱️ Full Event Schedule"*) accelerate shift authoring in `EventBuilderWizard.tsx`, `MasterPlannerDashboard.tsx`, and `LeadPortal.tsx`.
+- **⚡ 1-Click Multi-Slot Generator**:
+  - Organizers and Department Leads can automatically split a single volunteer role into 4 distinct consecutive time slots across the event day.
+
+### 22.2 Discovery & Preferred Time Slot Selection (`PublicEventLanding.tsx`)
+- **Schedule Time-of-Day Filter**:
+  - Public volunteers can filter opportunities across `All Times`, `🌅 Morning (<12 PM)`, `☀️ Midday (12 PM – 3 PM)`, and `🌙 Evening (3 PM+)`.
+- **Prominent Time Slot Badges**:
+  - Displays formatted duration, start/end times, reporting gate directions, and remaining open spots.
+
+### 22.3 Multi-Participant Household Shift Assignment & Zero Double-Booking
+- **Participant-to-Time-Slot Mapping (`UnifiedRegistrationModal.tsx`)**:
+  - Volunteers can assign specific family members or dependents to distinct time slots.
+  - Zero double-booking overlap engine strictly validates that no participant is assigned concurrent or conflicting shift times (`start1 < end2 && end1 > start2`).
+
+---
+

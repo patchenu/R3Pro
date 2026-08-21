@@ -247,3 +247,19 @@ Technology Matrix:
 * **Live Test Dispatch Sandbox**: Real-time test email dispatcher verifying $<2\text{s}$ SLA latency.
 * **SMS Gateway Roadmap Backlog**: Formalized A2P 10DLC ISV campaign registration, automated 72h/24h/2h mobile boarding pass SMS, emergency gate alerts, and 6-digit SMS OTP logins.
 
+### 5.3 Volunteer Shift Time Slot Setup, Preferred Schedule Windows & Overlap Guard
+* **Granular Time Window Specification**:
+  * Every shift is defined with explicit `startTime` and `endTime` datetimes instead of inheriting global event windows.
+  * Quick Time Slot Presets (*Morning 8-11am*, *Midday 11am-2pm*, *Afternoon 2-5pm*, *Evening 5-8pm*, *Full Event*) accelerate shift setup in `EventBuilderWizard.tsx`, `MasterPlannerDashboard.tsx`, and `LeadPortal.tsx`.
+* **⚡ 1-Click Multi-Slot Generator**:
+  * Organizers can split a single volunteer role into 4 distinct consecutive time slots across the event day.
+* **Public Discovery & Preferred Time Slot Selection (`PublicEventLanding.tsx`)**:
+  * Volunteers can filter opportunities across `All Times`, `🌅 Morning (<12 PM)`, `☀️ Midday (12 PM – 3 PM)`, and `🌙 Evening (3 PM+)`.
+  * Shifts highlight prominent time badges, reporting gates, and open spot counters.
+* **Multi-Participant Household Shift Assignment (`UnifiedRegistrationModal.tsx`)**:
+  * Parents and organizers can assign specific family members or dependents to distinct time slots.
+  * Zero double-booking overlap engine strictly validates that no participant is assigned concurrent or conflicting shift times (`start1 < end2 && end1 > start2`).
+
+---
+
+

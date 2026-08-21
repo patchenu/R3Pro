@@ -6,7 +6,7 @@ import { SignaturePad } from '../common/SignaturePad';
 import { 
   Users, UserPlus, Trash2, Calendar, Gift, HeartHandshake, 
   CreditCard, ShieldCheck, AlertCircle, Sparkles, Check, ChevronRight,
-  Cake, Key, Lock, HelpCircle, CheckCircle, UserCheck
+  Cake, Key, Lock, HelpCircle, CheckCircle, UserCheck, Clock
 } from 'lucide-react';
 import { formatCurrency, formatTimeRange, calculateAge, formatBirthDate } from '../../utils/formatters';
 import { WAIVER_TEMPLATES_DATA } from '../../data/templates';
@@ -599,9 +599,9 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
           {/* Shift Slot Assignments to Members */}
           {selectedShiftIds.length > 0 && (
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-indigo-600" />
-                Assign Shift Roles to Participants
+                Assign Shift Roles & Time Slots to Participants
               </h4>
 
               <div className="space-y-2.5">
@@ -609,16 +609,27 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
                   const shift = shifts.find(s => s.id === shiftId);
                   const subPart = shift ? subParts.find(sp => sp.id === shift.subPartId) : null;
                   return (
-                    <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div key={idx} className="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                       <div>
-                        <span className="text-[10px] font-bold text-indigo-600 uppercase">{subPart?.name}</span>
-                        <h5 className="text-xs font-bold text-slate-900">{shift?.title}</h5>
-                        <span className="text-[11px] text-slate-500">
-                          {shift ? `${shift.startTime.slice(11,16)} - ${shift.endTime.slice(11,16)}` : ''}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-bold text-indigo-700 uppercase bg-indigo-50 px-1.5 py-0.5 rounded">
+                            {subPart?.name}
+                          </span>
+                          <span className="text-xs font-bold text-slate-900">{shift?.title}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mt-1">
+                          <span className="font-bold text-indigo-900 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                            {shift ? formatTimeRange(shift.startTime, shift.endTime) : ''}
+                          </span>
+                          <span className="text-slate-400">•</span>
+                          <span className="text-slate-500">
+                            Gate: <strong>{subPart?.reportingGate}</strong>
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 shrink-0">
                         <label className="text-xs font-semibold text-slate-600 whitespace-nowrap">Assign To:</label>
                         <select
                           value={shiftAssignments.find(sa => sa.shiftId === shiftId)?.memberIndex || 0}
@@ -626,7 +637,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
                             const val = parseInt(e.target.value);
                             setShiftAssignments(prev => prev.map(sa => sa.shiftId === shiftId ? { ...sa, memberIndex: val } : sa));
                           }}
-                          className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold bg-slate-50"
+                          className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-indigo-950 bg-indigo-50/50"
                         >
                           {members.map((m, mIdx) => (
                             <option key={mIdx} value={mIdx}>

@@ -20,6 +20,7 @@ export const PublicEventLanding: React.FC = () => {
   // Filter State
   const [selectedSubPartId, setSelectedSubPartId] = useState<string>('all');
   const [slotTypeFilter, setSlotTypeFilter] = useState<'all' | 'volunteer' | 'items' | 'tickets' | 'unfilled'>('all');
+  const [timeSlotFilter, setTimeSlotFilter] = useState<'all' | 'morning' | 'midday' | 'afternoon_evening'>('all');
 
   // Selected Cart for Unified Registration
   const [selectedShiftIds, setSelectedShiftIds] = useState<string[]>([]);
@@ -288,34 +289,75 @@ export const PublicEventLanding: React.FC = () => {
           </div>
 
           {/* Slot Type Secondary Filter */}
-          <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-            <span className="text-[11px] font-semibold text-slate-600">Showing:</span>
-            {[
-              { id: 'all', label: 'Everything' },
-              { id: 'volunteer', label: 'Volunteer Shifts' },
-              { id: 'items', label: 'Supply Wishlist' },
-              { id: 'tickets', label: 'Tickets & Sponsorships' },
-              { id: 'unfilled', label: '⚠️ Unfilled Roles Only' },
-            ].map(type => (
-              <button
-                key={type.id}
-                onClick={() => setSlotTypeFilter(type.id as any)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
-                  slotTypeFilter === type.id
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                    : 'text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                {type.label}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-1.5 overflow-x-auto">
+              <span className="text-[11px] font-semibold text-slate-600">Showing:</span>
+              {[
+                { id: 'all', label: 'Everything' },
+                { id: 'volunteer', label: 'Volunteer Shifts' },
+                { id: 'items', label: 'Supply Wishlist' },
+                { id: 'tickets', label: 'Tickets & Sponsorships' },
+                { id: 'unfilled', label: '⚠️ Unfilled Roles Only' },
+              ].map(type => (
+                <button
+                  key={type.id}
+                  onClick={() => setSlotTypeFilter(type.id as any)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
+                    slotTypeFilter === type.id
+                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                      : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Time of Day Shift Schedule Filter */}
+            {(slotTypeFilter === 'all' || slotTypeFilter === 'volunteer' || slotTypeFilter === 'unfilled') && (
+              <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/80">
+                <span className="text-[10px] font-bold uppercase text-slate-500 px-1 flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-indigo-600" />
+                  Time Slot:
+                </span>
+                {[
+                  { id: 'all', label: 'All Times' },
+                  { id: 'morning', label: '🌅 Morning (<12pm)' },
+                  { id: 'midday', label: '☀️ Midday (12-3pm)' },
+                  { id: 'afternoon_evening', label: '🌙 Eve (3pm+)' },
+                ].map(ts => (
+                  <button
+                    key={ts.id}
+                    onClick={() => setTimeSlotFilter(ts.id as any)}
+                    className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition ${
+                      timeSlotFilter === ts.id
+                        ? 'bg-indigo-600 text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                  >
+                    {ts.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* SUB-PART DEPARTMENTS & SLOTS SECTION */}
         <div className="space-y-8">
           {filteredSubParts.map((subPart) => {
-            const subPartShifts = shifts.filter(s => s.subPartId === subPart.id && (slotTypeFilter === 'unfilled' ? s.claimedCount < s.capacity : true));
+            const subPartShifts = shifts.filter(s => {
+              if (s.subPartId !== subPart.id) return false;
+              if (slotTypeFilter === 'unfilled' && s.claimedCount >= s.capacity) return false;
+              if (timeSlotFilter !== 'all') {
+                const hour = parseInt(s.startTime.slice(11, 13)) || 9;
+                if (timeSlotFilter === 'morning' && hour >= 12) return false;
+                if (timeSlotFilter === 'midday' && (hour < 12 || hour >= 15)) return false;
+                if (timeSlotFilter === 'afternoon_evening' && hour < 15) return false;
+              }
+              return true;
+            });
+
             const subPartItems = itemSlots.filter(i => i.subPartId === subPart.id && (slotTypeFilter === 'unfilled' ? i.quantityPledged < i.quantityNeeded : true));
 
             const showShifts = slotTypeFilter === 'all' || slotTypeFilter === 'volunteer' || slotTypeFilter === 'unfilled';
@@ -354,13 +396,18 @@ export const PublicEventLanding: React.FC = () => {
 
                 <div className="p-6 space-y-6">
                   
-                  {/* VOLUNTEER SHIFTS GRID */}
+                  {/* VOLUNTEER SHIFTS GRID WITH TIME SLOTS */}
                   {showShifts && subPartShifts.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-3 flex items-center gap-1.5">
-                        <Users className="w-4 h-4 text-indigo-600" />
-                        Volunteer Shifts ({subPartShifts.length})
-                      </h4>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                          <Users className="w-4 h-4 text-indigo-600" />
+                          Volunteer Shift Time Slots ({subPartShifts.length})
+                        </h4>
+                        <span className="text-[11px] text-slate-500 font-semibold">
+                          Click to select your preferred shift time
+                        </span>
+                      </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                         {subPartShifts.map((shift) => {
@@ -368,13 +415,21 @@ export const PublicEventLanding: React.FC = () => {
                           const isSelected = selectedShiftIds.includes(shift.id);
                           const spotsLeft = shift.capacity - shift.claimedCount;
 
+                          // Compute start hour for time badge
+                          const startHour = parseInt(shift.startTime.slice(11, 13)) || 9;
+                          const timeWindowBadge = startHour < 12 
+                            ? '🌅 Morning Shift' 
+                            : startHour < 15 
+                            ? '☀️ Midday Peak' 
+                            : '🌙 Afternoon / Evening';
+
                           return (
                             <div
                               key={shift.id}
                               onClick={() => !isFull && toggleShiftSelection(shift.id)}
                               className={`p-4 rounded-2xl border transition-all cursor-pointer relative ${
                                 isSelected
-                                  ? 'bg-indigo-50/70 border-indigo-600 ring-2 ring-indigo-500/20 shadow-md'
+                                  ? 'bg-indigo-50/80 border-indigo-600 ring-2 ring-indigo-500/20 shadow-md'
                                   : isFull
                                   ? 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
                                   : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-sm'
@@ -382,8 +437,12 @@ export const PublicEventLanding: React.FC = () => {
                             >
                               <div className="flex justify-between items-start gap-2">
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2">
+                                  {/* Shift Title and Badges */}
+                                  <div className="flex flex-wrap items-center gap-1.5">
                                     <span className="font-extrabold text-sm text-slate-900">{shift.title}</span>
+                                    <span className="px-2 py-0.5 bg-indigo-100/70 text-indigo-800 text-[10px] font-bold rounded-md">
+                                      {timeWindowBadge}
+                                    </span>
                                     {shift.requiresWaiver && (
                                       <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded flex items-center gap-0.5">
                                         <ShieldCheck className="w-3 h-3 text-amber-600" />
@@ -392,12 +451,19 @@ export const PublicEventLanding: React.FC = () => {
                                     )}
                                   </div>
 
-                                  <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 mt-1">
-                                    <Clock className="w-3.5 h-3.5" />
-                                    <span>{formatTimeRange(shift.startTime, shift.endTime)}</span>
+                                  {/* Prominent Shift Time Slot & Reporting Location */}
+                                  <div className="mt-2 p-2 bg-slate-50 rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
+                                    <div className="flex items-center gap-1.5 font-bold text-indigo-900">
+                                      <Clock className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                                      <span>{formatTimeRange(shift.startTime, shift.endTime)}</span>
+                                    </div>
+                                    <div className="text-[11px] text-slate-500 flex items-center gap-1">
+                                      <MapPin className="w-3 h-3 text-slate-400" />
+                                      <span>Gate: <strong>{shift.reportingLocationOverride || subPart.reportingGate}</strong></span>
+                                    </div>
                                   </div>
 
-                                  <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">{shift.description}</p>
+                                  <p className="text-xs text-slate-600 mt-2 leading-relaxed">{shift.description}</p>
 
                                   {/* Requirements badges */}
                                   <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
@@ -430,10 +496,10 @@ export const PublicEventLanding: React.FC = () => {
                                     {!isFull && (
                                       <button
                                         type="button"
-                                        className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${
+                                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition ${
                                           isSelected
-                                            ? 'bg-indigo-600 text-white shadow-sm'
-                                            : 'bg-slate-100 hover:bg-indigo-100 text-slate-600'
+                                            ? 'bg-indigo-600 text-white shadow-md'
+                                            : 'bg-slate-100 hover:bg-indigo-100 text-slate-700'
                                         }`}
                                       >
                                         {isSelected ? <Check className="w-4 h-4" /> : <span className="text-xs font-bold">+</span>}

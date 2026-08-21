@@ -611,6 +611,69 @@ export const LeadPortal: React.FC = () => {
               />
             </div>
 
+            {/* Quick Shift Time Slot Presets */}
+            <div className="bg-indigo-50/70 p-3 rounded-2xl border border-indigo-100 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-indigo-950 flex items-center gap-1.5 text-xs">
+                  <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                  Quick Shift Time Slot Presets:
+                </span>
+                <span className="text-[10px] text-indigo-700 font-semibold">1-Tap Apply</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { label: '🌅 Morning (8am - 11am)', start: '08:00', end: '11:00' },
+                  { label: '☀️ Midday (11am - 2pm)', start: '11:00', end: '14:00' },
+                  { label: '🌤️ Afternoon (2pm - 5pm)', start: '14:00', end: '17:00' },
+                  { label: '🌙 Evening (5pm - 8pm)', start: '17:00', end: '20:00' },
+                  { label: '⏱️ Full Event', start: '09:00', end: '17:00' },
+                ].map((preset, pIdx) => {
+                  const day = currentEvent?.startDate ? currentEvent.startDate.slice(0, 10) : '2026-09-19';
+                  return (
+                    <button
+                      key={pIdx}
+                      type="button"
+                      onClick={() => {
+                        setNewShiftStart(`${day}T${preset.start}:00`);
+                        setNewShiftEnd(`${day}T${preset.end}:00`);
+                      }}
+                      className="px-2.5 py-1 bg-white border border-indigo-200 hover:border-indigo-400 text-indigo-900 rounded-lg text-[11px] font-semibold transition shadow-2xs"
+                    >
+                      {preset.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Shift Start Time</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  value={newShiftStart}
+                  onChange={(e) => setNewShiftStart(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Shift End Time</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  value={newShiftEnd}
+                  onChange={(e) => setNewShiftEnd(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Capacity (Volunteers Needed)</label>

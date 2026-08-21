@@ -133,6 +133,8 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const [shiftTitle, setShiftTitle] = useState('');
   const [shiftDesc, setShiftDesc] = useState('');
   const [shiftDeptIdx, setShiftDeptIdx] = useState(0);
+  const [shiftStart, setShiftStart] = useState('2026-10-15T09:00:00');
+  const [shiftEnd, setShiftEnd] = useState('2026-10-15T12:00:00');
   const [shiftCap, setShiftCap] = useState(4);
   const [shiftWaiver, setShiftWaiver] = useState(true);
 
@@ -188,16 +190,30 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     }));
     setDepartments(newDepts);
 
-    // Shifts
+    // Shifts with realistic staggered time windows
     const newShifts: WizardShift[] = [];
+    const eventDay = startDate ? startDate.slice(0, 10) : '2026-10-15';
+    let baseHour = 8;
+
     preset.departments.forEach((d, dIdx) => {
-      d.shifts.forEach(s => {
+      d.shifts.forEach((s, sIdx) => {
+        const duration = s.durationHours || 3;
+        const startH = (baseHour + (sIdx * 2.5)) % 14 + 7;
+        const endH = startH + duration;
+        
+        const pad = (n: number) => Math.floor(n).toString().padStart(2, '0');
+        const startMin = (startH % 1) === 0.5 ? '30' : '00';
+        const endMin = (endH % 1) === 0.5 ? '30' : '00';
+
+        const sStart = `${eventDay}T${pad(startH)}:${startMin}:00`;
+        const sEnd = `${eventDay}T${pad(endH)}:${endMin}:00`;
+
         newShifts.push({
           title: s.title,
           description: s.description,
           departmentIndex: dIdx,
-          startTime: startDate,
-          endTime: endDate,
+          startTime: sStart,
+          endTime: sEnd,
           capacity: s.capacity,
           requiresWaiver: s.requiresWaiver
         });
@@ -331,6 +347,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setShiftTitle('');
     setShiftDesc('');
     setShiftDeptIdx(0);
+    const day = startDate ? startDate.slice(0, 10) : '2026-10-15';
+    setShiftStart(`${day}T09:00:00`);
+    setShiftEnd(`${day}T12:00:00`);
     setShiftCap(4);
     setShiftWaiver(true);
     setIsAddShiftModalOpen(true);
@@ -342,6 +361,8 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setShiftTitle(s.title);
     setShiftDesc(s.description);
     setShiftDeptIdx(s.departmentIndex);
+    setShiftStart(s.startTime || startDate);
+    setShiftEnd(s.endTime || endDate);
     setShiftCap(s.capacity);
     setShiftWaiver(s.requiresWaiver);
     setIsAddShiftModalOpen(true);
@@ -355,8 +376,8 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
       title: shiftTitle.trim(),
       description: shiftDesc.trim(),
       departmentIndex: shiftDeptIdx,
-      startTime: startDate,
-      endTime: endDate,
+      startTime: shiftStart,
+      endTime: shiftEnd,
       capacity: Number(shiftCap) || 1,
       requiresWaiver: shiftWaiver
     };
@@ -369,6 +390,31 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
       setShifts([...shifts, shiftPayload]);
     }
 
+    setIsAddShiftModalOpen(false);
+  };
+
+  const handleGenerateTimeSlots = (baseTitle: string, deptIdx: number, desc: string, cap: number, waiver: boolean) => {
+    if (!baseTitle.trim()) return;
+    const eventDay = startDate ? startDate.slice(0, 10) : '2026-10-15';
+    const slots = [
+      { name: 'Morning Setup', start: `${eventDay}T08:00:00`, end: `${eventDay}T11:00:00` },
+      { name: 'Midday Peak', start: `${eventDay}T11:00:00`, end: `${eventDay}T14:00:00` },
+      { name: 'Afternoon Rush', start: `${eventDay}T14:00:00`, end: `${eventDay}T17:00:00` },
+      { name: 'Evening / Teardown', start: `${eventDay}T17:00:00`, end: `${eventDay}T20:00:00` }
+    ];
+
+    const generatedShifts: WizardShift[] = slots.map(s => ({
+      title: `${baseTitle.trim()} — ${s.name}`,
+      description: desc.trim() || `Volunteer support for ${baseTitle.trim()}`,
+      departmentIndex: deptIdx,
+      startTime: s.start,
+      endTime: s.end,
+      capacity: cap,
+      requiresWaiver: waiver
+    }));
+
+    setShifts(prev => [...prev, ...generatedShifts]);
+    showToast('success', 'Generated 4 Time Slots', `Added Morning, Midday, Afternoon, and Evening slots for ${baseTitle}`);
     setIsAddShiftModalOpen(false);
   };
 
@@ -1409,7 +1455,8 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
           isOpen={isAddShiftModalOpen}
           onClose={() => setIsAddShiftModalOpen(false)}
           title={editingShiftIdx !== null ? `Edit Shift: ${shiftTitle}` : 'Add Volunteer Shift Role'}
-          subtitle="Define slot requirements and safety waiver rules"
+          subtitle="Define role requirements, exact time slot windows, and safety waiver rules"
+          maxWidth="lg"
         >
           <form onSubmit={handleSaveShift} className="space-y-4 text-xs">
             <div>
@@ -1419,7 +1466,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                 required
                 value={shiftTitle}
                 onChange={(e) => setShiftTitle(e.target.value)}
-                placeholder="e.g. Morning Ticket Scanner"
+                placeholder="e.g. Bake Sale Cashier, Obstacle Course Marshall..."
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold"
               />
             </div>
@@ -1437,22 +1484,90 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               </select>
             </div>
 
+            {/* Quick Shift Time Slot Presets */}
+            <div className="bg-indigo-50/70 p-3 rounded-2xl border border-indigo-100 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-indigo-950 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                  Quick Shift Time Slot Presets:
+                </span>
+                <span className="text-[10px] text-indigo-700 font-semibold">1-Tap Apply</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { label: '🌅 Morning (8am - 11am)', start: '08:00', end: '11:00' },
+                  { label: '☀️ Midday (11am - 2pm)', start: '11:00', end: '14:00' },
+                  { label: '🌤️ Afternoon (2pm - 5pm)', start: '14:00', end: '17:00' },
+                  { label: '🌙 Evening (5pm - 8pm)', start: '17:00', end: '20:00' },
+                  { label: '⏱️ Full Event', start: '09:00', end: '17:00' },
+                ].map((preset, pIdx) => {
+                  const day = startDate ? startDate.slice(0, 10) : '2026-10-15';
+                  return (
+                    <button
+                      key={pIdx}
+                      type="button"
+                      onClick={() => {
+                        setShiftStart(`${day}T${preset.start}:00`);
+                        setShiftEnd(`${day}T${preset.end}:00`);
+                      }}
+                      className="px-2.5 py-1 bg-white border border-indigo-200 hover:border-indigo-400 text-indigo-900 rounded-lg text-[11px] font-semibold transition shadow-2xs"
+                    >
+                      {preset.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Exact Date & Time Slot Windows */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-slate-500" />
+                  <span>Shift Start Date & Time *</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={shiftStart}
+                  onChange={(e) => setShiftStart(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-slate-500" />
+                  <span>Shift End Date & Time *</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={shiftEnd}
+                  onChange={(e) => setShiftEnd(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Description & Tasks</label>
+              <label className="block font-bold text-slate-700 mb-1">Role Description & Tasks</label>
               <textarea
                 rows={2}
                 value={shiftDesc}
                 onChange={(e) => setShiftDesc(e.target.value)}
+                placeholder="Describe key responsibilities and physical requirements..."
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Capacity (Volunteers)</label>
+                <label className="block font-bold text-slate-700 mb-1">Capacity (Volunteers Needed)</label>
                 <input
                   type="number"
                   min="1"
+                  max="50"
                   value={shiftCap}
                   onChange={(e) => setShiftCap(Number(e.target.value))}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold"
@@ -1472,12 +1587,29 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               </div>
             </div>
 
+            {/* Multi-slot generator action for new roles */}
+            {editingShiftIdx === null && (
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-slate-800 block text-xs">Need this role across the whole day?</span>
+                  <span className="text-[10px] text-slate-500">Auto-create 4 time slots (Morning, Midday, Afternoon, Evening)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleGenerateTimeSlots(shiftTitle || 'Volunteer Assistant', shiftDeptIdx, shiftDesc, shiftCap, shiftWaiver)}
+                  className="px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold rounded-lg text-xs transition"
+                >
+                  ⚡ Generate 4 Slots
+                </button>
+              </div>
+            )}
+
             <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
               <button type="button" onClick={() => setIsAddShiftModalOpen(false)} className="px-4 py-2 bg-slate-100 rounded-xl">
                 Cancel
               </button>
-              <button type="submit" className="px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl">
-                Save Shift
+              <button type="submit" className="px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl shadow-sm">
+                Save Shift Time Slot
               </button>
             </div>
           </form>
