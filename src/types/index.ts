@@ -276,9 +276,15 @@ export interface VendorApplication {
   electricityNeeded: 'none' | '110v_standard' | '220v_heavy' | 'self_generator';
   spaceRequirement: string;
   coiPolicyNumber?: string;
+  coiCarrierName?: string;
+  coiExpirationDate?: string;
+  coiDocumentName?: string;
+  coiDocumentData?: string; // Base64 Data URL or document path
+  coiStatus?: 'not_submitted' | 'pending_verification' | 'verified' | 'expired';
   status: 'pending_review' | 'approved' | 'rejected' | 'paid';
   assignedBoothNumber?: string; // e.g. "Booth #A-14", "Food Truck Spot #2"
   invoiceNumber?: string;
+  taxReceiptNumber?: string;
   submittedAt: string;
 }
 

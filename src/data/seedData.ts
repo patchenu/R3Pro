@@ -1253,10 +1253,15 @@ export const SEED_VENDOR_APPLICATIONS: VendorApplication[] = [
     website: 'https://artisanbakes.com',
     electricityNeeded: 'none',
     spaceRequirement: '10x10 canopy booth',
-    coiPolicyNumber: 'STATE-FARM-9812401',
+    coiPolicyNumber: 'SF-GL-9812401',
+    coiCarrierName: 'State Farm General Insurance',
+    coiExpirationDate: '2026-12-31',
+    coiDocumentName: 'COI_ArtisanBakery_LincolnPTA_2026.pdf',
+    coiStatus: 'verified',
     status: 'approved',
     assignedBoothNumber: 'Booth #A-14',
     invoiceNumber: 'INV-2026-019',
+    taxReceiptNumber: 'REC-2026-VND-019',
     submittedAt: '2026-08-11T13:20:00'
   },
   {
@@ -1271,10 +1276,15 @@ export const SEED_VENDOR_APPLICATIONS: VendorApplication[] = [
     website: 'https://tacofiesta.com',
     electricityNeeded: '220v_heavy',
     spaceRequirement: '28ft Food Truck',
-    coiPolicyNumber: 'LIBERTY-MUTUAL-458190',
+    coiPolicyNumber: 'LM-COMM-458190',
+    coiCarrierName: 'Liberty Mutual Commercial',
+    coiExpirationDate: '2027-03-15',
+    coiDocumentName: 'COI_TacoFiesta_2026_AdditionalInsured.pdf',
+    coiStatus: 'verified',
     status: 'approved',
     assignedBoothNumber: 'Food Truck Bay #2',
     invoiceNumber: 'INV-2026-020',
+    taxReceiptNumber: 'REC-2026-VND-020',
     submittedAt: '2026-08-12T15:40:00'
   },
   {
@@ -1288,7 +1298,13 @@ export const SEED_VENDOR_APPLICATIONS: VendorApplication[] = [
     einTaxId: '91-4820193',
     electricityNeeded: 'none',
     spaceRequirement: '10x10 booth',
+    coiPolicyNumber: 'NEXT-BIZ-102948',
+    coiCarrierName: 'Next Insurance Inc.',
+    coiExpirationDate: '2026-11-20',
+    coiDocumentName: 'COI_WoodenToys_Pending_LincolnPTA.pdf',
+    coiStatus: 'pending_verification',
     status: 'pending_review',
+    invoiceNumber: 'INV-2026-021',
     submittedAt: '2026-08-18T09:10:00'
   }
 ];

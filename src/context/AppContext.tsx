@@ -117,6 +117,7 @@ interface AppContextType {
 
   // Vendor actions
   submitVendorApplication: (app: Omit<VendorApplication, 'id' | 'status' | 'submittedAt'>) => void;
+  updateVendorApplication: (appId: string, updates: Partial<VendorApplication>) => void;
   approveVendor: (appId: string, assignedBooth: string) => void;
   rejectVendor: (appId: string) => void;
 
@@ -1268,6 +1269,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('info', 'Vendor Application Declined', 'Vendor was notified.');
   };
 
+  const updateVendorApplication = (appId: string, updates: Partial<VendorApplication>) => {
+    setData((prev: any) => ({
+      ...prev,
+      vendorApplications: prev.vendorApplications.map((v: VendorApplication) => 
+        v.id === appId ? { ...v, ...updates } : v
+      )
+    }));
+    showToast('success', 'Vendor Application Updated', 'Compliance details and documents saved successfully.');
+  };
+
   // Paid Contractor & Service Provider Management (Accounts Payable)
   const addContractor = (contractorData: Omit<PaidContractor, 'id' | 'createdAt'>): PaidContractor => {
     const id = 'cont_' + Date.now();
@@ -1866,6 +1877,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       approveRequest,
       rejectRequest,
       submitVendorApplication,
+      updateVendorApplication,
       approveVendor,
       rejectVendor,
       addContractor,
