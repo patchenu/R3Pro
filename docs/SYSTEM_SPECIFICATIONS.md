@@ -82,12 +82,30 @@ sequenceDiagram
     App->>OrgModal: Automatically opens Org Onboarding Wizard (pre-filled)
     Visitor->>OrgModal: Submits Org details (EIN, Name, Address, Presets)
     OrgModal->>DB: Validates EIN uniqueness & assigns user as Org Super Admin
+### 3.2 Progressive Disclosure Landing Page Mental Model & Multi-Org Creation Hierarchy
+To maintain maximum conversion for public community volunteers while providing seamless administrative workflows for coordinators, the Discovery Hub hero dynamically adapts to authentication state:
+
+```mermaid
+graph TD
+    A[Visitor Arrives on Landing Page] --> B{Is User Authenticated?}
+    
+    B -->|No - Unauthenticated Public Visitor| C["1. Public Volunteer Discovery Mode<br>• Hero CTA: 'Browse Volunteer Opportunities'<br>• Secondary CTA: 'Sign In / Volunteer Registration'<br>• NO Organization Creation Button in Hero"]
+    
+    B -->|Yes - Authenticated User| D{Does User Own / Lead an Org?}
+    
+    D -->|No Org Registered Yet| E["2. New Leader Mode<br>• Hero CTA: 'Register Your Organization'<br>• Secondary CTA: 'Browse Volunteer Shifts'"]
+    
+    D -->|Yes - Org Registered| F["3. Organization Administrator Mode<br>• Hero CTA: '+ Register / Create New Event'<br>• Secondary CTA: 'Browse Community Shifts'<br>• Leadership Workspace Banner: Quick Org Settings & New Event"]
 ```
 
-### 3.1 Role Selection on Signup
-When registering, users declare their primary operational intent:
-1. **Volunteer & Family**: Immediate redirect to community opportunities and shift sign-ups.
-2. **Organization Leader / Coordinator**: Seamless handoff directly into the **Organization Onboarding Wizard**.
+#### Multi-Organization Creation Placement Strategy:
+* **Why not clutter the public landing page with 'Register Additional Organization'?**
+  A general visitor should never be confused by multi-entity enterprise controls. Once an organization is registered, the landing page stays focused on community events and creating new campaigns for that organization.
+* **Where Additional Organizations are Managed**:
+  1. **User Profile & Account Settings (`UserProfileModal.tsx`)**: Under the **"Organizations & Roles I Lead"** tab, users see all entities they belong to with a clear **`+ Register Another Organization or School`** button.
+  2. **Top Navbar Organization Switcher**: The dropdown list includes **`+ Register New Organization...`** at the bottom for instant switching.
+  3. **Org Executive Dashboard (`OrgExecutiveDashboard.tsx`)**: Header action for enterprise administrators managing multiple local branches or school chapters.
+
 
 ### 3.3 Dual Environment Architecture (Demo Simulator vs Live Clean Mode)
 To support both rapid stakeholder exploration and rigorous end-to-end production testing, R3Pro provides a top-level environment mode toggle:

@@ -34,6 +34,11 @@ const MainLayout: React.FC = () => {
     }
   };
 
+  const handleOpenAuth = (roleIntent: 'org_admin' | 'volunteer' = 'volunteer') => {
+    setAuthRoleIntent(roleIntent);
+    setIsAuthModalOpen(true);
+  };
+
   // Check URL query parameters on boot
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -96,6 +101,7 @@ const MainLayout: React.FC = () => {
             onSelectEvent={(eventId) => setActiveTab('public_landing')}
             onOpenOrgWizard={handleOpenOrgWizard}
             onOpenEventBuilder={() => setIsEventBuilderOpen(true)}
+            onOpenAuth={handleOpenAuth}
           />
         )}
         

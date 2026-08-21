@@ -13,14 +13,16 @@ interface CommunityDiscoveryHubProps {
   onSelectEvent: (eventId: string) => void;
   onOpenOrgWizard: () => void;
   onOpenEventBuilder: () => void;
+  onOpenAuth?: (roleIntent?: 'org_admin' | 'volunteer') => void;
 }
 
 export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
   onSelectEvent,
   onOpenOrgWizard,
-  onOpenEventBuilder
+  onOpenEventBuilder,
+  onOpenAuth
 }) => {
-  const { currentUser, events, organizations, shifts, registrations, donations, switchEvent, switchOrganization } = useApp();
+  const { currentUser, events, organizations, shifts, registrations, donations, switchEvent, switchOrganization, isAuthenticated } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrgType, setSelectedOrgType] = useState<string>('all');
@@ -29,6 +31,9 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
   const [selectedMonth, setSelectedMonth] = useState<string>('September 2026');
 
   const now = new Date().toISOString();
+
+  // Verify if user belongs to/leads an organization
+  const hasOrg = Boolean(currentUser.orgId && currentUser.orgId !== '' && organizations.some(o => o.id === currentUser.orgId));
 
   // Separate into Current/Upcoming vs Past Completed Events
   const upcomingEvents = events.filter(e => e.status !== 'completed' && e.endDate >= now);
@@ -90,26 +95,82 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
             Sign up for shifts in seconds, register your family with digital waivers, receive express QR check-in passes, and make a real difference in local schools, sports, and non-profit causes.
           </p>
 
-          {/* Primary Action Buttons Driving Volunteer Sign-Ups */}
+          {/* Dynamic Progressive Action Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <button
-              onClick={() => {
-                const el = document.getElementById('events-explorer');
-                el?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
-            >
-              <Users className="w-4 h-4" />
-              <span>Browse Open Volunteer Shifts</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            {/* 1. PUBLIC VISITOR (NOT SIGNED IN) */}
+            {!isAuthenticated && (
+              <>
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('events-explorer');
+                    el?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Browse Volunteer Opportunities</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
 
-            <button
-              onClick={onOpenOrgWizard}
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition"
-            >
-              <span>Register an Organization</span>
-            </button>
+                <button
+                  onClick={() => onOpenAuth?.('volunteer')}
+                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition flex items-center gap-2"
+                >
+                  <HeartHandshake className="w-4 h-4 text-rose-400" />
+                  <span>Sign In / Volunteer Registration</span>
+                </button>
+              </>
+            )}
+
+            {/* 2. SIGNED-IN USER WITHOUT AN ORGANIZATION */}
+            {isAuthenticated && !hasOrg && (
+              <>
+                <button
+                  onClick={onOpenOrgWizard}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-emerald-500/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
+                >
+                  <Building2 className="w-4 h-4" />
+                  <span>Register Your Organization</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('events-explorer');
+                    el?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition flex items-center gap-2"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Browse Volunteer Shifts</span>
+                </button>
+              </>
+            )}
+
+            {/* 3. SIGNED-IN USER WITH AN ACTIVE ORGANIZATION */}
+            {isAuthenticated && hasOrg && (
+              <>
+                <button
+                  onClick={onOpenEventBuilder}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Register / Create New Event</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('events-explorer');
+                    el?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition flex items-center gap-2"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Browse Community Shifts</span>
+                </button>
+              </>
+            )}
           </div>
 
           {/* Conditional Admin / Planner Workspace Shortcuts (Only visible if registered as Leader/Planner) */}

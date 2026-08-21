@@ -227,6 +227,19 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   );
                 })}
               </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenOrgWizard();
+                  }}
+                  className="w-full py-3 px-4 rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs flex items-center justify-center gap-2 transition shadow-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Register Another Organization or School</span>
+                </button>
+              </div>
             </div>
           )}
 
