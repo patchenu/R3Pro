@@ -285,6 +285,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const initialEvent: Event = {
       id: eventId,
       orgId: orgId,
+      eventKey: `EVT-2026-Q3-${Math.floor(100 + Math.random() * 900)}`,
       title: `${newOrg.name} Kickoff & Fundraiser 2026`,
       slug: (newOrg.name + '-kickoff-2026').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       tagline: 'Annual community event, volunteer drive and fundraising campaign',
@@ -367,10 +368,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const createEvent = (newEventData: Partial<Event>, templatePresetId?: string): Event => {
     const id = 'evt_' + Date.now();
     const slug = (newEventData.title || 'event').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const startDateObj = new Date(newEventData.startDate || Date.now());
+    const year = startDateObj.getFullYear();
+    const quarter = `Q${Math.floor(startDateObj.getMonth() / 3) + 1}`;
+    const randomSuffix = Math.floor(100 + Math.random() * 900);
+    const eventKey = newEventData.eventKey || `EVT-${year}-${quarter}-${randomSuffix}`;
     
     const event: Event = {
       id,
       orgId: currentOrg.id,
+      eventKey,
       title: newEventData.title || 'New Event',
       slug,
       tagline: newEventData.tagline || 'Community Event & Fundraiser',

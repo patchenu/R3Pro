@@ -143,6 +143,7 @@ export const SEED_EVENTS: Event[] = [
   {
     id: 'evt_fall_carnival_2026',
     orgId: 'org_lincoln_pta',
+    eventKey: 'EVT-2026-Q3-001',
     title: 'Lincoln High Fall Carnival & Bake Sale 2026',
     slug: 'lincoln-fall-carnival-2026',
     tagline: 'Join 500+ families for our biggest student fundraiser of the year!',
@@ -174,6 +175,7 @@ export const SEED_EVENTS: Event[] = [
   {
     id: 'evt_spring_stem_night_2026',
     orgId: 'org_lincoln_pta',
+    eventKey: 'EVT-2026-Q4-002',
     title: 'Lincoln STEM Fair & Robotics Showcase 2026',
     slug: 'lincoln-stem-night-2026',
     tagline: 'Empowering future engineers with 30 interactive student exhibits and live robotics arena.',
@@ -205,6 +207,7 @@ export const SEED_EVENTS: Event[] = [
   {
     id: 'evt_fall_carnival_2025',
     orgId: 'org_lincoln_pta',
+    eventKey: 'EVT-2025-Q3-001',
     title: 'Lincoln High Fall Carnival & Bake Sale 2025',
     slug: 'lincoln-fall-carnival-2025',
     tagline: 'Completed Campaign: Funded the Lincoln High Computer Lab & 30 New Laptops!',
@@ -236,6 +239,7 @@ export const SEED_EVENTS: Event[] = [
   {
     id: 'evt_spring_gala_2026',
     orgId: 'org_metro_foundation',
+    eventKey: 'EVT-2026-Q4-003',
     title: 'Hope for Tomorrow: Charity Gala & Silent Auction',
     slug: 'hope-gala-2026',
     tagline: 'An elegant evening celebrating 20 years of community impact and housing advocacy.',

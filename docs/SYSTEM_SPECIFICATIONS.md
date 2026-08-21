@@ -67,22 +67,25 @@ graph TD
      - **Tied Campaign Outcome**: Displays the total funds raised and community outcome achieved by that specific event (e.g. *"Event Outcome: Raised $11,450 for Lincoln High STEM Lab"*).
      - Verifying Coordinator on duty.
 
-#### 2.2.2 Master Events Portfolio & Campaign Outcomes (Single-Pane Executive Hub)
-To eliminate fragmentation and provide executive oversight across all historical and active campaigns, the **Org Super Admin Hub** includes the **`🎪 Master Events Portfolio & Outcomes`** studio:
-* **Aggregate Portfolio Metrics**:
-  - **Lifetime Funds Raised**: Total gross revenue across all campaigns.
-  - **Master CRM Volunteers**: Cross-event participant database count.
-  - **Campaign Pipeline**: Breakdown of Active/Upcoming vs Completed/Archived events.
-  - **Portfolio Goal Efficiency**: Percentage of cumulative fundraising targets achieved.
-* **Unified Event Ledger & Outcome Cards**:
-  - Displays every event with cover imagery, date, venue, status badges (*Active* vs *Completed*), and financial progress meters.
-  - **Shift Fulfillment Telemetry**: Tracks volunteer shift capacity (e.g. *38/40 spots (95%)*).
-  - **Department Committees**: Monitors assigned sub-parts and lead staffing.
-* **1-Click Executive Action Suite**:
-  - **`📊 View Outcome Report`**: Opens the comprehensive Event Campaign Dossier containing revenue breakdowns (Donations, Tickets, Sponsors), volunteer labor economic valuation ($31.80/hr rate), and in-kind wishlist fulfillment.
-  - **`⚙️ Open in Planner Hub`**: 1-click context switch into that specific event's planner command center.
-  - **`🖨️ Print Volunteer Manifest (PDF)`**: Formatted day-of-event check-in roster.
-  - **`📄 Export Financial Ledger (CSV)`**: Double-entry accounting ledger ready for CPA review.
+#### 2.2.2 Master Events Portfolio & Multi-Level Campaign Outcomes Studio
+To eliminate fragmentation and provide executive oversight across all historical and active campaigns, the **Org Super Admin Hub** includes the **`🎪 Master Events Portfolio & Outcomes`** studio with 3 dedicated reporting dimensions:
+* **Unique Event Keys**:
+  - Every campaign is assigned an immutable, human-readable identifier (e.g. `EVT-2026-Q3-001`, `EVT-2026-Q4-002`, `EVT-2025-Q3-001`) based on year, quarter, and sequence.
+  - Used for CPA reconciliation, grant audits, and board filings.
+* **Dimension 1: By Event (Unique Keys & Deep Dossiers)**:
+  - Instant search filter by **Event Key**, campaign title, or venue location.
+  - Granular dossier cards displaying cover image, date, financial progress ($ Raised / $ Goal with %), shift capacity fulfillment %, and assigned committee leads.
+  - **1-Click Outcome Report Modal**: Displays revenue breakdown (Direct Giving, Tickets, Corporate Sponsors), volunteer labor economic valuation ($31.80/hr statutory rate), and in-kind wishlist fulfillment.
+* **Dimension 2: By Quarter (Q1, Q2, Q3, Q4 Rollup)**:
+  - Aggregates all campaigns conducted within each fiscal quarter (e.g., *2026 Q3 (Jul - Sep)*).
+  - Calculates quarter gross proceeds, direct donations, ticket revenue, corporate sponsors, volunteer service hours, and labor economic valuation.
+  - Displays all constituent events with their unique Event Keys.
+  - **1-Click Export Actions**: `🖨️ Print Quarterly Summary (PDF)` and `📄 Export Quarter Ledger (CSV)`.
+* **Dimension 3: By Calendar Year (Annual Impact & Form 990 Rollup)**:
+  - Full annual executive synthesis for Board of Directors and IRS Form 990 filings.
+  - Tracks Annual Gross Proceeds, Cumulative Goals, Portfolio Efficiency %, Total Economic Footprint (Funds + Labor Value), and Year-Over-Year (% YoY) revenue growth.
+  - Full annual campaign ledger table with Event Keys, Quarters, Dates, and individual outcomes.
+  - **1-Click Export Actions**: `🖨️ Print Annual 990 / Board Dossier (PDF)` and `📄 Export Annual Ledger (CSV)`.
 
 ### 2.3 Persona 3: Event Chairs & Committee Leads
 * **Mental Model**: Flawless on-the-ground event execution, department delegation, shift capacity fulfillment, variable approval governance, and on-site door operations.

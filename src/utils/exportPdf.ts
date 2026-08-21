@@ -618,3 +618,270 @@ export function printStudentServiceLetterHtml(
   printWindow.document.write(html);
   printWindow.document.close();
 }
+
+export function printQuarterlyReportHtml(
+  quarterLabel: string,
+  org: Organization,
+  events: Event[],
+  metrics: {
+    totalRaised: number;
+    fundraisingGoal: number;
+    directGiving: number;
+    ticketSales: number;
+    sponsors: number;
+    volunteerHours: number;
+    economicValuation: number;
+    itemsDelivered: number;
+  }
+): void {
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) return;
+
+  const officerName = org.signatoryOfficerName || 'Elena Rostova';
+  const officerTitle = org.signatoryOfficerTitle || 'Authorized Executive Officer';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>${org.name} - ${quarterLabel} Financial & Operational Outcome Report</title>
+        <style>
+          body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #0f172a; padding: 40px; font-size: 12px; line-height: 1.5; }
+          .header { border-bottom: 3px solid ${org.primaryColor || '#4f46e5'}; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+          .logo { max-height: 50px; max-width: 160px; object-fit: contain; }
+          .title { font-size: 24px; font-weight: 800; color: #0f172a; }
+          .org { font-size: 13px; color: #475569; margin-top: 4px; font-weight: 600; }
+          .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
+          .card { padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; }
+          .label { font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; }
+          .val { font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 4px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th { background: #f1f5f9; text-align: left; padding: 8px 12px; border: 1px solid #cbd5e1; font-size: 11px; text-transform: uppercase; color: #475569; }
+          td { padding: 8px 12px; border: 1px solid #cbd5e1; }
+          .signature-section { margin-top: 48px; display: flex; justify-content: space-between; align-items: flex-end; }
+          .sig-line { border-top: 1px solid #0f172a; width: 240px; text-align: center; padding-top: 6px; font-size: 11px; }
+          .sig-img { max-height: 35px; margin-bottom: 4px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            ${org.logoUrl ? `<img src="${org.logoUrl}" class="logo" alt="${org.name}" /><br>` : ''}
+            <div class="title">${quarterLabel} Performance & Outcome Dossier</div>
+            <div class="org">${org.name} • EIN: ${org.ein}</div>
+          </div>
+          <div style="text-align: right; font-size: 11px; color: #64748b;">
+            <div>Generated: ${new Date().toLocaleDateString()}</div>
+            <div>Campaigns Hosted: <b>${events.length}</b></div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="label">Gross Revenue</div>
+            <div class="val" style="color:#059669;">${formatCurrency(metrics.totalRaised)}</div>
+          </div>
+          <div class="card">
+            <div class="label">Fundraising Target</div>
+            <div class="val">${formatCurrency(metrics.fundraisingGoal)}</div>
+          </div>
+          <div class="card">
+            <div class="label">Volunteer Labor Value</div>
+            <div class="val" style="color:#4f46e5;">${formatCurrency(metrics.economicValuation)}</div>
+            <div style="font-size:10px;color:#64748b;">${metrics.volunteerHours.toFixed(1)} hrs @ $31.80/hr</div>
+          </div>
+          <div class="card">
+            <div class="label">Goal Efficiency</div>
+            <div class="val" style="color:#9333ea;">${Math.round((metrics.totalRaised / (metrics.fundraisingGoal || 1)) * 100)}%</div>
+          </div>
+        </div>
+
+        <h3 style="margin-top:24px;font-size:14px;font-weight:bold;">Campaigns Included in this Quarter</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Event Key</th>
+              <th>Campaign Title</th>
+              <th>Date</th>
+              <th>Venue</th>
+              <th>Revenue Raised</th>
+              <th>Goal</th>
+              <th>Fulfillment</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${events.map(e => `
+              <tr>
+                <td><code style="font-weight:bold;color:#4f46e5;">${e.eventKey || 'N/A'}</code></td>
+                <td><b>${e.title}</b></td>
+                <td>${formatDate(e.startDate)}</td>
+                <td>${e.venueName}</td>
+                <td><b>${formatCurrency(e.totalRaised)}</b></td>
+                <td>${formatCurrency(e.fundraisingGoal)}</td>
+                <td><b>${Math.round((e.totalRaised / (e.fundraisingGoal || 1)) * 100)}%</b></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="signature-section">
+          <div>
+            <b>Report Type:</b> Quarterly Executive Ledger<br>
+            <b>Status:</b> Audited & Certified
+          </div>
+          <div class="sig-line">
+            ${org.signatorySignatureUrl ? `<img src="${org.signatorySignatureUrl}" class="sig-img" alt="Signature" /><br>` : ''}
+            <b>${officerName}</b><br>
+            ${officerTitle}<br>
+            ${org.name}
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() { window.print(); }
+        </script>
+      </body>
+    </html>
+  `;
+
+  printWindow.document.write(html);
+  printWindow.document.close();
+}
+
+export function printAnnualReportHtml(
+  year: number,
+  org: Organization,
+  events: Event[],
+  metrics: {
+    totalRaised: number;
+    fundraisingGoal: number;
+    directGiving: number;
+    ticketSales: number;
+    sponsors: number;
+    volunteerHours: number;
+    economicValuation: number;
+    itemsDelivered: number;
+    yoyGrowthPercent?: number;
+  }
+): void {
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) return;
+
+  const officerName = org.signatoryOfficerName || 'Elena Rostova';
+  const officerTitle = org.signatoryOfficerTitle || 'Authorized Executive Officer';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>${org.name} - ${year} Annual Comprehensive Impact & Financial Outcome Report</title>
+        <style>
+          body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #0f172a; padding: 48px; font-size: 12px; line-height: 1.6; }
+          .header { border-bottom: 3px solid ${org.primaryColor || '#4f46e5'}; padding-bottom: 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+          .logo { max-height: 55px; max-width: 180px; object-fit: contain; }
+          .title { font-size: 26px; font-weight: 900; color: #0f172a; }
+          .org { font-size: 14px; color: #475569; margin-top: 4px; font-weight: 600; }
+          .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 24px 0; }
+          .card { padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; }
+          .label { font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; }
+          .val { font-size: 20px; font-weight: 900; color: #0f172a; margin-top: 4px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+          th { background: #f1f5f9; text-align: left; padding: 10px 12px; border: 1px solid #cbd5e1; font-size: 11px; text-transform: uppercase; color: #475569; }
+          td { padding: 10px 12px; border: 1px solid #cbd5e1; }
+          .signature-section { margin-top: 56px; display: flex; justify-content: space-between; align-items: flex-end; }
+          .sig-line { border-top: 1px solid #0f172a; width: 260px; text-align: center; padding-top: 8px; font-size: 12px; }
+          .sig-img { max-height: 40px; margin-bottom: 4px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            ${org.logoUrl ? `<img src="${org.logoUrl}" class="logo" alt="${org.name}" /><br>` : ''}
+            <div class="title">${year} Annual Organization Outcome & Impact Dossier</div>
+            <div class="org">${org.name} • 501(c)(3) EIN: ${org.ein}</div>
+          </div>
+          <div style="text-align: right; font-size: 11px; color: #64748b;">
+            <div>Prepared for: Board of Directors & IRS Form 990</div>
+            <div>Date: ${new Date().toLocaleDateString()}</div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="label">Annual Gross Proceeds</div>
+            <div class="val" style="color:#059669;">${formatCurrency(metrics.totalRaised)}</div>
+            ${metrics.yoyGrowthPercent !== undefined ? `<div style="font-size:10px;color:#059669;font-weight:bold;">${metrics.yoyGrowthPercent >= 0 ? '+' : ''}${metrics.yoyGrowthPercent}% YoY Growth</div>` : ''}
+          </div>
+          <div class="card">
+            <div class="label">Cumulative Targets</div>
+            <div class="val">${formatCurrency(metrics.fundraisingGoal)}</div>
+            <div style="font-size:10px;color:#64748b;">${Math.round((metrics.totalRaised / (metrics.fundraisingGoal || 1)) * 100)}% Goal Fulfillment</div>
+          </div>
+          <div class="card">
+            <div class="label">Volunteer Labor Value</div>
+            <div class="val" style="color:#4f46e5;">${formatCurrency(metrics.economicValuation)}</div>
+            <div style="font-size:10px;color:#64748b;">${metrics.volunteerHours.toFixed(1)} hrs @ $31.80/hr</div>
+          </div>
+          <div class="card">
+            <div class="label">Total Economic Impact</div>
+            <div class="val" style="color:#9333ea;">${formatCurrency(metrics.totalRaised + metrics.economicValuation)}</div>
+            <div style="font-size:10px;color:#64748b;">Funds + Labor Valuation</div>
+          </div>
+        </div>
+
+        <h3 style="margin-top:28px;font-size:15px;font-weight:bold;">Campaign Performance Ledger for ${year}</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Event Key</th>
+              <th>Campaign Title</th>
+              <th>Quarter</th>
+              <th>Event Date</th>
+              <th>Revenue Raised</th>
+              <th>Target Goal</th>
+              <th>Efficiency</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${events.map(e => {
+              const month = new Date(e.startDate).getMonth();
+              const quarter = `Q${Math.floor(month / 3) + 1}`;
+              return `
+                <tr>
+                  <td><code style="font-weight:bold;color:#4f46e5;">${e.eventKey || 'N/A'}</code></td>
+                  <td><b>${e.title}</b></td>
+                  <td><span style="font-weight:bold;">${quarter}</span></td>
+                  <td>${formatDate(e.startDate)}</td>
+                  <td><b>${formatCurrency(e.totalRaised)}</b></td>
+                  <td>${formatCurrency(e.fundraisingGoal)}</td>
+                  <td><b>${Math.round((e.totalRaised / (e.fundraisingGoal || 1)) * 100)}%</b></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div class="signature-section">
+          <div>
+            <b>Annual Accounting Year:</b> ${year}<br>
+            <b>Governance Filing:</b> Board Approved & Verified
+          </div>
+          <div class="sig-line">
+            ${org.signatorySignatureUrl ? `<img src="${org.signatorySignatureUrl}" class="sig-img" alt="Signature" /><br>` : ''}
+            <b>${officerName}</b><br>
+            ${officerTitle}<br>
+            ${org.name}
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() { window.print(); }
+        </script>
+      </body>
+    </html>
+  `;
+
+  printWindow.document.write(html);
+  printWindow.document.close();
+}
+

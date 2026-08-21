@@ -120,12 +120,14 @@ This document provides system knowledge, core architectural rules, and coding st
 
 ---
 
-## 13. Master Events Portfolio & Campaign Outcomes Architecture
+## 13. Master Events Portfolio & Multi-Level Campaign Outcomes Architecture
 - **Single-Pane Executive Hub (`OrgExecutiveDashboard.tsx`)**:
   - Org Owners and Super Admins inspect all campaigns (Active/Upcoming vs Completed/Archived) in one centralized view.
-  - Aggregates **Lifetime Funds Raised**, **Master CRM Profiles**, **Active vs Completed Pipeline**, and **Portfolio Goal Efficiency %**.
-  - **Unified Event Dossiers**: Tracks real-time gross revenue, volunteer shift capacity fulfillment %, department committees, and wishlist pledges.
-  - **1-Click Outcome & Performance Report**: Displays revenue breakdown (Direct Giving, Tickets, Sponsors), volunteer labor economic valuation ($31.80/hr independent sector rate), and in-kind FMV offsets with 1-click PDF/CSV export buttons.
+  - **Unique Event Keys**: Every event is assigned a unique identifier (e.g. `EVT-2026-Q3-001`) for CPA reconciliation and audit ledgers.
+  - **3-Level Reporting Dimensions**:
+    1. **By Event (Unique Key)**: Granular search by title or event key, financial progress meters, shift capacity fulfillment %, and 1-click single-event dossiers.
+    2. **By Quarter (Q1 - Q4 Rollup)**: Aggregates total raised, direct donations, ticket sales, sponsor revenue, volunteer hours, and economic valuation ($31.80/hr) with 1-click quarterly PDF/CSV exports.
+    3. **By Calendar Year (Annual 990 / Board Rollup)**: Annual financial and volunteer impact summary with cumulative goal fulfillment %, YoY growth % vs prior years, and full campaign ledger with 1-click annual PDF/CSV exports.
 
 ---
 

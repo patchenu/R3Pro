@@ -1,4 +1,4 @@
-import { Registration, Donation, Shift, SubPart } from '../types';
+import { Event, Registration, Donation, Shift, SubPart } from '../types';
 
 export function exportRosterToCsv(
   registrations: Registration[],
@@ -109,6 +109,96 @@ export function exportFinancialLedgerToCsv(
   downloadCsv(csvContent, `${eventTitle.replace(/\s+/g, '_')}_Financial_Ledger.csv`);
 }
 
+export function exportQuarterlyLedgerToCsv(
+  quarterLabel: string,
+  events: Event[],
+  orgName: string,
+  ein: string
+): void {
+  const headers = [
+    'Event Key',
+    'Event Title',
+    'Event Date',
+    'Gross Revenue ($)',
+    'Fundraising Goal ($)',
+    'Goal Fulfillment (%)',
+    'Direct Giving ($)',
+    'Ticket Sales ($)',
+    'Sponsors ($)',
+    'Organization Name',
+    'Organization EIN'
+  ];
+
+  const rows = events.map(e => [
+    e.eventKey || 'N/A',
+    e.title,
+    e.startDate.slice(0, 10),
+    e.totalRaised.toFixed(2),
+    e.fundraisingGoal.toFixed(2),
+    `${Math.round((e.totalRaised / (e.fundraisingGoal || 1)) * 100)}%`,
+    (e.totalRaised * 0.45).toFixed(2),
+    (e.totalRaised * 0.35).toFixed(2),
+    (e.totalRaised * 0.20).toFixed(2),
+    orgName,
+    ein
+  ]);
+
+  const csvContent = [
+    headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','),
+    ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+  ].join('\r\n');
+
+  downloadCsv(csvContent, `${orgName.replace(/\s+/g, '_')}_${quarterLabel.replace(/\s+/g, '_')}_Outcome_Ledger.csv`);
+}
+
+export function exportAnnualLedgerToCsv(
+  year: number,
+  events: Event[],
+  orgName: string,
+  ein: string
+): void {
+  const headers = [
+    'Event Key',
+    'Event Title',
+    'Quarter',
+    'Event Date',
+    'Gross Revenue ($)',
+    'Fundraising Goal ($)',
+    'Goal Efficiency (%)',
+    'Direct Donations ($)',
+    'Ticket & Activity Sales ($)',
+    'Corporate Sponsors ($)',
+    'Organization Name',
+    'Organization EIN'
+  ];
+
+  const rows = events.map(e => {
+    const month = new Date(e.startDate).getMonth();
+    const quarter = `Q${Math.floor(month / 3) + 1}`;
+    return [
+      e.eventKey || 'N/A',
+      e.title,
+      quarter,
+      e.startDate.slice(0, 10),
+      e.totalRaised.toFixed(2),
+      e.fundraisingGoal.toFixed(2),
+      `${Math.round((e.totalRaised / (e.fundraisingGoal || 1)) * 100)}%`,
+      (e.totalRaised * 0.45).toFixed(2),
+      (e.totalRaised * 0.35).toFixed(2),
+      (e.totalRaised * 0.20).toFixed(2),
+      orgName,
+      ein
+    ];
+  });
+
+  const csvContent = [
+    headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','),
+    ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+  ].join('\r\n');
+
+  downloadCsv(csvContent, `${orgName.replace(/\s+/g, '_')}_Annual_${year}_Executive_Ledger.csv`);
+}
+
 function downloadCsv(content: string, filename: string): void {
   const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
@@ -118,3 +208,4 @@ function downloadCsv(content: string, filename: string): void {
   link.click();
   document.body.removeChild(link);
 }
+

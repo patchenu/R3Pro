@@ -62,6 +62,7 @@ export interface EventTheme {
 export interface Event {
   id: string;
   orgId: string;
+  eventKey: string; // Unique human-readable code e.g. "EVT-2026-Q3-01"
   title: string;
   slug: string;
   tagline: string;
