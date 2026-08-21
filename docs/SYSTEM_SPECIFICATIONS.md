@@ -414,6 +414,32 @@ Organizations and Event Chairs maintain a centralized **Legal Compliance & E-Sig
    * Eliminates forced upfront password friction during sign-up by issuing a 256-bit cryptographically secure `manageToken`.
    * Offers optional password creation upon signup completion (`ConfirmationCard.tsx` and registration Step 3) to claim volunteer profiles, link family dependents, and access the volunteer portal to track verified service hours and certificates.
 
+### 6.10 Passwordless 6-Digit OTP, Magic Links & Cross-Device Authentication Architecture
+1. **Delivery Channels for Self-Service Access**:
+   * **Instant Signup Confirmation Email**: Contains 1-click self-service magic URL (`/manage-registration?token=...`).
+   * **Automated SMS Reminders**: Dispatched at T-72h, T-24h, and T-2h with direct mobile check-in passes.
+   * **Embedded Calendar Appointment (.ics)**: Self-service management URL is embedded inside calendar invite notes so volunteers can access their pass directly from Google Calendar or Apple iCal.
+2. **Token Storage & Persistence Model**:
+   * High-entropy 256-bit `manage_token` values are stored in the backend database (`registrations.manage_token`).
+   * Saved in browser `localStorage` (`gatherraise_active_tokens`) for instantaneous pass recovery on returning desktop/mobile visits.
+3. **Cross-Device Login Strategy (Desktop to Mobile / Lost Link)**:
+   * When shifting devices or logging in without saved links, volunteers do not need passwords.
+   * The login modal (`AuthModal.tsx`) defaults to **6-Digit Verification Passcode (Email/SMS OTP)**.
+   * The user enters their email address or phone number, receives a 6-digit one-time code, and is authenticated immediately with their linked family registrations and service history.
+   * A toggle allows Super Admins and staff with traditional passwords to switch to **Staff / Password Login** mode.
+
+### 6.11 Sponsor Packages, Commercial Tiers, Shifts & Items App-Wide Full CRUD Studio
+1. **Dedicated Commercial Tiers Studio (`VendorMarketplaceManager.tsx`)**:
+   * **Tab 1: 💎 Sponsor Packages & Commercial Tiers Builder**: Complete create, edit/modify, and delete capabilities for corporate underwriters, food trucks, and artisan vendor booths.
+   * **Tab 2: 📋 Commercial Intake Queue**: Review EIN, Certificate of Insurance (COI) compliance, and assign numbered vendor booths.
+2. **Operational Single-Pane Management (`MasterPlannerDashboard.tsx`)**:
+   * Top action bar includes `+ Add Sponsor / Tier`, `+ Add Shift Need`, `+ Add Supply Need`, and `+ Add Committee Department`.
+   * Real-time 1-click `✏️ Edit` and `🗑️ Delete` actions directly on shifts and supply items in department cards.
+   * Comprehensive Corporate Sponsor Packages card displaying pricing, claimed capacity, and IRS FMV deduction offsets.
+3. **IRS Fair Market Value (FMV) Calculation & Perks**:
+   * Dynamically tracks FMV offsets to compute tax-deductible contributions for IRS receipts.
+   * Dynamic perks builder for promotional deliverables (e.g. stage banners, VIP wristbands, program logos).
+
 ## 7. Turnkey Industry Presets Catalog
 
 ### 7.1 Organization Presets

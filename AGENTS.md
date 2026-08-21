@@ -181,4 +181,36 @@ This document provides system knowledge, core architectural rules, and coding st
   - **Frictionless Shift Sign-Up**: Public volunteers register without mandatory upfront password creation, eliminating 40%+ conversion drop-off. Instant pass access is secured via 256-bit `manageToken`.
   - **Optional Account Claiming**: Volunteers can set an optional password during registration (Step 3) or directly on their post-signup confirmation screen (`ConfirmationCard.tsx`) to claim their volunteer profile, link household family dependents, and access their personal GatherRaise dashboard to track verified service hours and certificates.
 
+---
+
+## 18. Passwordless 6-Digit OTP, Magic Links & Token Storage Architecture
+- **Delivery Channels for Self-Service Access**:
+  1. **Instant Signup Confirmation Email**: Contains 1-click self-service magic URL (`/manage-registration?token=...`).
+  2. **Automated SMS Reminders**: Dispatched at T-72h, T-24h, and T-2h with direct mobile check-in passes.
+  3. **Embedded Calendar Appointment (.ics)**: Self-service management URL is embedded inside calendar invite notes so volunteers can access their pass directly from Google Calendar or Apple iCal.
+- **Token Storage & Persistence Model**:
+  - High-entropy 256-bit `manage_token` values are stored in the backend database (`registrations.manage_token`).
+  - Saved in browser `localStorage` (`gatherraise_active_tokens`) for instantaneous pass recovery on returning desktop/mobile visits.
+- **Cross-Device Login Strategy (Desktop to Mobile / Lost Link)**:
+  - When shifting devices or logging in without saved links, volunteers do not need passwords.
+  - The login modal (`AuthModal.tsx`) defaults to **6-Digit Verification Passcode (Email/SMS OTP)**.
+  - The user enters their email address or phone number, receives a 6-digit one-time code, and is authenticated immediately with their linked family registrations and service history.
+  - A toggle allows Super Admins and staff with traditional passwords to switch to **Staff / Password Login** mode.
+
+---
+
+## 19. Sponsor Packages, Commercial Tiers, Shifts & Items App-Wide CRUD Studio
+- **Centralized Builder Hubs**:
+  1. **`VendorMarketplaceManager.tsx` (`💎 Sponsor Packages & Commercial Tiers Builder` tab)**: Dedicated workspace for Super Admins and Commercial Chairs to build, customize, and price sponsor underwriting tiers, artisan vendor booths, and admission packages.
+  2. **`MasterPlannerDashboard.tsx` (`Committees & Budgets` tab)**: Single-pane view of all active sponsorship packages, volunteer shift needs, and supply wishlist items with 1-click `✏️ Edit` and `🗑️ Delete` actions.
+- **Sponsor & Commercial Tier Capabilities**:
+  - **IRS Fair Market Value (FMV) Offsets**: Sets the fair market value of goods/meals provided, automatically computing tax-deductible contributions for IRS receipts.
+  - **Dynamic Inclusions & Perks Checklist**: Custom bullet points (e.g. *Main Stage Logo Placement*, *VIP Passes*, *Social Media Mention*).
+  - **Physical Footprint & Electricity**: Defines required booth space dimensions (e.g. *10x10*, *Food Truck*) and toggles 110V/220V power drops.
+  - **Approval vs Instant Checkout**: Toggles instant self-service checkout vs mandatory application review.
+- **Shift & Item Full Lifecycle Management**:
+  - Department Leads and Event Planners can edit shift hours, volunteer capacities, and waiver requirements on existing shifts.
+  - Item wishlist slots can be modified to increase/decrease required quantities, adjust drop-off deadlines, and update FMV per unit.
+
+
 

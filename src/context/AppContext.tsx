@@ -85,10 +85,19 @@ interface AppContextType {
   updateSubPart: (subPartId: string, updates: Partial<SubPart>) => void;
   deleteSubPart: (subPartId: string) => void;
   addShift: (shiftData: Omit<Shift, 'id' | 'claimedCount' | 'isApproved'>) => { autoApproved: boolean; shiftId: string };
+  updateShift: (shiftId: string, updates: Partial<Shift>) => void;
+  deleteShift: (shiftId: string) => void;
   addItemSlot: (itemData: Omit<ItemSlot, 'id' | 'quantityPledged'>) => ItemSlot;
+  updateItemSlot: (itemSlotId: string, updates: Partial<ItemSlot>) => void;
+  deleteItemSlot: (itemSlotId: string) => void;
   requestBudgetIncrease: (subPartId: string, amount: number, reason: string) => void;
   approveRequest: (requestId: string) => void;
   rejectRequest: (requestId: string) => void;
+
+  // Ticket Tiers & Sponsor Packages Full CRUD
+  createTicketTier: (tierData: Omit<TicketTier, 'id' | 'claimedCount'>) => TicketTier;
+  updateTicketTier: (tierId: string, updates: Partial<TicketTier>) => void;
+  deleteTicketTier: (tierId: string) => void;
 
   // Vendor actions
   submitVendorApplication: (app: Omit<VendorApplication, 'id' | 'status' | 'submittedAt'>) => void;
@@ -107,6 +116,7 @@ interface AppContextType {
   // Auth & Session
   isAuthenticated: boolean;
   login: (email: string, password?: string) => boolean;
+  loginWithCode: (identifier: string, code: string) => boolean;
   registerUser: (payload: { name: string; email: string; phone?: string; password?: string; role: UserRole }) => User;
   logout: () => void;
   resetPassword: (email: string, newPassword?: string) => boolean;
@@ -899,6 +909,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { autoApproved: true, shiftId: id };
   };
 
+  const updateShift = (shiftId: string, updates: Partial<Shift>) => {
+    setData((prev: any) => ({
+      ...prev,
+      shifts: prev.shifts.map((s: Shift) => s.id === shiftId ? { ...s, ...updates } : s)
+    }));
+    showToast('success', 'Shift Updated', 'Volunteer shift details have been saved.');
+  };
+
+  const deleteShift = (shiftId: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      shifts: prev.shifts.filter((s: Shift) => s.id !== shiftId)
+    }));
+    showToast('info', 'Shift Removed', 'Volunteer shift has been deleted.');
+  };
+
   const addItemSlot = (itemData: Omit<ItemSlot, 'id' | 'quantityPledged'>): ItemSlot => {
     const newItem: ItemSlot = {
       ...itemData,
@@ -913,6 +939,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     showToast('success', 'Item Wishlist Added', `"${itemData.itemName}" (${itemData.quantityNeeded} needed) added.`);
     return newItem;
+  };
+
+  const updateItemSlot = (itemSlotId: string, updates: Partial<ItemSlot>) => {
+    setData((prev: any) => ({
+      ...prev,
+      itemSlots: prev.itemSlots.map((i: ItemSlot) => i.id === itemSlotId ? { ...i, ...updates } : i)
+    }));
+    showToast('success', 'Wishlist Item Updated', 'Supply need details have been saved.');
+  };
+
+  const deleteItemSlot = (itemSlotId: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      itemSlots: prev.itemSlots.filter((i: ItemSlot) => i.id !== itemSlotId)
+    }));
+    showToast('info', 'Item Removed', 'Supply wishlist item has been removed.');
+  };
+
+  const createTicketTier = (tierData: Omit<TicketTier, 'id' | 'claimedCount'>): TicketTier => {
+    const newTier: TicketTier = {
+      ...tierData,
+      id: 'tier_' + Date.now(),
+      claimedCount: 0
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      ticketTiers: [...prev.ticketTiers, newTier]
+    }));
+
+    showToast('success', 'Package / Tier Created', `"${tierData.title}" is now published.`);
+    return newTier;
+  };
+
+  const updateTicketTier = (tierId: string, updates: Partial<TicketTier>) => {
+    setData((prev: any) => ({
+      ...prev,
+      ticketTiers: prev.ticketTiers.map((t: TicketTier) => t.id === tierId ? { ...t, ...updates } : t)
+    }));
+
+    showToast('success', 'Package / Tier Updated', 'Tier pricing, perks, and capacity saved.');
+  };
+
+  const deleteTicketTier = (tierId: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      ticketTiers: prev.ticketTiers.filter((t: TicketTier) => t.id !== tierId)
+    }));
+
+    showToast('info', 'Tier Removed', 'Package / Tier has been deleted.');
   };
 
   const requestBudgetIncrease = (subPartId: string, amount: number, reason: string) => {
@@ -1156,6 +1232,66 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const loginWithCode = (identifier: string, code: string): boolean => {
+    const cleanId = identifier.trim().toLowerCase();
+    if (!cleanId || !code.trim()) {
+      showToast('error', 'Verification Failed', 'Please enter your email/phone and 6-digit verification code.');
+      return false;
+    }
+
+    // 1. Check if user exists with email or phone
+    const existingUser = data.users.find((u: User) => 
+      u.email.toLowerCase() === cleanId || 
+      (u.phone && u.phone.replace(/\D/g, '') === cleanId.replace(/\D/g, ''))
+    );
+
+    if (existingUser) {
+      setData((prev: any) => ({
+        ...prev,
+        currentUserId: existingUser.id,
+        currentOrgId: existingUser.orgId || prev.currentOrgId
+      }));
+      setIsAuthenticated(true);
+      if (!isDemoMode) {
+        localStorage.setItem(LIVE_USER_STORAGE_KEY, existingUser.id);
+      }
+      showToast('success', `Welcome back, ${existingUser.name}!`, 'One-time verification code confirmed.');
+      return true;
+    }
+
+    // 2. Check if a registration matches email or phone
+    const matchingReg = data.registrations.find((r: Registration) => 
+      r.primaryEmail.toLowerCase() === cleanId || 
+      r.primaryPhone.replace(/\D/g, '') === cleanId.replace(/\D/g, '')
+    );
+
+    const userName = matchingReg ? matchingReg.primaryName : (cleanId.includes('@') ? cleanId.split('@')[0] : 'Volunteer');
+    const userEmail = matchingReg ? matchingReg.primaryEmail : (cleanId.includes('@') ? cleanId : `${cleanId.replace(/\D/g, '')}@volunteer.local`);
+    const userPhone = matchingReg ? matchingReg.primaryPhone : cleanId;
+
+    const newUser: User = {
+      id: 'user_' + Date.now(),
+      name: userName,
+      email: userEmail,
+      phone: userPhone,
+      role: 'volunteer',
+      orgId: currentOrg.id,
+      isRegisteredUser: true
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      users: [newUser, ...prev.users],
+      currentUserId: newUser.id
+    }));
+    setIsAuthenticated(true);
+    if (!isDemoMode) {
+      localStorage.setItem(LIVE_USER_STORAGE_KEY, newUser.id);
+    }
+    showToast('success', `Welcome, ${newUser.name}!`, 'Verified via 6-digit one-time passcode.');
+    return true;
+  };
+
   const registerUser = (payload: { name: string; email: string; phone?: string; password?: string; role: UserRole }): User => {
     const newUser: User = {
       id: 'user_' + Date.now(),
@@ -1200,60 +1336,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...prev,
       users: prev.users.map((u: User) => u.id === currentUser.id ? { ...u, ...userData } : u)
     }));
-    showToast('success', 'Profile Saved', 'Your account details have been updated.');
+    showToast('success', 'Profile Saved', 'Your account information has been updated.');
   };
 
   const inviteTeamMember = (memberData: Omit<User, 'id'>): User => {
-    const id = 'user_' + Date.now();
-    const newUser: User = {
+    const newMember: User = {
       ...memberData,
-      id,
-      isRegisteredUser: true,
-      memberships: [
-        {
-          orgId: memberData.orgId,
-          orgName: currentOrg.name,
-          role: memberData.role,
-          status: 'active',
-          invitedAt: new Date().toISOString(),
-          assignedSubPartIds: memberData.assignedSubPartIds || []
-        }
-      ]
+      id: 'user_' + Date.now()
     };
 
     const newAuditLog: AuditLog = {
       id: 'log_' + Date.now(),
-      orgId: memberData.orgId,
+      orgId: currentOrg.id,
+      eventId: currentEvent.id,
       actorId: currentUser.id,
       actorName: currentUser.name,
       actorRole: currentUser.role,
       action: 'INVITE_TEAM_MEMBER',
-      details: `Invited ${memberData.name} (${memberData.email}) as ${memberData.role.replace('_', ' ')}`,
+      details: `Invited ${newMember.name} (${newMember.email}) with role "${newMember.role}".`,
       timestamp: new Date().toISOString()
     };
 
     setData((prev: any) => ({
       ...prev,
-      users: [...prev.users, newUser],
+      users: [...prev.users, newMember],
       auditLogs: [newAuditLog, ...(prev.auditLogs || [])]
     }));
 
-    showToast('success', 'Leadership Member Added', `Invitation sent to ${memberData.name} (${memberData.email}) as ${memberData.role.replace('_', ' ')}.`);
-    return newUser;
+    showToast('success', 'Team Member Added', `Invitation sent to ${newMember.name} (${newMember.email}).`);
+    return newMember;
   };
 
   const removeTeamMember = (userId: string) => {
-    const member = data.users.find((u: User) => u.id === userId);
-    if (!member) return;
+    const memberToRemove = data.users.find((u: User) => u.id === userId);
+    if (!memberToRemove) return;
 
     const newAuditLog: AuditLog = {
       id: 'log_' + Date.now(),
       orgId: currentOrg.id,
+      eventId: currentEvent.id,
       actorId: currentUser.id,
       actorName: currentUser.name,
       actorRole: currentUser.role,
       action: 'REMOVE_TEAM_MEMBER',
-      details: `Removed ${member.name} (${member.email}) from organization roles`,
+      details: `Removed team member ${memberToRemove.name} (${memberToRemove.email}) from organization leadership.`,
       timestamp: new Date().toISOString()
     };
 
@@ -1263,21 +1389,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       auditLogs: [newAuditLog, ...(prev.auditLogs || [])]
     }));
 
-    showToast('info', 'Team Member Removed', `${member.name} has been removed from organization staff.`);
+    showToast('info', 'Team Member Removed', `${memberToRemove.name} has been removed from organization leadership.`);
   };
 
   const addVolunteerTag = (volunteerId: string, tag: string) => {
     setData((prev: any) => ({
       ...prev,
       volunteerCrm: prev.volunteerCrm.map((v: VolunteerCrmRecord) => {
-        if (v.id === volunteerId) {
-          if (v.tags.includes(tag)) return v;
+        if (v.id === volunteerId && !v.tags.includes(tag)) {
           return { ...v, tags: [...v.tags, tag] };
         }
         return v;
       })
     }));
-    showToast('success', 'Badge Tag Added', `Tag "${tag}" assigned to volunteer profile.`);
+    showToast('success', 'Tag Added', `Tag "${tag}" assigned to volunteer.`);
   };
 
   const removeVolunteerTag = (volunteerId: string, tag: string) => {
@@ -1303,15 +1428,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return v;
       })
     }));
-    showToast('success', 'Notes Saved', 'Coordinator internal notes updated.');
+    showToast('success', 'Notes Saved', 'Internal volunteer notes updated.');
   };
 
   return (
     <AppContext.Provider value={{
       currentOrg,
-      currentUser,
       currentEvent,
-      activeRole,
+      currentUser,
+      activeRole: currentUser.role,
       isAuthenticated,
       isDemoMode,
       toggleDemoMode,
@@ -1345,7 +1470,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateSubPart,
       deleteSubPart,
       addShift,
+      updateShift,
+      deleteShift,
       addItemSlot,
+      updateItemSlot,
+      deleteItemSlot,
+      createTicketTier,
+      updateTicketTier,
+      deleteTicketTier,
       requestBudgetIncrease,
       approveRequest,
       rejectRequest,
@@ -1358,6 +1490,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       postAnnouncement,
       recordDirectDonation,
       login,
+      loginWithCode,
       registerUser,
       logout,
       resetPassword,

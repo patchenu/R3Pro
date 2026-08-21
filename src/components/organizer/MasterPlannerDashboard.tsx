@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { SubPart, Shift, ItemSlot } from '../../types';
+import { SubPart, Shift, ItemSlot, TicketTier, TicketType } from '../../types';
 import { 
   BarChart3, Users, DollarSign, ShieldAlert, Sparkles, 
   Plus, Settings, CheckCircle2, ArrowRight, Layers, Store, HeartHandshake,
   Printer, FileSpreadsheet, Search, Filter, ShieldCheck, Award, Share2, AlertTriangle, FileText, Package,
-  Edit3, Trash2, Tag, Calendar, MapPin, Radio, AlertCircle
+  Edit3, Trash2, Tag, Calendar, MapPin, Radio, AlertCircle, Check, X, Zap
 } from 'lucide-react';
 import { formatCurrency, formatPercentage, formatTimeRange } from '../../utils/formatters';
 import { exportRosterToCsv } from '../../utils/exportCsv';
@@ -29,9 +29,12 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   onOpenEventBuilder
 }) => {
   const { 
-    currentEvent, currentOrg, subParts, shifts, itemSlots, 
+    currentEvent, currentOrg, subParts, shifts, itemSlots, ticketTiers,
     registrations, donations, approvalRequests, toggleCheckIn,
-    addSubPart, updateSubPart, deleteSubPart, addShift, addItemSlot 
+    addSubPart, updateSubPart, deleteSubPart, 
+    addShift, updateShift, deleteShift, 
+    addItemSlot, updateItemSlot, deleteItemSlot,
+    createTicketTier, updateTicketTier, deleteTicketTier
   } = useApp();
 
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
@@ -41,7 +44,24 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   const [isAddDeptModalOpen, setIsAddDeptModalOpen] = useState(false);
   const [editingDept, setEditingDept] = useState<SubPart | null>(null);
   const [isAddShiftModalOpen, setIsAddShiftModalOpen] = useState(false);
+  const [editingShift, setEditingShift] = useState<Shift | null>(null);
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ItemSlot | null>(null);
+
+  // Sponsor & Ticket Tier Modal State
+  const [isAddTierModalOpen, setIsAddTierModalOpen] = useState(false);
+  const [editingTier, setEditingTier] = useState<TicketTier | null>(null);
+  const [tierTitle, setTierTitle] = useState('');
+  const [tierType, setTierType] = useState<TicketType>('sponsor_package');
+  const [tierPrice, setTierPrice] = useState<number>(500);
+  const [tierFmv, setTierFmv] = useState<number>(50);
+  const [tierCapacity, setTierCapacity] = useState<number>(5);
+  const [tierDescription, setTierDescription] = useState('');
+  const [tierPerks, setTierPerks] = useState<string[]>(['Logo on Main Stage', '4 VIP Tickets']);
+  const [newPerkInput, setNewPerkInput] = useState('');
+  const [tierBoothDimensions, setTierBoothDimensions] = useState('10x10');
+  const [tierPowerProvided, setTierPowerProvided] = useState(false);
+  const [tierInstantCheckout, setTierInstantCheckout] = useState(true);
 
   // Add / Edit SubPart Form State
   const [deptName, setDeptName] = useState('');
@@ -55,7 +75,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   const [deptDressCode, setDeptDressCode] = useState('');
   const [deptSupplies, setDeptSupplies] = useState('');
 
-  // Add Shift Form State
+  // Add / Edit Shift Form State
   const [targetSubPartForShift, setTargetSubPartForShift] = useState<string>(subParts[0]?.id || '');
   const [newShiftTitle, setNewShiftTitle] = useState('');
   const [newShiftDesc, setNewShiftDesc] = useState('');
@@ -64,7 +84,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   const [newShiftCapacity, setNewShiftCapacity] = useState<number>(4);
   const [newShiftWaiver, setNewShiftWaiver] = useState<boolean>(true);
 
-  // Add Item Form State
+  // Add / Edit Item Form State
   const [targetSubPartForItem, setTargetSubPartForItem] = useState<string>(subParts[0]?.id || '');
   const [newItemName, setNewItemName] = useState('');
   const [newItemCategory, setNewItemCategory] = useState<string>('Supplies');
@@ -195,6 +215,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   };
 
   const handleOpenAddShift = (preselectedSubPartId?: string) => {
+    setEditingShift(null);
     setTargetSubPartForShift(preselectedSubPartId || subParts[0]?.id || '');
     setNewShiftTitle('');
     setNewShiftDesc('');
@@ -205,25 +226,57 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
     setIsAddShiftModalOpen(true);
   };
 
+  const handleOpenEditShift = (shift: Shift) => {
+    setEditingShift(shift);
+    setTargetSubPartForShift(shift.subPartId);
+    setNewShiftTitle(shift.title);
+    setNewShiftDesc(shift.description || '');
+    setNewShiftStart(shift.startTime);
+    setNewShiftEnd(shift.endTime);
+    setNewShiftCapacity(shift.capacity);
+    setNewShiftWaiver(shift.requiresWaiver);
+    setIsAddShiftModalOpen(true);
+  };
+
   const handleSaveShift = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newShiftTitle.trim() || !targetSubPartForShift) return;
 
-    addShift({
-      eventId: currentEvent.id,
-      subPartId: targetSubPartForShift,
-      title: newShiftTitle,
-      description: newShiftDesc,
-      startTime: newShiftStart,
-      endTime: newShiftEnd,
-      capacity: Number(newShiftCapacity) || 1,
-      requiresWaiver: newShiftWaiver
-    });
+    if (editingShift) {
+      updateShift(editingShift.id, {
+        subPartId: targetSubPartForShift,
+        title: newShiftTitle.trim(),
+        description: newShiftDesc.trim(),
+        startTime: newShiftStart,
+        endTime: newShiftEnd,
+        capacity: Number(newShiftCapacity) || 1,
+        requiresWaiver: newShiftWaiver
+      });
+    } else {
+      addShift({
+        eventId: currentEvent.id,
+        subPartId: targetSubPartForShift,
+        title: newShiftTitle.trim(),
+        description: newShiftDesc.trim(),
+        startTime: newShiftStart,
+        endTime: newShiftEnd,
+        capacity: Number(newShiftCapacity) || 1,
+        requiresWaiver: newShiftWaiver
+      });
+    }
 
     setIsAddShiftModalOpen(false);
   };
 
+  const handleDeleteShift = (shiftId: string) => {
+    if (confirm('Are you sure you want to remove this volunteer shift?')) {
+      deleteShift(shiftId);
+      setIsAddShiftModalOpen(false);
+    }
+  };
+
   const handleOpenAddItem = (preselectedSubPartId?: string) => {
+    setEditingItem(null);
     setTargetSubPartForItem(preselectedSubPartId || subParts[0]?.id || '');
     setNewItemName('');
     setNewItemCategory('Supplies');
@@ -235,23 +288,152 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
     setIsAddItemModalOpen(true);
   };
 
+  const handleOpenEditItem = (item: ItemSlot) => {
+    setEditingItem(item);
+    setTargetSubPartForItem(item.subPartId);
+    setNewItemName(item.itemName);
+    setNewItemCategory(item.category);
+    setNewItemQuantity(item.quantityNeeded);
+    setNewItemUnit(item.unit);
+    setNewItemDropOff(item.dropOffLocation || 'Main Gate');
+    setNewItemDeadline(item.dropOffDeadline || 'Saturday Morning');
+    setNewItemFmv(item.estimatedFmvPerUnit || 25);
+    setIsAddItemModalOpen(true);
+  };
+
   const handleSaveItem = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newItemName.trim() || !targetSubPartForItem) return;
 
-    addItemSlot({
-      eventId: currentEvent.id,
-      subPartId: targetSubPartForItem,
-      itemName: newItemName,
-      category: newItemCategory,
-      quantityNeeded: Number(newItemQuantity) || 1,
-      unit: newItemUnit,
-      dropOffLocation: newItemDropOff,
-      dropOffDeadline: newItemDeadline,
-      estimatedFmvPerUnit: Number(newItemFmv) || 0
-    });
+    if (editingItem) {
+      updateItemSlot(editingItem.id, {
+        subPartId: targetSubPartForItem,
+        itemName: newItemName.trim(),
+        category: newItemCategory,
+        quantityNeeded: Number(newItemQuantity) || 1,
+        unit: newItemUnit.trim(),
+        dropOffLocation: newItemDropOff.trim(),
+        dropOffDeadline: newItemDeadline.trim(),
+        estimatedFmvPerUnit: Number(newItemFmv) || 0
+      });
+    } else {
+      addItemSlot({
+        eventId: currentEvent.id,
+        subPartId: targetSubPartForItem,
+        itemName: newItemName.trim(),
+        category: newItemCategory,
+        quantityNeeded: Number(newItemQuantity) || 1,
+        unit: newItemUnit.trim(),
+        dropOffLocation: newItemDropOff.trim(),
+        dropOffDeadline: newItemDeadline.trim(),
+        estimatedFmvPerUnit: Number(newItemFmv) || 0
+      });
+    }
 
     setIsAddItemModalOpen(false);
+  };
+
+  const handleDeleteItemSlot = (itemId: string) => {
+    if (confirm('Are you sure you want to remove this supply wishlist item?')) {
+      deleteItemSlot(itemId);
+      setIsAddItemModalOpen(false);
+    }
+  };
+
+  // Sponsor & Ticket Tier Handlers
+  const handleOpenAddTier = (defaultType: TicketType = 'sponsor_package') => {
+    setEditingTier(null);
+    setTierTitle('');
+    setTierType(defaultType);
+    setTierPrice(defaultType === 'sponsor_package' ? 1000 : defaultType === 'vendor_booth' ? 150 : 25);
+    setTierFmv(defaultType === 'sponsor_package' ? 100 : 0);
+    setTierCapacity(defaultType === 'sponsor_package' ? 4 : defaultType === 'vendor_booth' ? 12 : 200);
+    setTierDescription(
+      defaultType === 'sponsor_package' 
+        ? 'Prominent recognition across main entrance banner, student programs, and website.'
+        : defaultType === 'vendor_booth'
+        ? 'Reserved 10x10 space in festival courtyard with 1 table and 2 chairs.'
+        : 'General admission wristband for games and activities.'
+    );
+    setTierPerks(
+      defaultType === 'sponsor_package' 
+        ? ['Main Stage Banner Recognition', '4 VIP Wristbands', 'Program Logo Placement']
+        : defaultType === 'vendor_booth'
+        ? ['10x10 Footprint', '1 Table + 2 Chairs', 'Access to 1,500+ Attendees']
+        : ['Full Day Access']
+    );
+    setTierBoothDimensions(defaultType === 'vendor_booth' ? '10x10' : '');
+    setTierPowerProvided(false);
+    setTierInstantCheckout(defaultType !== 'vendor_booth');
+    setIsAddTierModalOpen(true);
+  };
+
+  const handleOpenEditTier = (tier: TicketTier) => {
+    setEditingTier(tier);
+    setTierTitle(tier.title);
+    setTierType(tier.type);
+    setTierPrice(tier.price);
+    setTierFmv(tier.fairMarketValue);
+    setTierCapacity(tier.capacity);
+    setTierDescription(tier.description);
+    setTierPerks([...tier.perks]);
+    setTierBoothDimensions(tier.boothDimensions || '');
+    setTierPowerProvided(!!tier.powerProvided);
+    setTierInstantCheckout(tier.instantCheckout);
+    setIsAddTierModalOpen(true);
+  };
+
+  const handleAddTierPerk = () => {
+    if (!newPerkInput.trim()) return;
+    setTierPerks([...tierPerks, newPerkInput.trim()]);
+    setNewPerkInput('');
+  };
+
+  const handleRemoveTierPerk = (index: number) => {
+    setTierPerks(tierPerks.filter((_, idx) => idx !== index));
+  };
+
+  const handleSaveTier = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tierTitle.trim()) return;
+
+    if (editingTier) {
+      updateTicketTier(editingTier.id, {
+        title: tierTitle.trim(),
+        type: tierType,
+        price: Number(tierPrice) || 0,
+        fairMarketValue: Number(tierFmv) || 0,
+        capacity: Number(tierCapacity) || 1,
+        description: tierDescription.trim(),
+        perks: tierPerks,
+        boothDimensions: tierType === 'vendor_booth' ? tierBoothDimensions.trim() : undefined,
+        powerProvided: tierType === 'vendor_booth' ? tierPowerProvided : undefined,
+        instantCheckout: tierInstantCheckout
+      });
+    } else {
+      createTicketTier({
+        eventId: currentEvent.id,
+        title: tierTitle.trim(),
+        type: tierType,
+        price: Number(tierPrice) || 0,
+        fairMarketValue: Number(tierFmv) || 0,
+        capacity: Number(tierCapacity) || 1,
+        description: tierDescription.trim(),
+        perks: tierPerks,
+        boothDimensions: tierType === 'vendor_booth' ? tierBoothDimensions.trim() : undefined,
+        powerProvided: tierType === 'vendor_booth' ? tierPowerProvided : undefined,
+        instantCheckout: tierInstantCheckout
+      });
+    }
+
+    setIsAddTierModalOpen(false);
+  };
+
+  const handleDeleteTier = (tierId: string) => {
+    if (confirm('Are you sure you want to delete this sponsor package / ticket tier?')) {
+      deleteTicketTier(tierId);
+      setIsAddTierModalOpen(false);
+    }
   };
 
   return (
@@ -397,7 +579,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
             <div>
               <h3 className="text-base font-bold text-slate-900">Event Committee Departments & Operational Needs</h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Total Budget Allocated: <strong className="text-slate-900">{formatCurrency(totalAllocatedBudget)}</strong> across <strong>{subParts.length} Departments</strong> and <strong>{shifts.length} Volunteer Needs</strong>.
+                Total Budget Allocated: <strong className="text-slate-900">{formatCurrency(totalAllocatedBudget)}</strong> across <strong>{subParts.length} Departments</strong>, <strong>{shifts.length} Volunteer Needs</strong>, and <strong>{ticketTiers.length} Sponsor & Ticket Tiers</strong>.
               </p>
             </div>
 
@@ -424,6 +606,14 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>+ Add Supply Need</span>
+              </button>
+
+              <button
+                onClick={() => handleOpenAddTier('sponsor_package')}
+                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3.5 rounded-xl text-xs shadow-sm transition"
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>+ Add Sponsor / Tier</span>
               </button>
             </div>
           </div>
@@ -533,23 +723,39 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
                         </button>
                       </div>
 
-                      <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                      <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
                         {deptShifts.length === 0 ? (
                           <div className="p-3 text-center text-slate-400 bg-slate-50/50 rounded-xl text-xs italic">
                             No shifts added yet. Click "+ Add Shift" to post roles.
                           </div>
                         ) : (
                           deptShifts.map(s => (
-                            <div key={s.id} className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center text-xs">
-                              <div>
+                            <div key={s.id} className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center text-xs hover:border-slate-300 transition group">
+                              <div className="flex-1 pr-2">
                                 <span className="font-bold text-slate-800 block">{s.title}</span>
                                 <span className="text-[10px] text-slate-500">{formatTimeRange(s.startTime, s.endTime)}</span>
                               </div>
-                              <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
-                                s.claimedCount >= s.capacity ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                              }`}>
-                                {s.claimedCount}/{s.capacity} Filled
-                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
+                                  s.claimedCount >= s.capacity ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                }`}>
+                                  {s.claimedCount}/{s.capacity}
+                                </span>
+                                <button
+                                  onClick={() => handleOpenEditShift(s)}
+                                  className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition"
+                                  title="Edit Shift"
+                                >
+                                  <Edit3 className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteShift(s.id)}
+                                  className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition"
+                                  title="Delete Shift"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
                             </div>
                           ))
                         )}
@@ -575,8 +781,22 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
                           <span className="text-slate-400 text-[11px] italic">No supply items requested.</span>
                         ) : (
                           deptItems.map(i => (
-                            <span key={i.id} className="px-2.5 py-1 bg-purple-50 border border-purple-200 text-purple-800 rounded-lg text-[11px] font-medium">
-                              <strong>{i.itemName}</strong> ({i.quantityPledged}/{i.quantityNeeded} {i.unit})
+                            <span key={i.id} className="px-2.5 py-1 bg-purple-50 border border-purple-200 text-purple-800 rounded-lg text-[11px] font-medium flex items-center gap-1.5">
+                              <span><strong>{i.itemName}</strong> ({i.quantityPledged}/{i.quantityNeeded} {i.unit})</span>
+                              <button
+                                onClick={() => handleOpenEditItem(i)}
+                                className="text-purple-400 hover:text-purple-900"
+                                title="Edit Item"
+                              >
+                                <Edit3 className="w-2.5 h-2.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteItemSlot(i.id)}
+                                className="text-purple-400 hover:text-rose-600"
+                                title="Delete Item"
+                              >
+                                <Trash2 className="w-2.5 h-2.5" />
+                              </button>
                             </span>
                           ))
                         )}
@@ -604,6 +824,107 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
             })}
           </div>
         )}
+
+        {/* Corporate Sponsor Packages & Tickets Section */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700">
+                  <Award className="w-4 h-4" />
+                </span>
+                <h3 className="text-base font-black text-slate-900">
+                  Corporate Sponsor Packages, Vendor Spaces & Ticket Tiers ({ticketTiers.length})
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Manage commercial underwriting tiers, booth pitches, and admission wristbands with IRS 501(c)(3) tax deductions
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActivePlannerTab('vendors')}
+                className="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition"
+              >
+                Open Full Sponsor Studio &rarr;
+              </button>
+              <button
+                onClick={() => handleOpenAddTier('sponsor_package')}
+                className="px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition flex items-center gap-1"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Add Package / Tier</span>
+              </button>
+            </div>
+          </div>
+
+          {ticketTiers.length === 0 ? (
+            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              <Award className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+              <div className="text-xs font-bold text-slate-700">No Sponsorship Packages Configured Yet</div>
+              <p className="text-[11px] text-slate-500 mt-1 mb-3">Add title sponsors or vendor pitches to raise corporate revenue.</p>
+              <button
+                onClick={() => handleOpenAddTier('sponsor_package')}
+                className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-xs"
+              >
+                + Create Sponsor Tier
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {ticketTiers.map((tier) => (
+                <div
+                  key={tier.id}
+                  className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between hover:border-slate-300 transition"
+                >
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                        tier.type === 'sponsor_package' ? 'bg-indigo-100 text-indigo-800' :
+                        tier.type === 'vendor_booth' ? 'bg-amber-100 text-amber-800' :
+                        'bg-emerald-100 text-emerald-800'
+                      }`}>
+                        {tier.type.replace('_', ' ')}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleOpenEditTier(tier)}
+                          className="p-1 text-slate-400 hover:text-indigo-600 transition"
+                          title="Edit Package"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTier(tier.id)}
+                          className="p-1 text-slate-400 hover:text-rose-600 transition"
+                          title="Delete Package"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <h4 className="font-bold text-xs text-slate-900">{tier.title}</h4>
+                    <div className="text-lg font-black text-indigo-600 mt-0.5">{formatCurrency(tier.price)}</div>
+                    <div className="text-[11px] text-slate-500 mt-1 line-clamp-2">{tier.description}</div>
+                  </div>
+
+                  <div className="mt-3 pt-2.5 border-t border-slate-200 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-600 font-semibold">{tier.claimedCount} / {tier.capacity} claimed</span>
+                    <button
+                      onClick={() => handleOpenEditTier(tier)}
+                      className="font-bold text-indigo-600 hover:text-indigo-800"
+                    >
+                      Edit &rarr;
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
       )}
 
@@ -1000,13 +1321,13 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
         </Modal>
       )}
 
-      {/* MODAL 2: ADD VOLUNTEER SHIFT NEED */}
+      {/* MODAL 2: ADD / EDIT VOLUNTEER SHIFT NEED */}
       {isAddShiftModalOpen && (
         <Modal
           isOpen={isAddShiftModalOpen}
           onClose={() => setIsAddShiftModalOpen(false)}
-          title="Add Volunteer Shift Need"
-          subtitle="Publish a new shift slot for community volunteers"
+          title={editingShift ? `Edit Shift: ${editingShift.title}` : "Add Volunteer Shift Need"}
+          subtitle={editingShift ? "Modify shift hours, capacity, and legal waiver requirements" : "Publish a new shift slot for community volunteers"}
           maxWidth="lg"
         >
           <form onSubmit={handleSaveShift} className="space-y-4 text-xs">
@@ -1094,33 +1415,46 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
               </div>
             </div>
 
-            <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setIsAddShiftModalOpen(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center gap-1.5"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Publish Shift Need</span>
-              </button>
+            <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
+              {editingShift ? (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteShift(editingShift.id)}
+                  className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Shift</span>
+                </button>
+              ) : <div />}
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddShiftModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{editingShift ? 'Save Shift Changes' : 'Publish Shift Need'}</span>
+                </button>
+              </div>
             </div>
           </form>
         </Modal>
       )}
 
-      {/* MODAL 3: ADD SUPPLY / WISHLIST NEED */}
+      {/* MODAL 3: ADD / EDIT SUPPLY WISHLIST NEED */}
       {isAddItemModalOpen && (
         <Modal
           isOpen={isAddItemModalOpen}
           onClose={() => setIsAddItemModalOpen(false)}
-          title="Add Supply & Equipment Wishlist Need"
-          subtitle="Request physical goods donations and in-kind equipment from community members"
+          title={editingItem ? `Edit Supply Need: ${editingItem.itemName}` : "Add Supply & Equipment Wishlist Need"}
+          subtitle={editingItem ? "Update requested quantities, drop-off location, or valuation" : "Request physical goods donations and in-kind equipment from community members"}
           maxWidth="lg"
         >
           <form onSubmit={handleSaveItem} className="space-y-4 text-xs">
@@ -1226,21 +1560,252 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
               </span>
             </div>
 
-            <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setIsAddItemModalOpen(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center gap-1.5"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Publish Wishlist Need</span>
-              </button>
+            <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
+              {editingItem ? (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteItemSlot(editingItem.id)}
+                  className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Item</span>
+                </button>
+              ) : <div />}
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddItemModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{editingItem ? 'Save Item Changes' : 'Publish Wishlist Need'}</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* MODAL 4: ADD / EDIT SPONSOR PACKAGE OR TICKET TIER */}
+      {isAddTierModalOpen && (
+        <Modal
+          isOpen={isAddTierModalOpen}
+          onClose={() => setIsAddTierModalOpen(false)}
+          title={editingTier ? `Edit Package: ${editingTier.title}` : 'Create Sponsor Package or Ticket Tier'}
+          subtitle="Configure pricing, statutory IRS tax deduction offsets, capacity, and promotional perks"
+          maxWidth="2xl"
+        >
+          <form onSubmit={handleSaveTier} className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">Package or Tier Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={tierTitle}
+                  onChange={(e) => setTierTitle(e.target.value)}
+                  placeholder="e.g. Diamond Title Presenting Sponsor, Artisan Food Tent, All-Day Wristband..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Tier Classification *</label>
+                <select
+                  value={tierType}
+                  onChange={(e) => setTierType(e.target.value as TicketType)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"
+                >
+                  <option value="sponsor_package">💎 Corporate / Family Sponsor Package</option>
+                  <option value="vendor_booth">🏬 Commercial / Artisan Vendor Booth</option>
+                  <option value="admission_ticket">🎟️ Admission Ticket / Activity Pass</option>
+                  <option value="raffle">🎟️ Raffle / Drawing Entry</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Total Available Capacity *</label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={tierCapacity}
+                  onChange={(e) => setTierCapacity(parseInt(e.target.value) || 1)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Package Price ($ USD) *</label>
+                <div className="relative">
+                  <DollarSign className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="number"
+                    min="0"
+                    step="5"
+                    required
+                    value={tierPrice}
+                    onChange={(e) => setTierPrice(parseFloat(e.target.value) || 0)}
+                    className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  IRS Fair Market Value (FMV) ($)
+                </label>
+                <div className="relative">
+                  <DollarSign className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="number"
+                    min="0"
+                    step="5"
+                    value={tierFmv}
+                    onChange={(e) => setTierFmv(parseFloat(e.target.value) || 0)}
+                    className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white"
+                  />
+                </div>
+                <span className="text-[10px] text-slate-500 mt-0.5 block">
+                  Value of goods/meals received (deducted from tax receipt)
+                </span>
+              </div>
+
+              {tierType === 'vendor_booth' && (
+                <>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Booth Space Dimensions</label>
+                    <input
+                      type="text"
+                      value={tierBoothDimensions}
+                      onChange={(e) => setTierBoothDimensions(e.target.value)}
+                      placeholder="e.g. 10x10 Tent, 30ft Food Truck"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-5">
+                    <input
+                      type="checkbox"
+                      id="tierPowerCheck"
+                      checked={tierPowerProvided}
+                      onChange={(e) => setTierPowerProvided(e.target.checked)}
+                      className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                    />
+                    <label htmlFor="tierPowerCheck" className="font-bold text-slate-700 cursor-pointer">
+                      Electric power drop included (110V / 220V)
+                    </label>
+                  </div>
+                </>
+              )}
+
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">Public Description</label>
+                <textarea
+                  rows={2}
+                  value={tierDescription}
+                  onChange={(e) => setTierDescription(e.target.value)}
+                  placeholder="Describe the opportunity, visibility benefits, or attendee permissions..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white"
+                />
+              </div>
+
+              {/* Perks & Inclusions Builder */}
+              <div className="sm:col-span-2 space-y-2">
+                <label className="block font-bold text-slate-700">Package Perks & Inclusions (Bullet Points)</label>
+                
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newPerkInput}
+                    onChange={(e) => setNewPerkInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddTierPerk();
+                      }
+                    }}
+                    placeholder="e.g. Dedicated Logo on Stage, 4 VIP passes, Social Media Mention..."
+                    className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTierPerk}
+                    className="px-4 py-2 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition"
+                  >
+                    + Add Perk
+                  </button>
+                </div>
+
+                {/* Current Perks List */}
+                <div className="space-y-1.5 pt-1">
+                  {tierPerks.map((perk, pIdx) => (
+                    <div key={pIdx} className="flex items-center justify-between bg-slate-100 px-3 py-1.5 rounded-xl text-xs">
+                      <span className="text-slate-800 font-medium flex items-center gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        {perk}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTierPerk(pIdx)}
+                        className="text-slate-400 hover:text-rose-600 transition"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="sm:col-span-2 pt-2 border-t border-slate-100 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="plannerInstantCheckoutCheck"
+                  checked={tierInstantCheckout}
+                  onChange={(e) => setTierInstantCheckout(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                />
+                <label htmlFor="plannerInstantCheckoutCheck" className="text-xs font-semibold text-slate-700 cursor-pointer">
+                  Enable Instant Self-Service Checkout (If unchecked, requires organizer review)
+                </label>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
+              {editingTier ? (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteTier(editingTier.id)}
+                  className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Package</span>
+                </button>
+              ) : <div />}
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddTierModalOpen(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{editingTier ? 'Save Package Changes' : 'Publish Package Tier'}</span>
+                </button>
+              </div>
             </div>
           </form>
         </Modal>
