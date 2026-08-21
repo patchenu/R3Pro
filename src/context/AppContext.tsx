@@ -2,13 +2,15 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   Organization, User, Event, SubPart, Shift, ItemSlot, TicketTier, 
   Registration, Donation, VendorApplication, ApprovalRequest, 
-  VolunteerCrmRecord, Announcement, AuditLog, UserRole, WaiverTemplate 
+  VolunteerCrmRecord, Announcement, AuditLog, UserRole, WaiverTemplate,
+  PaidContractor, ProBonoPledge 
 } from '../types';
 import { 
   SEED_ORGANIZATIONS, SEED_USERS, SEED_EVENTS, SEED_SUBPARTS, 
   SEED_SHIFTS, SEED_ITEM_SLOTS, SEED_TICKET_TIERS, SEED_REGISTRATIONS, 
   SEED_DONATIONS, SEED_VENDOR_APPLICATIONS, SEED_APPROVAL_REQUESTS, 
-  SEED_VOLUNTEER_CRM, SEED_ANNOUNCEMENTS, SEED_AUDIT_LOGS 
+  SEED_VOLUNTEER_CRM, SEED_ANNOUNCEMENTS, SEED_AUDIT_LOGS,
+  SEED_CONTRACTORS, SEED_PRO_BONO_PLEDGES 
 } from '../data/seedData';
 import { EVENT_TEMPLATES, ORG_TEMPLATES, WAIVER_TEMPLATES_DATA } from '../data/templates';
 import { generateManageToken, generateReceiptNumber } from '../utils/formatters';
@@ -44,6 +46,8 @@ interface AppContextType {
   announcements: Announcement[];
   auditLogs: AuditLog[];
   waiverTemplates: WaiverTemplate[];
+  contractors: PaidContractor[];
+  proBonoPledges: ProBonoPledge[];
   toasts: ToastNotification[];
 
   // Switchers
@@ -115,6 +119,16 @@ interface AppContextType {
   submitVendorApplication: (app: Omit<VendorApplication, 'id' | 'status' | 'submittedAt'>) => void;
   approveVendor: (appId: string, assignedBooth: string) => void;
   rejectVendor: (appId: string) => void;
+
+  // Paid Contractor & Service Provider Management (Accounts Payable)
+  addContractor: (contractorData: Omit<PaidContractor, 'id' | 'createdAt'>) => PaidContractor;
+  updateContractor: (contractorId: string, updates: Partial<PaidContractor>) => void;
+  deleteContractor: (contractorId: string) => void;
+
+  // Pro-Bono In-Kind Professional Services (Tax-Deductible)
+  pledgeProBonoService: (pledgeData: Omit<ProBonoPledge, 'id' | 'inKindReceiptNumber' | 'createdAt' | 'status' | 'sponsorPerksGranted'>) => ProBonoPledge;
+  updateProBonoPledge: (pledgeId: string, updates: Partial<ProBonoPledge>) => void;
+  deleteProBonoPledge: (pledgeId: string) => void;
 
   // Legal Waivers & Compliance
   addWaiverTemplate: (data: Omit<WaiverTemplate, 'id'>) => WaiverTemplate;
@@ -201,6 +215,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             instantCheckout: tt.instantCheckout !== undefined ? tt.instantCheckout : true
           }));
         }
+        if (!parsed.contractors || !Array.isArray(parsed.contractors)) {
+          parsed.contractors = SEED_CONTRACTORS;
+        }
+        if (!parsed.proBonoPledges || !Array.isArray(parsed.proBonoPledges)) {
+          parsed.proBonoPledges = SEED_PRO_BONO_PLEDGES;
+        }
         return parsed;
       } catch (e) {
         console.error('Failed to parse localStorage data', e);
@@ -222,6 +242,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       announcements: SEED_ANNOUNCEMENTS,
       auditLogs: SEED_AUDIT_LOGS,
       waiverTemplates: WAIVER_TEMPLATES_DATA,
+      contractors: SEED_CONTRACTORS,
+      proBonoPledges: SEED_PRO_BONO_PLEDGES,
       currentOrgId: 'org_lincoln_pta',
       currentUserId: 'user_elena',
       currentEventId: 'evt_fall_carnival_2026',
@@ -1246,6 +1268,117 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('info', 'Vendor Application Declined', 'Vendor was notified.');
   };
 
+  // Paid Contractor & Service Provider Management (Accounts Payable)
+  const addContractor = (contractorData: Omit<PaidContractor, 'id' | 'createdAt'>): PaidContractor => {
+    const id = 'cont_' + Date.now();
+    const newContractor: PaidContractor = {
+      ...contractorData,
+      id,
+      createdAt: new Date().toISOString()
+    };
+
+    setData((prev: any) => {
+      // Auto-update department budget spent
+      const updatedSubParts = prev.subParts.map((sp: SubPart) => 
+        sp.id === contractorData.subPartId 
+          ? { ...sp, budgetSpent: sp.budgetSpent + Number(contractorData.contractAmount) }
+          : sp
+      );
+      return {
+        ...prev,
+        contractors: [newContractor, ...(prev.contractors || [])],
+        subParts: updatedSubParts
+      };
+    });
+
+    showToast('success', 'Contractor Logged', `${contractorData.businessName} contracted for $${contractorData.contractAmount}.`);
+    return newContractor;
+  };
+
+  const updateContractor = (contractorId: string, updates: Partial<PaidContractor>) => {
+    setData((prev: any) => {
+      const existing = (prev.contractors || []).find((c: PaidContractor) => c.id === contractorId);
+      if (!existing) return prev;
+
+      let updatedSubParts = prev.subParts;
+      if (updates.contractAmount !== undefined && updates.contractAmount !== existing.contractAmount) {
+        const diff = Number(updates.contractAmount) - Number(existing.contractAmount);
+        updatedSubParts = prev.subParts.map((sp: SubPart) => 
+          sp.id === (updates.subPartId || existing.subPartId)
+            ? { ...sp, budgetSpent: Math.max(0, sp.budgetSpent + diff) }
+            : sp
+        );
+      }
+
+      return {
+        ...prev,
+        contractors: (prev.contractors || []).map((c: PaidContractor) => c.id === contractorId ? { ...c, ...updates } : c),
+        subParts: updatedSubParts
+      };
+    });
+
+    showToast('success', 'Contractor Updated', 'Contract terms, W-9 status, and payment saved.');
+  };
+
+  const deleteContractor = (contractorId: string) => {
+    setData((prev: any) => {
+      const existing = (prev.contractors || []).find((c: PaidContractor) => c.id === contractorId);
+      let updatedSubParts = prev.subParts;
+      if (existing) {
+        updatedSubParts = prev.subParts.map((sp: SubPart) => 
+          sp.id === existing.subPartId 
+            ? { ...sp, budgetSpent: Math.max(0, sp.budgetSpent - Number(existing.contractAmount)) }
+            : sp
+        );
+      }
+      return {
+        ...prev,
+        contractors: (prev.contractors || []).filter((c: PaidContractor) => c.id !== contractorId),
+        subParts: updatedSubParts
+      };
+    });
+
+    showToast('info', 'Contractor Removed', 'Contractor deleted and department budget reconciled.');
+  };
+
+  // Pro-Bono In-Kind Professional Services
+  const pledgeProBonoService = (pledgeData: Omit<ProBonoPledge, 'id' | 'inKindReceiptNumber' | 'createdAt' | 'status' | 'sponsorPerksGranted'>): ProBonoPledge => {
+    const id = 'pbp_' + Date.now();
+    const inKindReceiptNumber = 'INKIND-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
+    const newPledge: ProBonoPledge = {
+      ...pledgeData,
+      id,
+      inKindReceiptNumber,
+      status: 'pledged',
+      sponsorPerksGranted: true,
+      createdAt: new Date().toISOString()
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      proBonoPledges: [newPledge, ...(prev.proBonoPledges || [])]
+    }));
+
+    showToast('success', 'Pro-Bono Service Donated!', `Receipt #${inKindReceiptNumber} issued for $${pledgeData.estimatedFmv} FMV non-cash contribution.`);
+    return newPledge;
+  };
+
+  const updateProBonoPledge = (pledgeId: string, updates: Partial<ProBonoPledge>) => {
+    setData((prev: any) => ({
+      ...prev,
+      proBonoPledges: (prev.proBonoPledges || []).map((p: ProBonoPledge) => p.id === pledgeId ? { ...p, ...updates } : p)
+    }));
+    showToast('success', 'Pro-Bono Pledge Updated', 'Service details and sponsor recognition saved.');
+  };
+
+  const deleteProBonoPledge = (pledgeId: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      proBonoPledges: (prev.proBonoPledges || []).filter((p: ProBonoPledge) => p.id !== pledgeId)
+    }));
+    showToast('info', 'Pledge Removed', 'Pro-bono pledge record removed.');
+  };
+
   const addWaiverTemplate = (data: Omit<WaiverTemplate, 'id'>): WaiverTemplate => {
     const id = 'waiver_' + Date.now();
     const newWaiver: WaiverTemplate = {
@@ -1701,6 +1834,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       announcements: data.announcements.filter((a: Announcement) => a.eventId === currentEvent.id),
       auditLogs: data.auditLogs,
       waiverTemplates: data.waiverTemplates || WAIVER_TEMPLATES_DATA,
+      contractors: data.contractors || SEED_CONTRACTORS,
+      proBonoPledges: data.proBonoPledges || SEED_PRO_BONO_PLEDGES,
       toasts,
       switchRole,
       switchOrganization,
@@ -1733,6 +1868,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       submitVendorApplication,
       approveVendor,
       rejectVendor,
+      addContractor,
+      updateContractor,
+      deleteContractor,
+      pledgeProBonoService,
+      updateProBonoPledge,
+      deleteProBonoPledge,
       addWaiverTemplate,
       updateWaiverTemplate,
       deleteWaiverTemplate,

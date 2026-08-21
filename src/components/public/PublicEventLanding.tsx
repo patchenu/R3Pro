@@ -4,19 +4,21 @@ import {
   Calendar, MapPin, Share2, Clock, Users, HeartHandshake, 
   Store, Gift, Check, ShieldCheck, AlertTriangle, Sparkles, 
   ExternalLink, ChevronRight, Info, Bell, Tag, ArrowRight,
-  Shirt, ArrowUpDown
+  Shirt, ArrowUpDown, Award, Briefcase
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatTimeRange, formatPercentage } from '../../utils/formatters';
 import { Thermometer } from '../common/Thermometer';
 import { UnifiedRegistrationModal } from './UnifiedRegistrationModal';
 import { VendorApplicationModal } from './VendorApplicationModal';
+import { CommercialMarketplaceModal } from './CommercialMarketplaceModal';
+import { ProBonoPledgeModal } from './ProBonoPledgeModal';
 import { ConfirmationCard } from './ConfirmationCard';
 import { QrCodeModal } from '../common/QrCodeModal';
 import { ManageRegistration } from './ManageRegistration';
 import { TicketTier } from '../../types';
 
 export const PublicEventLanding: React.FC = () => {
-  const { currentEvent, currentOrg, subParts, shifts, itemSlots, ticketTiers, donations, announcements, registrations } = useApp();
+  const { currentEvent, currentOrg, subParts, shifts, itemSlots, ticketTiers, donations, announcements, registrations, proBonoPledges } = useApp();
 
   // Filter State
   const [selectedSubPartId, setSelectedSubPartId] = useState<string>('all');
@@ -34,6 +36,8 @@ export const PublicEventLanding: React.FC = () => {
   // Modals State
   const [isRegModalOpen, setIsRegModalOpen] = useState(false);
   const [isVendorModalOpen, setIsVendorModalOpen] = useState(false);
+  const [isCommercialModalOpen, setIsCommercialModalOpen] = useState(false);
+  const [isProBonoModalOpen, setIsProBonoModalOpen] = useState(false);
   const [selectedVendorTier, setSelectedVendorTier] = useState<TicketTier | null>(null);
   const [confirmedReg, setConfirmedReg] = useState<any | null>(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -257,6 +261,39 @@ export const PublicEventLanding: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Commercial Sponsor, Merchant & Food Truck Dedicated Gateway Banner */}
+        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-7 shadow-lg border border-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-5">
+          <div className="flex items-center gap-4">
+            <div className="w-13 h-13 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
+              <Store className="w-7 h-7" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
+                  <Award className="w-3 h-3" />
+                  <span>Commercial & Corporate Gateway</span>
+                </span>
+                <span className="text-xs text-indigo-300 font-semibold">• 501(c)(3) Tax Deductible</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-black text-white mt-1">
+                Are you a Local Merchant, Artisan, Food Truck or Corporate Sponsor?
+              </h3>
+              <p className="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
+                Book 10x10 artisan booth spaces, food truck bays with 110V/220V power, or corporate underwriting packages with premier brand perks and official tax receipts.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsCommercialModalOpen(true)}
+            className="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-2xl shadow-md transition flex items-center gap-2 shrink-0 group cursor-pointer"
+          >
+            <Store className="w-4 h-4 text-slate-950" />
+            <span>Open Commercial & Sponsor Portal</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
 
         {/* Department / Category Filter Tabs */}
         <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm space-y-3">
@@ -527,11 +564,22 @@ export const PublicEventLanding: React.FC = () => {
 
                   {/* SUPPLY ITEMS WISHLIST */}
                   {showItems && subPartItems.length > 0 && (
-                    <div className="pt-2 border-t border-slate-100">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-3 flex items-center gap-1.5">
-                        <Gift className="w-4 h-4 text-emerald-600" />
-                        Supply & Item Donation Wishlist ({subPartItems.length})
-                      </h4>
+                    <div className="pt-2 border-t border-slate-100 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                          <Gift className="w-4 h-4 text-emerald-600" />
+                          <span>Supply & Item Donation Wishlist ({subPartItems.length})</span>
+                        </h4>
+                        
+                        <button
+                          type="button"
+                          onClick={() => setIsProBonoModalOpen(true)}
+                          className="text-xs font-extrabold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-2xs"
+                        >
+                          <Briefcase className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Offer Pro-Bono Service / Equipment &rarr;</span>
+                        </button>
+                      </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                         {subPartItems.map((item) => {
@@ -856,7 +904,25 @@ export const PublicEventLanding: React.FC = () => {
         />
       )}
 
-      {/* Vendor Application Modal */}
+      {/* Dedicated Commercial Marketplace & Sponsor Modal */}
+      {isCommercialModalOpen && (
+        <CommercialMarketplaceModal
+          isOpen={isCommercialModalOpen}
+          onClose={() => setIsCommercialModalOpen(false)}
+          event={currentEvent}
+        />
+      )}
+
+      {/* Pro-Bono Professional Services & In-Kind Pledge Modal */}
+      {isProBonoModalOpen && (
+        <ProBonoPledgeModal
+          isOpen={isProBonoModalOpen}
+          onClose={() => setIsProBonoModalOpen(false)}
+          event={currentEvent}
+        />
+      )}
+
+      {/* Vendor Application Modal (Fallback) */}
       {isVendorModalOpen && (
         <VendorApplicationModal
           isOpen={isVendorModalOpen}

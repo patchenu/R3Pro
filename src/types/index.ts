@@ -366,3 +366,40 @@ export interface AuditLog {
   details: string;
   timestamp: string;
 }
+
+export type ContractorPaymentStatus = 'draft' | 'contract_signed' | 'invoice_received' | 'paid_in_full';
+
+export interface PaidContractor {
+  id: string;
+  eventId: string;
+  subPartId: string;
+  businessName: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  serviceCategory: string; // 'Audio / Visual & DJ' | 'Security & Safety' | 'Tent & Equipment Rental' | 'Waste & Sanitation' | 'Catering & Hospitality' | 'Entertainment & Performers' | 'Other'
+  contractAmount: number;
+  w9Received: boolean;
+  coiReceived: boolean;
+  paymentStatus: ContractorPaymentStatus;
+  invoiceNumber?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface ProBonoPledge {
+  id: string;
+  eventId: string;
+  subPartId?: string;
+  businessName: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  serviceCategory: string;
+  serviceDescription: string;
+  estimatedFmv: number; // Fair market value for IRS 501(c)(3) deduction
+  inKindReceiptNumber: string;
+  status: 'pledged' | 'verified_delivered';
+  sponsorPerksGranted: boolean;
+  createdAt: string;
+}

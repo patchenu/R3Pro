@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { SubPart, Shift, ItemSlot, TicketTier, TicketType } from '../../types';
+import { SubPart, Shift, ItemSlot, TicketTier, TicketType, PaidContractor, ProBonoPledge, ContractorPaymentStatus } from '../../types';
 import { 
   BarChart3, Users, DollarSign, ShieldAlert, Sparkles, 
   Plus, Settings, CheckCircle2, ArrowRight, Layers, Store, HeartHandshake,
   Printer, FileSpreadsheet, Search, Filter, ShieldCheck, Award, Share2, AlertTriangle, FileText, Package,
   Edit3, Trash2, Tag, Calendar, MapPin, Radio, AlertCircle, Check, X, Zap, Clock,
-  Shirt, ArrowUp, ArrowDown, ArrowUpDown
+  Shirt, ArrowUp, ArrowDown, ArrowUpDown, Briefcase, Building2, FileCheck, CheckSquare
 } from 'lucide-react';
 import { formatCurrency, formatPercentage, formatTimeRange } from '../../utils/formatters';
 import { exportRosterToCsv } from '../../utils/exportCsv';
@@ -34,10 +34,12 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   const { 
     currentEvent, currentOrg, subParts, shifts, itemSlots, ticketTiers,
     registrations, donations, approvalRequests, announcements, updateEvent, toggleCheckIn,
+    contractors, proBonoPledges,
     addSubPart, updateSubPart, deleteSubPart, 
     addShift, updateShift, deleteShift, 
     addItemSlot, updateItemSlot, deleteItemSlot,
     createTicketTier, updateTicketTier, deleteTicketTier, reorderTicketTiers,
+    addContractor, updateContractor, deleteContractor,
     showToast
   } = useApp();
 
@@ -97,6 +99,22 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   const [newItemDropOff, setNewItemDropOff] = useState<string>('Main Gate');
   const [newItemDeadline, setNewItemDeadline] = useState<string>('Saturday 8:30 AM');
   const [newItemFmv, setNewItemFmv] = useState<number>(25);
+
+  // Paid Contractor & Service Provider Modal State
+  const [isAddContractorModalOpen, setIsAddContractorModalOpen] = useState(false);
+  const [editingContractor, setEditingContractor] = useState<PaidContractor | null>(null);
+  const [contractorBusinessName, setContractorBusinessName] = useState('');
+  const [contractorContactName, setContractorContactName] = useState('');
+  const [contractorEmail, setContractorEmail] = useState('');
+  const [contractorPhone, setContractorPhone] = useState('');
+  const [contractorCategory, setContractorCategory] = useState('Audio / Visual & DJ');
+  const [contractorAmount, setContractorAmount] = useState<number>(500);
+  const [contractorSubPartId, setContractorSubPartId] = useState<string>(subParts[0]?.id || '');
+  const [contractorW9, setContractorW9] = useState(false);
+  const [contractorCoi, setContractorCoi] = useState(false);
+  const [contractorStatus, setContractorStatus] = useState<ContractorPaymentStatus>('contract_signed');
+  const [contractorInvoiceNum, setContractorInvoiceNum] = useState('');
+  const [contractorNotes, setContractorNotes] = useState('');
 
   // Volunteer Management Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -459,6 +477,91 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
     );
     reorderTicketTiers(sorted);
     showToast('info', 'Tiers Sorted', order === 'high_to_low' ? 'Sorted highest to lowest in cost.' : 'Sorted lowest to highest in cost.');
+  };
+
+  // Paid Contractor Handlers
+  const handleOpenAddContractor = (subPartId?: string) => {
+    setEditingContractor(null);
+    setContractorBusinessName('');
+    setContractorContactName('');
+    setContractorEmail('');
+    setContractorPhone('');
+    setContractorCategory('Audio / Visual & DJ');
+    setContractorAmount(500);
+    setContractorSubPartId(subPartId || subParts[0]?.id || '');
+    setContractorW9(false);
+    setContractorCoi(false);
+    setContractorStatus('contract_signed');
+    setContractorInvoiceNum('');
+    setContractorNotes('');
+    setIsAddContractorModalOpen(true);
+  };
+
+  const handleOpenEditContractor = (c: PaidContractor) => {
+    setEditingContractor(c);
+    setContractorBusinessName(c.businessName);
+    setContractorContactName(c.contactName);
+    setContractorEmail(c.email);
+    setContractorPhone(c.phone);
+    setContractorCategory(c.serviceCategory);
+    setContractorAmount(c.contractAmount);
+    setContractorSubPartId(c.subPartId);
+    setContractorW9(c.w9Received);
+    setContractorCoi(c.coiReceived);
+    setContractorStatus(c.paymentStatus);
+    setContractorInvoiceNum(c.invoiceNumber || '');
+    setContractorNotes(c.notes || '');
+    setIsAddContractorModalOpen(true);
+  };
+
+  const handleSaveContractor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contractorBusinessName.trim() || !contractorContactName.trim() || contractorAmount <= 0) {
+      showToast('error', 'Missing Information', 'Please provide business name, contact name, and fee amount.');
+      return;
+    }
+
+    if (editingContractor) {
+      updateContractor(editingContractor.id, {
+        businessName: contractorBusinessName.trim(),
+        contactName: contractorContactName.trim(),
+        email: contractorEmail.trim(),
+        phone: contractorPhone.trim(),
+        serviceCategory: contractorCategory,
+        contractAmount: Number(contractorAmount),
+        subPartId: contractorSubPartId,
+        w9Received: contractorW9,
+        coiReceived: contractorCoi,
+        paymentStatus: contractorStatus,
+        invoiceNumber: contractorInvoiceNum.trim() || undefined,
+        notes: contractorNotes.trim() || undefined
+      });
+    } else {
+      addContractor({
+        eventId: currentEvent.id,
+        subPartId: contractorSubPartId,
+        businessName: contractorBusinessName.trim(),
+        contactName: contractorContactName.trim(),
+        email: contractorEmail.trim(),
+        phone: contractorPhone.trim(),
+        serviceCategory: contractorCategory,
+        contractAmount: Number(contractorAmount),
+        w9Received: contractorW9,
+        coiReceived: contractorCoi,
+        paymentStatus: contractorStatus,
+        invoiceNumber: contractorInvoiceNum.trim() || undefined,
+        notes: contractorNotes.trim() || undefined
+      });
+    }
+
+    setIsAddContractorModalOpen(false);
+  };
+
+  const handleDeleteContractor = (contractorId: string) => {
+    if (confirm('Are you sure you want to remove this contractor? The fee will be credited back to the department budget.')) {
+      deleteContractor(contractorId);
+      setIsAddContractorModalOpen(false);
+    }
   };
 
   return (
@@ -1003,6 +1106,182 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
               ))}
             </div>
           )}
+        </div>
+
+        {/* HIRED CONTRACTORS & PAID SERVICES (ACCOUNTS PAYABLE) SECTION */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg bg-blue-50 text-blue-700">
+                  <Briefcase className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-700">
+                  Accounts Payable & Operational Procurement
+                </span>
+              </div>
+              <h3 className="text-lg font-extrabold text-slate-900 mt-1">
+                Hired Contractors & Paid Services
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Paid service providers (DJ, Sound Tech, Port-a-Potties, Security, Rentals) automatically debited against committee department budgets.
+              </p>
+            </div>
+
+            <button
+              onClick={() => handleOpenAddContractor()}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Add Hired Contractor</span>
+            </button>
+          </div>
+
+          {/* Contractors List */}
+          {(() => {
+            const eventContractors = (contractors || []).filter(c => c.eventId === currentEvent.id);
+            const eventProBono = (proBonoPledges || []).filter(p => p.eventId === currentEvent.id);
+            const totalContractedSpend = eventContractors.reduce((sum, c) => sum + Number(c.contractAmount), 0);
+            const totalProBonoValue = eventProBono.reduce((sum, p) => sum + Number(p.estimatedFmv), 0);
+
+            return (
+              <div className="space-y-4">
+                {/* Spend Summary Header */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-600 font-semibold">Total Paid Services Spend:</span>
+                    <span className="text-sm font-black text-slate-900">{formatCurrency(totalContractedSpend)}</span>
+                  </div>
+                  <div className="flex items-center justify-between sm:border-l sm:border-slate-200 sm:pl-4">
+                    <span className="text-xs text-emerald-700 font-semibold">Pro-Bono Donated Services (FMV):</span>
+                    <span className="text-sm font-black text-emerald-700">{formatCurrency(totalProBonoValue)}</span>
+                  </div>
+                </div>
+
+                {eventContractors.length === 0 ? (
+                  <div className="p-8 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                    <Briefcase className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                    <div className="text-xs font-bold text-slate-700">No paid contractors logged yet</div>
+                    <p className="text-[11px] text-slate-500 mt-1">Log hired DJs, sound engineers, tent rentals, and security providers to reconcile department expenses.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {eventContractors.map(contractor => {
+                      const dept = subParts.find(sp => sp.id === contractor.subPartId);
+                      return (
+                        <div
+                          key={contractor.id}
+                          className="p-4 rounded-2xl border border-slate-200 bg-white shadow-xs hover:border-slate-300 transition flex flex-col justify-between"
+                        >
+                          <div>
+                            <div className="flex justify-between items-start">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
+                                {contractor.serviceCategory}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleOpenEditContractor(contractor)}
+                                  className="p-1 text-slate-400 hover:text-blue-600 transition"
+                                  title="Edit Contractor"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteContractor(contractor.id)}
+                                  className="p-1 text-slate-400 hover:text-rose-600 transition"
+                                  title="Delete Contractor"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <h4 className="font-extrabold text-sm text-slate-900 mt-2">{contractor.businessName}</h4>
+                            <div className="text-lg font-black text-slate-900 mt-0.5">
+                              {formatCurrency(contractor.contractAmount)}
+                            </div>
+                            
+                            <div className="text-xs text-slate-600 mt-1">
+                              Contact: <strong>{contractor.contactName}</strong> • {contractor.phone || contractor.email}
+                            </div>
+                            
+                            {dept && (
+                              <div className="text-[11px] text-indigo-700 font-semibold mt-1">
+                                Committee: {dept.name}
+                              </div>
+                            )}
+
+                            {contractor.notes && (
+                              <p className="text-[11px] text-slate-500 mt-2 line-clamp-2 italic bg-slate-50 p-2 rounded-lg">
+                                "{contractor.notes}"
+                              </p>
+                            )}
+
+                            {/* Compliance & Status Badges */}
+                            <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center gap-1.5 text-[10px]">
+                              <span className={`px-2 py-0.5 rounded font-bold ${
+                                contractor.w9Received ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                              }`}>
+                                {contractor.w9Received ? '✓ W-9 on file' : '✗ W-9 Needed'}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded font-bold ${
+                                contractor.coiReceived ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                              }`}>
+                                {contractor.coiReceived ? '✓ COI Verified' : '⚠ COI Pending'}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded font-bold ${
+                                contractor.paymentStatus === 'paid_in_full' ? 'bg-emerald-100 text-emerald-800' :
+                                contractor.paymentStatus === 'invoice_received' ? 'bg-blue-100 text-blue-800' :
+                                'bg-slate-100 text-slate-700'
+                              }`}>
+                                Status: {contractor.paymentStatus.replace('_', ' ')}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                            <span className="font-mono text-slate-500">{contractor.invoiceNumber || 'No invoice attached'}</span>
+                            <button
+                              onClick={() => handleOpenEditContractor(contractor)}
+                              className="font-bold text-blue-600 hover:text-blue-800"
+                            >
+                              Update Status &rarr;
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Pro-Bono In-Kind Services Overview */}
+                {eventProBono.length > 0 && (
+                  <div className="pt-4 border-t border-slate-200">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5 mb-2.5">
+                      <HeartHandshake className="w-4 h-4 text-emerald-600" />
+                      <span>Pro-Bono In-Kind Professional Service Donations ({eventProBono.length})</span>
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {eventProBono.map(pb => (
+                        <div key={pb.id} className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 flex justify-between items-center text-xs">
+                          <div>
+                            <span className="font-extrabold text-slate-900 block">{pb.businessName}</span>
+                            <span className="text-[11px] text-slate-600">{pb.serviceDescription}</span>
+                            <span className="text-[10px] font-mono text-emerald-800 block mt-0.5">{pb.inKindReceiptNumber}</span>
+                          </div>
+                          <div className="text-right shrink-0 pl-3">
+                            <span className="text-sm font-black text-emerald-700 block">{formatCurrency(pb.estimatedFmv)}</span>
+                            <span className="text-[10px] font-bold text-emerald-800">501(c)(3) FMV</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            );
+          })()}
         </div>
 
       </div>
@@ -1961,6 +2240,213 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>{editingTier ? 'Save Package Changes' : 'Publish Package Tier'}</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* HIRED CONTRACTOR MODAL */}
+      {isAddContractorModalOpen && (
+        <Modal
+          isOpen={isAddContractorModalOpen}
+          onClose={() => setIsAddContractorModalOpen(false)}
+          title={editingContractor ? 'Edit Hired Contractor & Terms' : 'Log New Hired Contractor / Service Provider'}
+          subtitle={`${currentEvent.title} • Accounts Payable & Operational Procurement`}
+          maxWidth="2xl"
+        >
+          <form onSubmit={handleSaveContractor} className="space-y-4">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-start gap-2">
+              <Briefcase className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+              <div>
+                <strong>Department Budget Integration:</strong> Hired contractor fees automatically debit against the assigned committee's budget ({formatCurrency(subParts.find(sp => sp.id === contractorSubPartId)?.budgetAllocated || 0)} allocated).
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Business / Provider Name *</label>
+                <div className="relative">
+                  <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    required
+                    value={contractorBusinessName}
+                    onChange={(e) => setContractorBusinessName(e.target.value)}
+                    placeholder="e.g. SoundWave Stage & Lighting LLC"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Contact Person Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={contractorContactName}
+                  onChange={(e) => setContractorContactName(e.target.value)}
+                  placeholder="e.g. Mike Henderson"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Contact Email</label>
+                <input
+                  type="email"
+                  value={contractorEmail}
+                  onChange={(e) => setContractorEmail(e.target.value)}
+                  placeholder="mike@soundwavelighting.com"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  value={contractorPhone}
+                  onChange={(e) => setContractorPhone(e.target.value)}
+                  placeholder="(555) 000-0000"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Service Category *</label>
+                <select
+                  value={contractorCategory}
+                  onChange={(e) => setContractorCategory(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                >
+                  <option value="Audio / Visual & DJ">🎵 Audio / Visual, Sound & DJ</option>
+                  <option value="Waste & Sanitation">🚻 Waste Management & Portable Restrooms</option>
+                  <option value="Security & Safety">🛡️ Private Security & Crossing Guards</option>
+                  <option value="Tent & Equipment Rental">🎪 Tents, Canopies & Staging</option>
+                  <option value="Catering & Hospitality">☕ Catering & Food Service</option>
+                  <option value="Entertainment & Performers">🎭 Live Bands, Magicians & Performers</option>
+                  <option value="Photography & Media">📸 Professional Photography / Video</option>
+                  <option value="Other">💼 Other Contracted Service</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Contract Fee Amount ($ USD) *</label>
+                <div className="relative">
+                  <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="number"
+                    min="1"
+                    step="10"
+                    required
+                    value={contractorAmount}
+                    onChange={(e) => setContractorAmount(Number(e.target.value))}
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Committee / Department Scope *</label>
+                <select
+                  value={contractorSubPartId}
+                  onChange={(e) => setContractorSubPartId(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                >
+                  {subParts.map(sp => (
+                    <option key={sp.id} value={sp.id}>{sp.name} (${sp.budgetAllocated} Budget)</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Payment & Invoice Status</label>
+                <select
+                  value={contractorStatus}
+                  onChange={(e) => setContractorStatus(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                >
+                  <option value="draft">Draft / Inquiry</option>
+                  <option value="contract_signed">Contract Signed / Booked</option>
+                  <option value="invoice_received">Invoice Received (Pending Payment)</option>
+                  <option value="paid_in_full">Paid in Full & Reconciled</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Invoice Number</label>
+                <input
+                  type="text"
+                  value={contractorInvoiceNum}
+                  onChange={(e) => setContractorInvoiceNum(e.target.value)}
+                  placeholder="e.g. INV-9482"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono font-medium"
+                />
+              </div>
+
+              {/* Compliance Checkboxes */}
+              <div className="flex items-center gap-4 pt-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={contractorW9}
+                    onChange={(e) => setContractorW9(e.target.checked)}
+                    className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                  />
+                  <span className="font-semibold text-slate-800">W-9 Received</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={contractorCoi}
+                    onChange={(e) => setContractorCoi(e.target.checked)}
+                    className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                  />
+                  <span className="font-semibold text-slate-800">COI Verified</span>
+                </label>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">Contract Scope Notes & Equipment Deliverables</label>
+                <textarea
+                  rows={2}
+                  value={contractorNotes}
+                  onChange={(e) => setContractorNotes(e.target.value)}
+                  placeholder="e.g. Delivering 4 speakers, sound board, 2 wired mics at 7:30 AM East Gate..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
+              {editingContractor ? (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteContractor(editingContractor.id)}
+                  className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Remove Contractor</span>
+                </button>
+              ) : <div />}
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddContractorModalOpen(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+                >
+                  <Briefcase className="w-3.5 h-3.5" />
+                  <span>{editingContractor ? 'Save Contractor Changes' : 'Log Contractor & Debit Budget'}</span>
                 </button>
               </div>
             </div>

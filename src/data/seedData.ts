@@ -1,4 +1,8 @@
-import { Organization, User, Event, SubPart, Shift, ItemSlot, TicketTier, Registration, Donation, VendorApplication, ApprovalRequest, VolunteerCrmRecord, Announcement, AuditLog } from '../types';
+import { 
+  Organization, User, Event, SubPart, Shift, ItemSlot, TicketTier, 
+  Registration, Donation, VendorApplication, ApprovalRequest, 
+  VolunteerCrmRecord, Announcement, AuditLog, PaidContractor, ProBonoPledge 
+} from '../types';
 
 export const SEED_ORGANIZATIONS: Organization[] = [
   {
@@ -1574,3 +1578,76 @@ export const SEED_AUDIT_LOGS: AuditLog[] = [
     timestamp: '2026-08-12T16:00:00'
   }
 ];
+
+export const SEED_CONTRACTORS: PaidContractor[] = [
+  {
+    id: 'cont_01',
+    eventId: 'evt_fall_carnival_2026',
+    subPartId: 'subpart_carnival_labor',
+    businessName: 'Apex Stage & Audio Rigging LLC',
+    contactName: 'Brian Miller',
+    email: 'brian@apexsoundrigs.com',
+    phone: '(555) 678-9012',
+    serviceCategory: 'Audio / Visual & DJ',
+    contractAmount: 850,
+    w9Received: true,
+    coiReceived: true,
+    paymentStatus: 'contract_signed',
+    invoiceNumber: 'INV-APEX-4921',
+    notes: 'Providing master PA system, 4 wireless microphones, and main quad speaker array for morning announcements and live student bands.',
+    createdAt: '2026-08-10T11:00:00'
+  },
+  {
+    id: 'cont_02',
+    eventId: 'evt_fall_carnival_2026',
+    subPartId: 'subpart_carnival_labor',
+    businessName: 'Royal Restrooms & Sanitation Services',
+    contactName: 'Kevin Sullivan',
+    email: 'dispatch@royalflushrentals.com',
+    phone: '(555) 789-2345',
+    serviceCategory: 'Waste & Sanitation',
+    contractAmount: 600,
+    w9Received: true,
+    coiReceived: true,
+    paymentStatus: 'invoice_received',
+    invoiceNumber: 'INV-RR-8812',
+    notes: 'Delivering 4 portable restrooms + 2 ADA accessible units and handwashing stations to the East Athletic Field on Friday 4 PM.',
+    createdAt: '2026-08-12T14:30:00'
+  }
+];
+
+export const SEED_PRO_BONO_PLEDGES: ProBonoPledge[] = [
+  {
+    id: 'pbp_01',
+    eventId: 'evt_fall_carnival_2026',
+    subPartId: 'subpart_carnival_games',
+    businessName: 'Starlight Photo Studio & Portraits',
+    contactName: 'Rachel Green',
+    email: 'rachel@starlightportraits.com',
+    phone: '(555) 901-2345',
+    serviceCategory: 'Photography & Media',
+    serviceDescription: '4 hours of professional candid event photography and digital photo album for families.',
+    estimatedFmv: 750,
+    inKindReceiptNumber: 'INKIND-2026-0041',
+    status: 'pledged',
+    sponsorPerksGranted: true,
+    createdAt: '2026-08-14T10:15:00'
+  },
+  {
+    id: 'pbp_02',
+    eventId: 'evt_fall_carnival_2026',
+    subPartId: 'subpart_carnival_food',
+    businessName: 'Artisan Gourmet Roast Coffee',
+    contactName: 'Leo Vance',
+    email: 'leo@artisancoffeeco.com',
+    phone: '(555) 432-8765',
+    serviceCategory: 'Catering & Hospitality',
+    serviceDescription: 'Donating 200 cups of freshly brewed artisan drip coffee and barista service for volunteer morning setup.',
+    estimatedFmv: 400,
+    inKindReceiptNumber: 'INKIND-2026-0042',
+    status: 'pledged',
+    sponsorPerksGranted: true,
+    createdAt: '2026-08-16T15:45:00'
+  }
+];
+

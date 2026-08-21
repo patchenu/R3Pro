@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { SubPart, Shift, ItemSlot } from '../../types';
+import { SubPart, Shift, ItemSlot, PaidContractor } from '../../types';
 import { 
   Users, Plus, Gift, Clock, Send, ShieldCheck, CheckCircle2, 
   MapPin, Phone, AlertTriangle, DollarSign, QrCode, TrendingUp,
-  Edit3, Trash2, Package, Shirt 
+  Edit3, Trash2, Package, Shirt, Briefcase, Building2 
 } from 'lucide-react';
 import { formatCurrency, formatTimeRange, formatPercentage } from '../../utils/formatters';
 import { LeadBroadcastModal } from './LeadBroadcastModal';
@@ -13,6 +13,7 @@ import { Modal } from '../common/Modal';
 export const LeadPortal: React.FC = () => {
   const { 
     currentEvent, subParts, shifts, itemSlots, registrations, currentUser, 
+    contractors,
     updateSubPart, addShift, updateShift, deleteShift,
     addItemSlot, updateItemSlot, deleteItemSlot,
     requestBudgetIncrease, toggleCheckIn 
@@ -558,6 +559,72 @@ export const LeadPortal: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* DEPARTMENT HIRED CONTRACTORS & SERVICES CARD */}
+      {(() => {
+        const deptContractors = (contractors || []).filter(c => c.subPartId === currentSubPart.id);
+        if (deptContractors.length === 0) return null;
+        const totalDeptContracted = deptContractors.reduce((sum, c) => sum + Number(c.contractAmount), 0);
+
+        return (
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-blue-50 text-blue-700">
+                    <Briefcase className="w-4 h-4" />
+                  </span>
+                  <h3 className="text-base font-extrabold text-slate-900">
+                    Assigned Hired Contractors & Professional Services ({deptContractors.length})
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Paid vendors and equipment providers allocated to {currentSubPart.name} ({formatCurrency(totalDeptContracted)} total spend).
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {deptContractors.map(c => (
+                <div key={c.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
+                      {c.serviceCategory}
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-500">{c.invoiceNumber || 'No invoice #'}</span>
+                  </div>
+
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-900">{c.businessName}</h4>
+                    <div className="text-base font-black text-slate-900 mt-0.5">{formatCurrency(c.contractAmount)}</div>
+                    <div className="text-slate-600 mt-0.5">
+                      Contact: <strong>{c.contactName}</strong> • {c.phone || c.email}
+                    </div>
+                  </div>
+
+                  {c.notes && (
+                    <p className="text-[11px] text-slate-500 italic bg-white p-2 rounded-lg border border-slate-100">
+                      "{c.notes}"
+                    </p>
+                  )}
+
+                  <div className="pt-2 border-t border-slate-200/80 flex items-center gap-2 text-[10px]">
+                    <span className={`px-2 py-0.5 rounded font-bold ${c.w9Received ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                      {c.w9Received ? '✓ W-9 on file' : '✗ W-9 Needed'}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded font-bold ${c.coiReceived ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                      {c.coiReceived ? '✓ COI Verified' : '⚠ COI Pending'}
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-bold ml-auto">
+                      {c.paymentStatus.replace('_', ' ')}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* VOLUNTEER ATTENDANCE & CHECK-IN TABLE */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
