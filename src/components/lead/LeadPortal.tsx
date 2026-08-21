@@ -3,14 +3,20 @@ import { useApp } from '../../context/AppContext';
 import { SubPart, Shift, ItemSlot } from '../../types';
 import { 
   Users, Plus, Gift, Clock, Send, ShieldCheck, CheckCircle2, 
-  MapPin, Phone, AlertTriangle, DollarSign, QrCode, TrendingUp 
+  MapPin, Phone, AlertTriangle, DollarSign, QrCode, TrendingUp,
+  Edit3, Trash2, Package 
 } from 'lucide-react';
 import { formatCurrency, formatTimeRange, formatPercentage } from '../../utils/formatters';
 import { LeadBroadcastModal } from './LeadBroadcastModal';
 import { Modal } from '../common/Modal';
 
 export const LeadPortal: React.FC = () => {
-  const { currentEvent, subParts, shifts, itemSlots, registrations, currentUser, addShift, addItemSlot, requestBudgetIncrease, toggleCheckIn } = useApp();
+  const { 
+    currentEvent, subParts, shifts, itemSlots, registrations, currentUser, 
+    addShift, updateShift, deleteShift,
+    addItemSlot, updateItemSlot, deleteItemSlot,
+    requestBudgetIncrease, toggleCheckIn 
+  } = useApp();
 
   // Scoped SubPart: Find user's assigned subpart, or default to the first one
   const assignedSubPart = subParts.find(sp => sp.leadUserId === currentUser.id || currentUser.assignedSubPartIds?.includes(sp.id)) || subParts[0];
@@ -24,7 +30,8 @@ export const LeadPortal: React.FC = () => {
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [isBudgetReqOpen, setIsBudgetReqOpen] = useState(false);
 
-  // Add Shift Form
+  // Shift Form State
+  const [editingShift, setEditingShift] = useState<Shift | null>(null);
   const [newShiftTitle, setNewShiftTitle] = useState('');
   const [newShiftDesc, setNewShiftDesc] = useState('');
   const [newShiftStart, setNewShiftStart] = useState('2026-09-19T10:00:00');
@@ -32,13 +39,15 @@ export const LeadPortal: React.FC = () => {
   const [newShiftCap, setNewShiftCap] = useState(4);
   const [newShiftWaiver, setNewShiftWaiver] = useState(true);
 
-  // Add Item Form
+  // Item Form State
+  const [editingItem, setEditingItem] = useState<ItemSlot | null>(null);
   const [newItemName, setNewItemName] = useState('');
   const [newItemCategory, setNewItemCategory] = useState('Supplies');
   const [newItemQty, setNewItemQty] = useState(10);
   const [newItemUnit, setNewItemUnit] = useState('boxes');
   const [newItemDropOff, setNewItemDropOff] = useState('Department Desk');
   const [newItemDeadline, setNewItemDeadline] = useState('Saturday 8:00 AM');
+  const [newItemFmv, setNewItemFmv] = useState<number>(25);
 
   // Budget Request Form
   const [budgetReqAmount, setBudgetReqAmount] = useState(250);
@@ -58,38 +67,127 @@ export const LeadPortal: React.FC = () => {
   const totalClaimed = subPartShifts.reduce((sum, s) => sum + s.claimedCount, 0);
   const fillRate = formatPercentage(totalClaimed, totalCap);
 
-  const handleAddShiftSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    addShift({
-      subPartId: currentSubPart.id,
-      eventId: currentEvent.id,
-      title: newShiftTitle,
-      description: newShiftDesc,
-      startTime: newShiftStart,
-      endTime: newShiftEnd,
-      capacity: newShiftCap,
-      requiresWaiver: newShiftWaiver,
-      waiverTemplateId: 'waiver_general_liability'
-    });
-    setIsAddShiftOpen(false);
+  const handleOpenAddShift = () => {
+    setEditingShift(null);
     setNewShiftTitle('');
     setNewShiftDesc('');
+    setNewShiftStart(currentEvent.startDate);
+    setNewShiftEnd(currentEvent.endDate);
+    setNewShiftCap(4);
+    setNewShiftWaiver(true);
+    setIsAddShiftOpen(true);
   };
 
-  const handleAddItemSubmit = (e: React.FormEvent) => {
+  const handleOpenEditShift = (shift: Shift) => {
+    setEditingShift(shift);
+    setNewShiftTitle(shift.title);
+    setNewShiftDesc(shift.description || '');
+    setNewShiftStart(shift.startTime);
+    setNewShiftEnd(shift.endTime);
+    setNewShiftCap(shift.capacity);
+    setNewShiftWaiver(shift.requiresWaiver);
+    setIsAddShiftOpen(true);
+  };
+
+  const handleSaveShiftSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    addItemSlot({
-      subPartId: currentSubPart.id,
-      eventId: currentEvent.id,
-      itemName: newItemName,
-      category: newItemCategory,
-      quantityNeeded: newItemQty,
-      unit: newItemUnit,
-      dropOffLocation: newItemDropOff,
-      dropOffDeadline: newItemDeadline
-    });
-    setIsAddItemOpen(false);
+    if (!newShiftTitle.trim()) return;
+
+    if (editingShift) {
+      updateShift(editingShift.id, {
+        title: newShiftTitle.trim(),
+        description: newShiftDesc.trim(),
+        startTime: newShiftStart,
+        endTime: newShiftEnd,
+        capacity: Number(newShiftCap) || 1,
+        requiresWaiver: newShiftWaiver
+      });
+    } else {
+      addShift({
+        subPartId: currentSubPart.id,
+        eventId: currentEvent.id,
+        title: newShiftTitle.trim(),
+        description: newShiftDesc.trim(),
+        startTime: newShiftStart,
+        endTime: newShiftEnd,
+        capacity: Number(newShiftCap) || 1,
+        requiresWaiver: newShiftWaiver,
+        waiverTemplateId: 'waiver_general_liability'
+      });
+    }
+
+    setIsAddShiftOpen(false);
+    setEditingShift(null);
+  };
+
+  const handleDeleteShift = (shiftId: string) => {
+    if (confirm('Are you sure you want to remove this volunteer shift from your department?')) {
+      deleteShift(shiftId);
+      setIsAddShiftOpen(false);
+    }
+  };
+
+  const handleOpenAddItem = () => {
+    setEditingItem(null);
     setNewItemName('');
+    setNewItemCategory('Supplies');
+    setNewItemQty(10);
+    setNewItemUnit('boxes');
+    setNewItemDropOff(`${currentSubPart.name} Desk`);
+    setNewItemDeadline('Event Morning 8:00 AM');
+    setNewItemFmv(25);
+    setIsAddItemOpen(true);
+  };
+
+  const handleOpenEditItem = (item: ItemSlot) => {
+    setEditingItem(item);
+    setNewItemName(item.itemName);
+    setNewItemCategory(item.category);
+    setNewItemQty(item.quantityNeeded);
+    setNewItemUnit(item.unit);
+    setNewItemDropOff(item.dropOffLocation);
+    setNewItemDeadline(item.dropOffDeadline);
+    setNewItemFmv(item.estimatedFmvPerUnit || 25);
+    setIsAddItemOpen(true);
+  };
+
+  const handleSaveItemSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newItemName.trim()) return;
+
+    if (editingItem) {
+      updateItemSlot(editingItem.id, {
+        itemName: newItemName.trim(),
+        category: newItemCategory,
+        quantityNeeded: Number(newItemQty) || 1,
+        unit: newItemUnit.trim(),
+        dropOffLocation: newItemDropOff.trim(),
+        dropOffDeadline: newItemDeadline.trim(),
+        estimatedFmvPerUnit: Number(newItemFmv) || 0
+      });
+    } else {
+      addItemSlot({
+        subPartId: currentSubPart.id,
+        eventId: currentEvent.id,
+        itemName: newItemName.trim(),
+        category: newItemCategory,
+        quantityNeeded: Number(newItemQty) || 1,
+        unit: newItemUnit.trim(),
+        dropOffLocation: newItemDropOff.trim(),
+        dropOffDeadline: newItemDeadline.trim(),
+        estimatedFmvPerUnit: Number(newItemFmv) || 0
+      });
+    }
+
+    setIsAddItemOpen(false);
+    setEditingItem(null);
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    if (confirm('Are you sure you want to remove this supply wishlist item?')) {
+      deleteItemSlot(itemId);
+      setIsAddItemOpen(false);
+    }
   };
 
   const handleBudgetSubmit = (e: React.FormEvent) => {
@@ -134,7 +232,7 @@ export const LeadPortal: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setIsAddShiftOpen(true)}
+              onClick={handleOpenAddShift}
               className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 px-4 rounded-xl text-xs border border-white/20 transition"
             >
               <Plus className="w-4 h-4" />
@@ -142,7 +240,7 @@ export const LeadPortal: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setIsAddItemOpen(true)}
+              onClick={handleOpenAddItem}
               className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 px-4 rounded-xl text-xs border border-white/20 transition"
             >
               <Plus className="w-4 h-4" />
@@ -245,10 +343,10 @@ export const LeadPortal: React.FC = () => {
         <div className="flex justify-between items-center">
           <div>
             <h3 className="text-lg font-bold text-slate-900">Volunteer Shift Roster</h3>
-            <p className="text-xs text-slate-500">Monitor volunteer registrations and track arrivals</p>
+            <p className="text-xs text-slate-500">Monitor volunteer registrations and adjust shift capacities</p>
           </div>
           <button
-            onClick={() => setIsAddShiftOpen(true)}
+            onClick={handleOpenAddShift}
             className="flex items-center gap-1 text-xs font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -265,6 +363,7 @@ export const LeadPortal: React.FC = () => {
                 <th className="pb-3 font-bold">Filled / Capacity</th>
                 <th className="pb-3 font-bold">Waiver Req</th>
                 <th className="pb-3 font-bold">Status</th>
+                <th className="pb-3 font-bold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -300,9 +399,105 @@ export const LeadPortal: React.FC = () => {
                       </span>
                     ) : (
                       <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold text-[10px]">
-                        Pending Planner Approval
+                        Pending Approval
                       </span>
                     )}
+                  </td>
+                  <td className="py-3 text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        onClick={() => handleOpenEditShift(shift)}
+                        className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                        title="Edit Shift"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteShift(shift.id)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                        title="Delete Shift"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* SUPPLY WISHLIST & ITEM DROP-OFFS TABLE */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">Department Supply & Wishlist Drop-Offs</h3>
+            <p className="text-xs text-slate-500">Track pledged items, drop-off locations, and IRS Fair Market Value offsets</p>
+          </div>
+          <button
+            onClick={handleOpenAddItem}
+            className="flex items-center gap-1 text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            New Wishlist Item
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider font-semibold">
+                <th className="pb-3 font-bold">Item Description</th>
+                <th className="pb-3 font-bold">Category</th>
+                <th className="pb-3 font-bold">Pledged / Needed</th>
+                <th className="pb-3 font-bold">Drop-Off Point & Deadline</th>
+                <th className="pb-3 font-bold">Est. FMV</th>
+                <th className="pb-3 font-bold text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {subPartItems.map((item) => (
+                <tr key={item.id} className="hover:bg-slate-50/80 transition">
+                  <td className="py-3 font-bold text-slate-900">
+                    {item.itemName}
+                  </td>
+                  <td className="py-3">
+                    <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-semibold text-[11px]">
+                      {item.category}
+                    </span>
+                  </td>
+                  <td className="py-3">
+                    <span className={`px-2 py-0.5 rounded-md font-bold ${
+                      item.quantityPledged >= item.quantityNeeded ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {item.quantityPledged} / {item.quantityNeeded} {item.unit}
+                    </span>
+                  </td>
+                  <td className="py-3 text-slate-600 font-medium">
+                    <div>{item.dropOffLocation}</div>
+                    <span className="text-[10px] text-slate-400">By: {item.dropOffDeadline}</span>
+                  </td>
+                  <td className="py-3 font-bold text-emerald-700">
+                    {formatCurrency(item.estimatedFmvPerUnit || 25)} / {item.unit}
+                  </td>
+                  <td className="py-3 text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        onClick={() => handleOpenEditItem(item)}
+                        className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+                        title="Edit Item"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteItem(item.id)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                        title="Delete Item"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -384,15 +579,15 @@ export const LeadPortal: React.FC = () => {
         />
       )}
 
-      {/* Add Shift Modal */}
+      {/* Add / Edit Shift Modal */}
       {isAddShiftOpen && (
         <Modal
           isOpen={isAddShiftOpen}
           onClose={() => setIsAddShiftOpen(false)}
-          title={`Add Volunteer Shift to ${currentSubPart.name}`}
+          title={editingShift ? `Edit Shift: ${editingShift.title}` : `Add Volunteer Shift to ${currentSubPart.name}`}
           subtitle={`Current threshold: ${currentEvent.approvalThresholdSlots} slots (auto-approves under limit)`}
         >
-          <form onSubmit={handleAddShiftSubmit} className="space-y-4">
+          <form onSubmit={handleSaveShiftSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Shift Title *</label>
               <input
@@ -454,22 +649,22 @@ export const LeadPortal: React.FC = () => {
                 type="submit"
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-xl text-xs shadow-md transition"
               >
-                Create Shift
+                {editingShift ? 'Save Shift Changes' : 'Create Shift'}
               </button>
             </div>
           </form>
         </Modal>
       )}
 
-      {/* Add Item Modal */}
+      {/* Add / Edit Item Modal */}
       {isAddItemOpen && (
         <Modal
           isOpen={isAddItemOpen}
           onClose={() => setIsAddItemOpen(false)}
-          title={`Add Wishlist Item to ${currentSubPart.name}`}
-          subtitle="Request supply and food donations from attendees"
+          title={editingItem ? `Edit Wishlist Item: ${editingItem.itemName}` : `Add Wishlist Item to ${currentSubPart.name}`}
+          subtitle="Request supply and food donations from attendees with IRS FMV values"
         >
-          <form onSubmit={handleAddItemSubmit} className="space-y-4">
+          <form onSubmit={handleSaveItemSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Item Description *</label>
               <input
@@ -503,6 +698,37 @@ export const LeadPortal: React.FC = () => {
                   className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs"
                 />
               </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Drop-Off Point</label>
+                <input
+                  type="text"
+                  value={newItemDropOff}
+                  onChange={(e) => setNewItemDropOff(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Drop-Off Deadline</label>
+                <input
+                  type="text"
+                  value={newItemDeadline}
+                  onChange={(e) => setNewItemDeadline(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs"
+                />
+              </div>
+
+              <div className="col-span-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Est. Fair Market Value ($ per unit)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={newItemFmv}
+                  onChange={(e) => setNewItemFmv(parseInt(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-bold text-emerald-700"
+                />
+              </div>
             </div>
 
             <div className="flex justify-between items-center pt-2">
@@ -517,7 +743,7 @@ export const LeadPortal: React.FC = () => {
                 type="submit"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-xl text-xs shadow-md transition"
               >
-                Add to Wishlist
+                {editingItem ? 'Save Item Changes' : 'Add to Wishlist'}
               </button>
             </div>
           </form>

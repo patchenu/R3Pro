@@ -432,13 +432,38 @@ Organizations and Event Chairs maintain a centralized **Legal Compliance & E-Sig
 1. **Dedicated Commercial Tiers Studio (`VendorMarketplaceManager.tsx`)**:
    * **Tab 1: 💎 Sponsor Packages & Commercial Tiers Builder**: Complete create, edit/modify, and delete capabilities for corporate underwriters, food trucks, and artisan vendor booths.
    * **Tab 2: 📋 Commercial Intake Queue**: Review EIN, Certificate of Insurance (COI) compliance, and assign numbered vendor booths.
-2. **Operational Single-Pane Management (`MasterPlannerDashboard.tsx`)**:
+2. **Operational Single-Pane Management (`MasterPlannerDashboard.tsx` & `LeadPortal.tsx`)**:
    * Top action bar includes `+ Add Sponsor / Tier`, `+ Add Shift Need`, `+ Add Supply Need`, and `+ Add Committee Department`.
    * Real-time 1-click `✏️ Edit` and `🗑️ Delete` actions directly on shifts and supply items in department cards.
+   * Department Leads can manage their own shifts and wishlist items in real time with automated threshold approval routing.
    * Comprehensive Corporate Sponsor Packages card displaying pricing, claimed capacity, and IRS FMV deduction offsets.
-3. **IRS Fair Market Value (FMV) Calculation & Perks**:
-   * Dynamically tracks FMV offsets to compute tax-deductible contributions for IRS receipts.
-   * Dynamic perks builder for promotional deliverables (e.g. stage banners, VIP wristbands, program logos).
+3. **Supporter CRM & Offline Contributions CRUD (`VolunteerCrm.tsx` & `ReportsExportCenter.tsx`)**:
+   * Create, edit profile details (skills, contact, tags), and delete supporter profiles with multi-year memory integrity.
+   * Record offline check/cash contributions, instantly print IRS Pub 526/561 receipts, and void/delete invalid transactions from the double-entry accounting ledger.
+
+### 6.12 Multi-Tenant Email & SMS Dispatch Architecture
+1. **Tenant-Isolated Sender Identity & Deliverability**:
+   * **Default Platform Delivery**:
+     - `From: "[Org Name] via GatherRaise" <notifications@mail.gatherraise.com>`
+     - `Reply-To: [Coordinator Email / Org Admin Email]` routes recipient replies directly to the local organization, preventing unmonitored system blackholes.
+     - Injected metadata: `X-Entity-Ref-ID: org_{org_id}_evt_{event_id}` for delivery status attribution.
+   * **Custom Dedicated Domain Sending (DKIM / SPF / DMARC)**:
+     - Enterprise organizations, school districts, and foundations can authenticate custom domains (e.g. `volunteers@lincolnhighpta.org`).
+     - System performs automated CNAME verification with Postmark / AWS SES to guarantee 100% white-label deliverability with zero brand spoofing penalties.
+2. **Priority Queue Architecture & Tenant Rate Limiting (Redis BullMQ / AWS SQS)**:
+   * **`Queue P0 (Instant Auth & Security OTP)`**: 6-digit login OTP passcodes and 1-click magic links with $<2\text{s}$ delivery SLA. Bypasses all marketing queues.
+   * **`Queue P1 (Gate & Check-In Passes)`**: Real-time QR mobile boarding passes, emergency gate reassignment notices, and day-of operational alerts.
+   * **`Queue P2 (Transactional Receipts)`**: IRS 501(c)(3) tax acknowledgement letters, registration confirmations, and supply drop-off vouchers.
+   * **`Queue P3 (Broadcast & Bulk Notifications)`**: Lead announcements, volunteer recruitment blasts, and annual birthday greetings. Throttled at 50/sec per tenant to protect shared IP pool reputation.
+3. **Tenant-Scoped Suppression & Opt-Out Isolation**:
+   * Unsubscribe links generate cryptographic tenant-scoped tokens: `https://app.gatherraise.com/preferences?u=...&org_id=...`.
+   * Unsubscribing from School PTA broadcasts strictly suppresses marketing messages for `(email, org_id)` and does NOT impact the recipient's notifications from other community organizations (e.g., Westside Soccer League).
+   * Transactional exemptions: Security OTPs, confirmed shift arrival details, and statutory IRS donation receipts bypass marketing suppressions in compliance with CAN-SPAM / CASL regulations.
+4. **A2P 10DLC SMS Compliance in Multi-Tenancy**:
+   * GatherRaise acts as a registered Campaign Registry ISV (Independent Software Vendor), onboarding tenant organizations under standardized nonprofit and education A2P use cases.
+   * Automated Organization identifier prefixing: All SMS dispatches are strictly prepended with the tenant identifier:
+     `[Lincoln High PTA] Your shift starts at 8:00 AM at Gate 2. Pass: https://gatherraise.com/p/x94827 Reply STOP to opt out.`
+   * Inbound carrier `STOP` / `UNSUBSCRIBE` webhooks automatically update the tenant-scoped suppression table `(phone_e164, org_id, is_opted_out = true)`. Re-subscribing is supported via `START`.
 
 ## 7. Turnkey Industry Presets Catalog
 

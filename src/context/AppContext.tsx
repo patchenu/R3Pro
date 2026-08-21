@@ -54,6 +54,8 @@ interface AppContextType {
   // Actions
   createOrganization: (orgData: Partial<Organization>, templatePresetId?: string, adminName?: string) => Organization;
   createEvent: (newEvent: Partial<Event>, templatePresetId?: string) => Event;
+  updateEvent: (eventId: string, updates: Partial<Event>) => void;
+  deleteEvent: (eventId: string) => void;
   claimSlotsAndRegister: (payload: {
     primaryName: string;
     primaryEmail: string;
@@ -111,7 +113,9 @@ interface AppContextType {
 
   // Communications & Donations
   postAnnouncement: (ann: Omit<Announcement, 'id' | 'sentAt'>) => void;
+  deleteAnnouncement: (announcementId: string) => void;
   recordDirectDonation: (donation: Omit<Donation, 'id' | 'createdAt' | 'taxReceiptNumber'>) => Donation;
+  deleteDonation: (donationId: string) => void;
   
   // Auth & Session
   isAuthenticated: boolean;
@@ -122,9 +126,13 @@ interface AppContextType {
   resetPassword: (email: string, newPassword?: string) => boolean;
   updateUserProfile: (data: Partial<User>) => void;
   inviteTeamMember: (memberData: Omit<User, 'id'>) => User;
+  updateTeamMember: (userId: string, updates: Partial<User>) => void;
   removeTeamMember: (userId: string) => void;
 
   // CRM Management & Tagging
+  addVolunteer: (volunteer: Omit<VolunteerCrmRecord, 'id' | 'orgId' | 'lifetimeHours' | 'lifetimeDonations' | 'eventsParticipated' | 'attendanceRate' | 'lastActive'> & { lifetimeHours?: number; lifetimeDonations?: number }) => VolunteerCrmRecord;
+  updateVolunteer: (volunteerId: string, updates: Partial<VolunteerCrmRecord>) => void;
+  deleteVolunteer: (volunteerId: string) => void;
   addVolunteerTag: (volunteerId: string, tag: string) => void;
   removeVolunteerTag: (volunteerId: string, tag: string) => void;
   updateVolunteerNotes: (volunteerId: string, notes: string) => void;
@@ -1392,6 +1400,100 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('info', 'Team Member Removed', `${memberToRemove.name} has been removed from organization leadership.`);
   };
 
+  const updateTeamMember = (userId: string, updates: Partial<User>) => {
+    setData((prev: any) => ({
+      ...prev,
+      users: prev.users.map((u: User) => u.id === userId ? { ...u, ...updates } : u)
+    }));
+    showToast('success', 'Team Member Updated', 'Role permissions and assignments updated.');
+  };
+
+  const updateEvent = (eventId: string, updates: Partial<Event>) => {
+    setData((prev: any) => ({
+      ...prev,
+      events: prev.events.map((e: Event) => e.id === eventId ? { ...e, ...updates } : e)
+    }));
+    showToast('success', 'Campaign Updated', 'Event details have been saved.');
+  };
+
+  const deleteEvent = (eventId: string) => {
+    setData((prev: any) => {
+      const remainingEvents = prev.events.filter((e: Event) => e.id !== eventId);
+      const nextEventId = remainingEvents[0]?.id || prev.currentEventId;
+      return {
+        ...prev,
+        events: remainingEvents,
+        subParts: prev.subParts.filter((sp: SubPart) => sp.eventId !== eventId),
+        shifts: prev.shifts.filter((s: Shift) => s.eventId !== eventId),
+        itemSlots: prev.itemSlots.filter((i: ItemSlot) => i.eventId !== eventId),
+        ticketTiers: prev.ticketTiers.filter((t: TicketTier) => t.eventId !== eventId),
+        registrations: prev.registrations.filter((r: Registration) => r.eventId !== eventId),
+        donations: prev.donations.filter((d: Donation) => d.eventId !== eventId),
+        currentEventId: nextEventId
+      };
+    });
+    showToast('info', 'Event Removed', 'Campaign and its associated records have been deleted.');
+  };
+
+  const addVolunteer = (volunteer: Omit<VolunteerCrmRecord, 'id' | 'orgId' | 'lifetimeHours' | 'lifetimeDonations' | 'eventsParticipated' | 'attendanceRate' | 'lastActive'> & { lifetimeHours?: number; lifetimeDonations?: number }): VolunteerCrmRecord => {
+    const newVol: VolunteerCrmRecord = {
+      id: 'vol_' + Date.now(),
+      orgId: currentOrg.id,
+      name: volunteer.name,
+      email: volunteer.email,
+      phone: volunteer.phone,
+      birthDate: volunteer.birthDate,
+      lifetimeHours: volunteer.lifetimeHours || 0,
+      lifetimeDonations: volunteer.lifetimeDonations || 0,
+      eventsParticipated: 0,
+      attendanceRate: 100,
+      skills: volunteer.skills || [],
+      tags: volunteer.tags || ['New Supporter'],
+      lastActive: new Date().toISOString(),
+      notes: volunteer.notes || '',
+      importanceRank: volunteer.importanceRank || 'New Supporter',
+      eventHistory: []
+    };
+    setData((prev: any) => ({
+      ...prev,
+      volunteerCrm: [newVol, ...prev.volunteerCrm]
+    }));
+    showToast('success', 'Supporter Added', `${newVol.name} added to volunteer CRM.`);
+    return newVol;
+  };
+
+  const updateVolunteer = (volunteerId: string, updates: Partial<VolunteerCrmRecord>) => {
+    setData((prev: any) => ({
+      ...prev,
+      volunteerCrm: prev.volunteerCrm.map((v: VolunteerCrmRecord) => v.id === volunteerId ? { ...v, ...updates } : v)
+    }));
+    showToast('success', 'Contact Updated', 'Volunteer CRM record has been updated.');
+  };
+
+  const deleteVolunteer = (volunteerId: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      volunteerCrm: prev.volunteerCrm.filter((v: VolunteerCrmRecord) => v.id !== volunteerId)
+    }));
+    showToast('info', 'Contact Removed', 'Volunteer profile has been removed from CRM.');
+  };
+
+  const deleteAnnouncement = (announcementId: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      announcements: prev.announcements.filter((a: Announcement) => a.id !== announcementId)
+    }));
+    showToast('info', 'Announcement Deleted', 'Broadcast announcement removed.');
+  };
+
+  const deleteDonation = (donationId: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      donations: prev.donations.filter((d: Donation) => d.id !== donationId)
+    }));
+    showToast('info', 'Donation Voided', 'Donation contribution record has been removed.');
+  };
+
   const addVolunteerTag = (volunteerId: string, tag: string) => {
     setData((prev: any) => ({
       ...prev,
@@ -1461,6 +1563,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       switchEvent,
       createOrganization,
       createEvent,
+      updateEvent,
+      deleteEvent,
       claimSlotsAndRegister,
       cancelRegistration,
       toggleCheckIn,
@@ -1488,7 +1592,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateWaiverTemplate,
       deleteWaiverTemplate,
       postAnnouncement,
+      deleteAnnouncement,
       recordDirectDonation,
+      deleteDonation,
       login,
       loginWithCode,
       registerUser,
@@ -1496,7 +1602,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       resetPassword,
       updateUserProfile,
       inviteTeamMember,
+      updateTeamMember,
       removeTeamMember,
+      addVolunteer,
+      updateVolunteer,
+      deleteVolunteer,
       addVolunteerTag,
       removeVolunteerTag,
       updateVolunteerNotes,

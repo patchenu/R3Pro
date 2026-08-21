@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ORG_TEMPLATES } from '../../data/templates';
-import { Event } from '../../types';
+import { Event, User } from '../../types';
 import { VolunteerCrm } from './VolunteerCrm';
 import { LegalComplianceStudio } from './LegalComplianceStudio';
 import { Modal } from '../common/Modal';
@@ -10,7 +10,7 @@ import {
   History, Plus, Check, Settings, Sparkles, Image, Palette, 
   Upload, FileText, CheckCircle2, ShieldCheck, UserPlus, Trash2, Mail, Phone, Briefcase,
   Calendar, BarChart3, TrendingUp, CheckCircle, ExternalLink, Printer, FileSpreadsheet, Eye, ChevronRight, Package, ArrowUpRight,
-  Filter, Search, Hash, Layers, PieChart, ArrowDownRight
+  Filter, Search, Hash, Layers, PieChart, ArrowDownRight, Edit3, X
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { 
@@ -28,9 +28,10 @@ import {
 
 export const OrgExecutiveDashboard: React.FC = () => {
   const { 
-    currentOrg, users, auditLogs, events, volunteerCrm, 
+    currentOrg, users, currentUser, auditLogs, events, volunteerCrm, 
     registrations, shifts, subParts, donations, itemSlots,
-    updateOrganizationBranding, inviteTeamMember, removeTeamMember, 
+    updateOrganizationBranding, inviteTeamMember, updateTeamMember, removeTeamMember, 
+    updateEvent, deleteEvent,
     switchEvent, switchRole, showToast 
   } = useApp();
   
@@ -41,6 +42,26 @@ export const OrgExecutiveDashboard: React.FC = () => {
   const [eventFilter, setEventFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
   const [eventSearchQuery, setEventSearchQuery] = useState('');
   const [selectedEventReport, setSelectedEventReport] = useState<Event | null>(null);
+
+  // Edit Event State
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editEventTitle, setEditEventTitle] = useState('');
+  const [editEventTagline, setEditEventTagline] = useState('');
+  const [editEventGoal, setEditEventGoal] = useState(10000);
+  const [editEventStartDate, setEditEventStartDate] = useState('');
+  const [editEventEndDate, setEditEventEndDate] = useState('');
+  const [editEventVenueName, setEditEventVenueName] = useState('');
+  const [editEventVenueAddress, setEditEventVenueAddress] = useState('');
+  const [editEventCoverUrl, setEditEventCoverUrl] = useState('');
+  const [editEventTags, setEditEventTags] = useState<string[]>([]);
+  const [newTagInput, setNewTagInput] = useState('');
+  const [editThresholdBudget, setEditThresholdBudget] = useState(250);
+  const [editThresholdSlots, setEditThresholdSlots] = useState(5);
+
+  // Edit Team Member State
+  const [editingTeamMember, setEditingTeamMember] = useState<User | null>(null);
+  const [editMemberRole, setEditMemberRole] = useState<'committee_lead' | 'event_planner' | 'org_admin'>('committee_lead');
+  const [editMemberSubPartId, setEditMemberSubPartId] = useState<string>('');
 
   const orgEvents = events.filter(e => e.orgId === currentOrg.id);
   const totalOrgFunds = orgEvents.reduce((sum, e) => sum + e.totalRaised, 0);
@@ -117,9 +138,82 @@ export const OrgExecutiveDashboard: React.FC = () => {
     { label: 'Navy', hex: '#1e3a8a' },
     { label: 'Crimson', hex: '#dc2626' },
     { label: 'Royal Purple', hex: '#9333ea' },
-    { label: 'Amber Gold', hex: '#d97706' },
-    { label: 'Slate', hex: '#0f172a' }
+    { label: 'Amber', hex: '#d97706' },
+    { label: 'Teal', hex: '#0d9488' }
   ];
+
+  const handleOpenEditEvent = (evt: Event) => {
+    setEditingEvent(evt);
+    setEditEventTitle(evt.title);
+    setEditEventTagline(evt.tagline);
+    setEditEventGoal(evt.fundraisingGoal);
+    setEditEventStartDate(evt.startDate.slice(0, 16));
+    setEditEventEndDate(evt.endDate.slice(0, 16));
+    setEditEventVenueName(evt.venueName);
+    setEditEventVenueAddress(evt.venueAddress);
+    setEditEventCoverUrl(evt.coverImageUrl);
+    setEditEventTags([...(evt.tags || [])]);
+    setNewTagInput('');
+    setEditThresholdBudget(evt.approvalThresholdBudget || 250);
+    setEditThresholdSlots(evt.approvalThresholdSlots || 5);
+  };
+
+  const handleAddEventTag = () => {
+    if (!newTagInput.trim()) return;
+    if (!editEventTags.includes(newTagInput.trim())) {
+      setEditEventTags([...editEventTags, newTagInput.trim()]);
+    }
+    setNewTagInput('');
+  };
+
+  const handleRemoveEventTag = (tag: string) => {
+    setEditEventTags(editEventTags.filter(t => t !== tag));
+  };
+
+  const handleSaveEditEvent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEvent || !editEventTitle.trim()) return;
+
+    updateEvent(editingEvent.id, {
+      title: editEventTitle.trim(),
+      tagline: editEventTagline.trim(),
+      fundraisingGoal: Number(editEventGoal) || 1000,
+      startDate: editEventStartDate,
+      endDate: editEventEndDate,
+      venueName: editEventVenueName.trim(),
+      venueAddress: editEventVenueAddress.trim(),
+      coverImageUrl: editEventCoverUrl.trim(),
+      tags: editEventTags,
+      approvalThresholdBudget: Number(editThresholdBudget) || 250,
+      approvalThresholdSlots: Number(editThresholdSlots) || 5
+    });
+
+    setEditingEvent(null);
+  };
+
+  const handleDeleteEvent = (eventId: string, eventTitle: string) => {
+    if (confirm(`Are you sure you want to permanently delete the campaign "${eventTitle}"? All associated shifts, wishlist items, and records will be deleted.`)) {
+      deleteEvent(eventId);
+    }
+  };
+
+  const handleOpenEditTeamMember = (user: User) => {
+    setEditingTeamMember(user);
+    setEditMemberRole(user.role as any);
+    setEditMemberSubPartId(user.assignedSubPartIds?.[0] || '');
+  };
+
+  const handleSaveEditTeamMember = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTeamMember) return;
+
+    updateTeamMember(editingTeamMember.id, {
+      role: editMemberRole,
+      assignedSubPartIds: editMemberRole === 'committee_lead' && editMemberSubPartId ? [editMemberSubPartId] : []
+    });
+
+    setEditingTeamMember(null);
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
     const file = e.target.files?.[0];
@@ -486,28 +580,50 @@ export const OrgExecutiveDashboard: React.FC = () => {
                       </div>
 
                       {/* Card Actions Footer */}
-                      <div className="p-5 pt-0 border-t border-slate-100 grid grid-cols-2 gap-2 mt-2">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedEventReport(evt)}
-                          className="flex items-center justify-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold py-2.5 px-3 rounded-xl text-xs transition"
-                        >
-                          <BarChart3 className="w-3.5 h-3.5" />
-                          <span>View Outcome Report</span>
-                        </button>
+                      <div className="p-5 pt-0 border-t border-slate-100 space-y-2.5 mt-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedEventReport(evt)}
+                            className="flex items-center justify-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold py-2.5 px-3 rounded-xl text-xs transition"
+                          >
+                            <BarChart3 className="w-3.5 h-3.5" />
+                            <span>Outcome Report</span>
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            switchEvent(evt.id);
-                            switchRole('event_planner');
-                            showToast('success', 'Switched Event Context', `Planner Hub opened for ${evt.title}`);
-                          }}
-                          className="flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition"
-                        >
-                          <span>Open Planner Hub</span>
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              switchEvent(evt.id);
+                              switchRole('event_planner');
+                              showToast('success', 'Switched Event Context', `Planner Hub opened for ${evt.title}`);
+                            }}
+                            className="flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition"
+                          >
+                            <span>Open Planner</span>
+                            <ArrowUpRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="flex justify-between items-center pt-2 border-t border-slate-100 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditEvent(evt)}
+                            className="text-slate-600 hover:text-purple-700 font-bold text-[11px] flex items-center gap-1 transition"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Edit Event Details</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteEvent(evt.id, evt.title)}
+                            className="text-rose-500 hover:text-rose-700 font-bold text-[11px] flex items-center gap-1 transition"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete Campaign</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -1268,19 +1384,30 @@ export const OrgExecutiveDashboard: React.FC = () => {
                        'Scoped Department Committee'}
                     </span>
 
-                    {!isSuperAdmin && (
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => {
-                          if (confirm(`Remove ${user.name} from organization roles?`)) {
-                            removeTeamMember(user.id);
-                          }
-                        }}
-                        className="text-rose-600 hover:text-rose-800 font-bold text-[11px] flex items-center gap-0.5"
+                        type="button"
+                        onClick={() => handleOpenEditTeamMember(user)}
+                        className="text-purple-600 hover:text-purple-800 font-bold text-[11px] flex items-center gap-0.5"
                       >
-                        <Trash2 className="w-3 h-3" />
-                        <span>Remove</span>
+                        <Edit3 className="w-3 h-3" />
+                        <span>Edit Role</span>
                       </button>
-                    )}
+
+                      {!isSuperAdmin && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`Remove ${user.name} from organization roles?`)) {
+                              removeTeamMember(user.id);
+                            }
+                          }}
+                          className="text-rose-600 hover:text-rose-800 font-bold text-[11px] flex items-center gap-0.5"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Remove</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -1487,6 +1614,245 @@ export const OrgExecutiveDashboard: React.FC = () => {
       {/* TAB 3: LEGAL WAIVERS & COMPLIANCE */}
       {activeAdminTab === 'legal' && (
         <LegalComplianceStudio />
+      )}
+
+      {/* MODAL: EDIT EVENT DETAILS */}
+      {editingEvent && (
+        <Modal
+          isOpen={Boolean(editingEvent)}
+          onClose={() => setEditingEvent(null)}
+          title={`Edit Campaign: ${editingEvent.title}`}
+          subtitle={`Modify campaign parameters, schedule, venue, and approval rules for ${editingEvent.eventKey || 'this event'}`}
+          maxWidth="2xl"
+        >
+          <form onSubmit={handleSaveEditEvent} className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">Event Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={editEventTitle}
+                  onChange={(e) => setEditEventTitle(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">Tagline / Mission Statement</label>
+                <input
+                  type="text"
+                  value={editEventTagline}
+                  onChange={(e) => setEditEventTagline(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Fundraising Target Goal ($) *</label>
+                <input
+                  type="number"
+                  required
+                  min="100"
+                  value={editEventGoal}
+                  onChange={(e) => setEditEventGoal(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-extrabold text-emerald-700"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Cover Image URL</label>
+                <input
+                  type="url"
+                  value={editEventCoverUrl}
+                  onChange={(e) => setEditEventCoverUrl(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Start Date & Time *</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={editEventStartDate}
+                  onChange={(e) => setEditEventStartDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">End Date & Time *</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={editEventEndDate}
+                  onChange={(e) => setEditEventEndDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Venue Location Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editEventVenueName}
+                  onChange={(e) => setEditEventVenueName(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Venue Street Address *</label>
+                <input
+                  type="text"
+                  required
+                  value={editEventVenueAddress}
+                  onChange={(e) => setEditEventVenueAddress(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              {/* Variable Approval Limits */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Budget Auto-Approval Limit ($)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={editThresholdBudget}
+                  onChange={(e) => setEditThresholdBudget(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+                <span className="text-[10px] text-slate-400">Leads requesting additions above this enter approval queue</span>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Shift Slots Auto-Approval Limit</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={editThresholdSlots}
+                  onChange={(e) => setEditThresholdSlots(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+                <span className="text-[10px] text-slate-400">Shift additions exceeding this capacity require Planner review</span>
+              </div>
+
+              {/* Public Search & Discovery Tags */}
+              <div className="sm:col-span-2 space-y-1.5 pt-1">
+                <label className="block font-bold text-slate-700">Search & Discovery Tags</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newTagInput}
+                    onChange={(e) => setNewTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddEventTag();
+                      }
+                    }}
+                    placeholder="e.g. STEM, Bake Sale, Charity Gala, High School..."
+                    className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddEventTag}
+                    className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl"
+                  >
+                    + Add Tag
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {editEventTags.map((tag, tIdx) => (
+                    <span key={tIdx} className="px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg font-bold text-[11px] flex items-center gap-1">
+                      <span>{tag}</span>
+                      <button type="button" onClick={() => handleRemoveEventTag(tag)} className="text-purple-400 hover:text-purple-900">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingEvent(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Save Campaign Changes</span>
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* MODAL: EDIT TEAM MEMBER ROLE & DEPARTMENT */}
+      {editingTeamMember && (
+        <Modal
+          isOpen={Boolean(editingTeamMember)}
+          onClose={() => setEditingTeamMember(null)}
+          title={`Edit Role: ${editingTeamMember.name}`}
+          subtitle={`Update leadership permissions and committee assignments for ${currentOrg.name}`}
+        >
+          <form onSubmit={handleSaveEditTeamMember} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Role Level</label>
+              <select
+                value={editMemberRole}
+                onChange={(e) => setEditMemberRole(e.target.value as any)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+              >
+                <option value="committee_lead">Committee Lead (Scoped Department)</option>
+                <option value="event_planner">Event Planner (Master Event Logistics & Approvals)</option>
+                <option value="org_admin">Organization Super Admin (Full Governance & CRM)</option>
+              </select>
+            </div>
+
+            {editMemberRole === 'committee_lead' && (
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Assigned Department Committee</label>
+                <select
+                  value={editMemberSubPartId}
+                  onChange={(e) => setEditMemberSubPartId(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                >
+                  <option value="">Select Department...</option>
+                  {subParts.map(sp => (
+                    <option key={sp.id} value={sp.id}>{sp.name} ({sp.reportingGate})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingTeamMember(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-md"
+              >
+                Update Permissions
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
     </div>

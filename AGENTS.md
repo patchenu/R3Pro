@@ -212,5 +212,51 @@ This document provides system knowledge, core architectural rules, and coding st
   - Department Leads and Event Planners can edit shift hours, volunteer capacities, and waiver requirements on existing shifts.
   - Item wishlist slots can be modified to increase/decrease required quantities, adjust drop-off deadlines, and update FMV per unit.
 
+---
 
+## 20. Multi-Tenant Email & SMS Dispatch Architecture
 
+### 20.1 Tenant-Isolated Sender Identity & Deliverability
+- **Managed Platform Delivery (Default)**:
+  - Header structure: `From: "[Org Name] via GatherRaise" <notifications@mail.gatherraise.com>`
+  - `Reply-To: [Lead Email / Org Admin Email]` routes volunteer replies directly to the local coordinator's inbox.
+  - Injected metadata: `X-Entity-Ref-ID: org_{org_id}_evt_{event_id}` for webhook routing.
+- **Custom Domain Authentication (Enterprise / Dedicated DKIM/SPF)**:
+  - Organizations can verify custom sending domains (e.g. `volunteers@lincolnhighpta.org`) via DNS CNAME validation with Postmark / AWS SES.
+  - System verifies DKIM public keys and SPF alignment before activating direct custom domain dispatch.
+
+### 20.2 Queue Prioritization & Tenant Rate Limiting
+- **Priority Tier Queues (Redis BullMQ / AWS SQS)**:
+  - **P0 (Security & Auth)**: 6-digit login OTPs and 1-click magic links (<2s delivery SLA). Never throttled by marketing campaigns.
+  - **P1 (Gate Operations)**: Live QR mobile check-in passes and day-of emergency gate reassignment notices.
+  - **P2 (Transactional Receipts)**: IRS 501(c)(3) tax acknowledgement letters, registration confirmations, and supply drop-off vouchers.
+  - **P3 (Broadcast & Bulk Notifications)**: Lead announcements, volunteer recruitment broadcasts, and annual birthday greetings. Throttled at 50/sec per tenant to preserve IP pool reputation.
+
+### 20.3 Multi-Tenant Suppression & Opt-Out Scoping
+- **Tenant-Scoped Unsubscribe**:
+  - Marketing opt-outs are strictly isolated by `(email, org_id)`.
+  - Unsubscribing from School PTA broadcasts does NOT suppress emails from the Youth Soccer League or Community Food Bank.
+- **Transactional Exemption**:
+  - Security OTPs, confirmed shift arrival instructions, and IRS tax receipts bypass promotional suppressions in compliance with CAN-SPAM / CASL regulations.
+
+### 20.4 A2P 10DLC SMS Multi-Tenancy & TCPA Compliance
+- **Campaign Registry ISV Registration**: GatherRaise operates as a registered Campaign Registry ISV, registering tenant sub-use cases (*Standard Nonprofit*, *Education*, *Customer Service*).
+- **Mandatory Brand Identifier Prefix**: All SMS messages are prepended with the Organization identifier:
+  `[Lincoln High PTA] Your shift starts at 8:00 AM at Gate 2. Pass: https://gatherraise.com/p/x94827 Reply STOP to opt out.`
+- **Carrier Keyword Handling**: Inbound `STOP` / `UNSUBSCRIBE` webhooks write to the tenant-scoped suppression table `(phone_e164, org_id, is_opted_out = true)`. Re-subscribing is handled via `START`.
+
+---
+
+## 21. App-Wide Full CRUD Operations & State Lifecycle Matrix
+
+| Module / Component | Entities Managed | Create Action | Edit / Modify Action | Delete / Void Action |
+| :--- | :--- | :--- | :--- | :--- |
+| **Volunteer CRM** (`VolunteerCrm.tsx`) | Supporters, Donors, VIPs | `+ Add Supporter / Donor` modal | `✏️ Edit Profile` (contact, skills, tier) | `🗑️ Delete Profile` (with confirmation) |
+| **Team Leadership** (`TeamMemberManagerModal.tsx`, `OrgExecutiveDashboard.tsx`) | Org Admins, Planners, Leads | `+ Invite Team Member` (active user creation) | `✏️ Edit Role & Committee Scope` | `🗑️ Remove Member` (Super Admin protected) |
+| **Master Campaigns** (`OrgExecutiveDashboard.tsx`, `MasterPlannerDashboard.tsx`) | Events, Campaigns | `+ New Event Campaign` Wizard | `✏️ Edit Campaign Settings` (dates, goals, rules) | `🗑️ Delete Campaign` (cascading cleanup) |
+| **Department Shifts** (`LeadPortal.tsx`, `MasterPlannerDashboard.tsx`) | Volunteer Shifts | `+ Add Volunteer Shift` | `✏️ Edit Shift` (hours, capacities, waiver) | `🗑️ Delete Shift` |
+| **Supply Wishlist** (`LeadPortal.tsx`, `MasterPlannerDashboard.tsx`) | Wishlist & Drop-Off Items | `+ Add Wishlist Item` | `✏️ Edit Item` (quantity, deadline, FMV) | `🗑️ Delete Item` |
+| **Sponsor Packages** (`VendorMarketplaceManager.tsx`, `MasterPlannerDashboard.tsx`) | Tiers, Vendor Booths | `+ Create Tier / Booth` | `✏️ Edit Tier` (pricing, perks, FMV, power) | `🗑️ Delete Tier` |
+| **Financial Ledger** (`ReportsExportCenter.tsx`) | Donations, Grants, Checks | `+ Record Offline Contribution` | Real-time reconciliation | `🗑️ Void / Delete Donation Record` |
+
+---
