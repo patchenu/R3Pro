@@ -153,19 +153,19 @@ This document provides system knowledge, core architectural rules, and coding st
 
 ---
 
-## 16. Event Creation Strategies, Blank Slate Management & Discovery Tags
-- **3 Setup Modes in `EventBuilderWizard.tsx`**:
-  1. **`🏛️ Industry Blueprints`**: Pre-loads best-practice operational departments, volunteer shifts, capacities, and item wishlists in 1 click.
-  2. **`📋 Clone from Past Event`**: Replicates previous year campaigns for annual recurrences, preserving proven committees, budgets, and volunteer roles.
-  3. **`⚡ Blank Canvas (Start from Scratch)`**: Initializes a clean event without preloaded dependencies.
+## 16. 7-Step Interactive Guided Event Builder Wizard & Discovery Architecture
+- **7 Guided Setup Steps in `EventBuilderWizard.tsx`**:
+  1. **Step 1: `🏛️ Source Strategy & Blueprints`**: Toggle between *Industry Blueprints* (turnkey operational packages), *Clone Past Event* (duplicate previous year campaigns), or *Blank Canvas* (from scratch).
+  2. **Step 2: `📅 Campaign Essentials & Schedule`**: Title, tagline, target fundraising goal ($), date/time windows, venue name, physical address, and cover image.
+  3. **Step 3: `👥 Committee Departments & Leadership Assignments`**: Dynamic creation/editing of operational committees, designating Leads from organization staff (`users`), reporting gates, radio channels, and allocated department budgets.
+  4. **Step 4: `🙋 Volunteer Shift Needs & Staffing Capacities`**: Define role titles, tasks, shift timeframes, capacity spots, and liability waiver requirements per committee.
+  5. **Step 5: `🎁 Supply & Equipment Wishlist Drop-Offs`**: Specify physical supplies, food/beverage items, drop-off stations, deadlines, and IRS Fair Market Value (FMV) deduction offsets.
+  6. **Step 6: `💎 Sponsorship Packages & Commercial Tiers`**: Build corporate underwriting tiers, artisan vendor booths (with footprint dimensions & electricity options), admission tickets, and custom perk inclusions.
+  7. **Step 7: `🏷️ Discovery Tags, Variable Approval Rules & Review`**: Curated preset + custom discovery tags, auto-approval thresholds (budget $ and shift spot limits), master dossier review, and 1-click campaign launch.
 - **Blank Slate Operations in Planner Hub (`MasterPlannerDashboard.tsx`)**:
-  - If an event is created with 0 preloaded shifts/departments, the Planner uses 1-click modals:
-    - `+ Add Committee Department`: Defines name, allocated budget, designated Lead (name, phone, email, radio), and reporting gate directions.
-    - `+ Add Shift Need`: Defines volunteer slot requirements, hours, capacities, and waiver rules.
-    - `+ Add Supply Need`: Publishes in-kind item wishlist drop-offs with target counts and deadlines.
+  - If starting from a blank canvas or editing on the fly, Planners and Leads can dynamically provision departments, shifts, wishlist items, and sponsor tiers with 1-click modals.
 - **Public Search & Discovery Tags (`event.tags: string[]`)**:
-  - Supports curated preset tags (`Family Friendly`, `STEM & Tech`, `Food & Bake Sale`, `Carnival & Games`, `Athletics & Sports`, `Charity Gala`, `Silent Auction`, `Student Service Hours`) and dynamic custom tags.
-  - Interactive Tag pills in `CommunityDiscoveryHub.tsx` enable instantaneous filtering and keyword search matching for public attendees.
+  - Curated preset tags (`Family Friendly`, `STEM & Tech`, `Food & Bake Sale`, `Carnival & Games`, `Athletics & Sports`, `Charity Gala`, `Silent Auction`, `Student Service Hours`) and custom tags empower instant filtering in `CommunityDiscoveryHub.tsx`.
 
 ---
 

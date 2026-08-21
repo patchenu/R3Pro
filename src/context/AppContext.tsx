@@ -53,7 +53,16 @@ interface AppContextType {
 
   // Actions
   createOrganization: (orgData: Partial<Organization>, templatePresetId?: string, adminName?: string) => Organization;
-  createEvent: (newEvent: Partial<Event>, templatePresetId?: string) => Event;
+  createEvent: (
+    newEvent: Partial<Event>, 
+    templatePresetId?: string,
+    customPayload?: {
+      subParts?: Omit<SubPart, 'id' | 'budgetSpent' | 'shiftIds' | 'itemSlotIds'>[];
+      shifts?: (Omit<Shift, 'id' | 'claimedCount' | 'isApproved'> & { departmentIndex?: number })[];
+      itemSlots?: (Omit<ItemSlot, 'id' | 'quantityPledged'> & { departmentIndex?: number })[];
+      ticketTiers?: Omit<TicketTier, 'id' | 'claimedCount'>[];
+    }
+  ) => Event;
   updateEvent: (eventId: string, updates: Partial<Event>) => void;
   deleteEvent: (eventId: string) => void;
   claimSlotsAndRegister: (payload: {
@@ -384,7 +393,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newOrg;
   };
 
-  const createEvent = (newEventData: Partial<Event>, templatePresetId?: string): Event => {
+  const createEvent = (
+    newEventData: Partial<Event>, 
+    templatePresetId?: string,
+    customPayload?: {
+      subParts?: Omit<SubPart, 'id' | 'budgetSpent' | 'shiftIds' | 'itemSlotIds'>[];
+      shifts?: (Omit<Shift, 'id' | 'claimedCount' | 'isApproved'> & { departmentIndex?: number })[];
+      itemSlots?: (Omit<ItemSlot, 'id' | 'quantityPledged'> & { departmentIndex?: number })[];
+      ticketTiers?: Omit<TicketTier, 'id' | 'claimedCount'>[];
+    }
+  ): Event => {
     const id = 'evt_' + Date.now();
     const slug = (newEventData.title || 'event').toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const startDateObj = new Date(newEventData.startDate || Date.now());
@@ -419,20 +437,78 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       totalRaised: 0,
       currency: 'USD',
       status: 'published',
-      approvalThresholdBudget: currentOrg.settings.approvalThresholdBudget,
-      approvalThresholdSlots: currentOrg.settings.approvalThresholdSlots,
+      approvalThresholdBudget: newEventData.approvalThresholdBudget || currentOrg.settings.approvalThresholdBudget,
+      approvalThresholdSlots: newEventData.approvalThresholdSlots || currentOrg.settings.approvalThresholdSlots,
       reminderCadence: currentOrg.settings.defaultReminderCadence,
       allowFeeCoverage: true,
       subPartIds: []
     };
 
-    // Hydrate template departments, shifts, items if chosen
+    // Hydrate template departments, shifts, items, ticket tiers if customPayload or template chosen
     const template = EVENT_TEMPLATES.find(t => t.id === templatePresetId);
     let newSubParts: SubPart[] = [];
     let newShifts: Shift[] = [];
     let newItems: ItemSlot[] = [];
+    let newTicketTiers: TicketTier[] = [];
 
-    if (template) {
+    if (customPayload && (customPayload.subParts || customPayload.ticketTiers || customPayload.shifts || customPayload.itemSlots)) {
+      // Use customized payload from the step-by-step wizard
+      (customPayload.subParts || []).forEach((dept, dIdx) => {
+        const subPartId = `sp_${id}_${dIdx}_${Date.now()}`;
+        newSubParts.push({
+          ...dept,
+          id: subPartId,
+          eventId: id,
+          budgetSpent: 0,
+          shiftIds: [],
+          itemSlotIds: []
+        });
+      });
+
+      (customPayload.shifts || []).forEach((s, sIdx) => {
+        const targetSubPartId = s.subPartId || (s.departmentIndex !== undefined && newSubParts[s.departmentIndex]?.id) || newSubParts[0]?.id || `sp_${id}_0`;
+        newShifts.push({
+          id: `shift_${id}_${sIdx}_${Date.now()}`,
+          subPartId: targetSubPartId,
+          eventId: id,
+          title: s.title,
+          description: s.description || '',
+          startTime: s.startTime || event.startDate,
+          endTime: s.endTime || event.endDate,
+          capacity: s.capacity || 4,
+          claimedCount: 0,
+          requiresWaiver: s.requiresWaiver ?? true,
+          waiverTemplateId: s.waiverTemplateId || 'waiver_general_liability',
+          isApproved: true
+        });
+      });
+
+      (customPayload.itemSlots || []).forEach((i, iIdx) => {
+        const targetSubPartId = i.subPartId || (i.departmentIndex !== undefined && newSubParts[i.departmentIndex]?.id) || newSubParts[0]?.id || `sp_${id}_0`;
+        newItems.push({
+          id: `item_${id}_${iIdx}_${Date.now()}`,
+          subPartId: targetSubPartId,
+          eventId: id,
+          itemName: i.itemName,
+          category: i.category || 'Supplies',
+          quantityNeeded: i.quantityNeeded || 1,
+          quantityPledged: 0,
+          unit: i.unit || 'units',
+          dropOffLocation: i.dropOffLocation || 'Department Station',
+          dropOffDeadline: i.dropOffDeadline || 'Event Morning',
+          estimatedFmvPerUnit: i.estimatedFmvPerUnit || 20
+        });
+      });
+
+      (customPayload.ticketTiers || []).forEach((tt, ttIdx) => {
+        newTicketTiers.push({
+          ...tt,
+          id: `tier_${id}_${ttIdx}_${Date.now()}`,
+          eventId: id,
+          claimedCount: 0
+        });
+      });
+    } else if (template) {
       template.departments.forEach((dept, dIdx) => {
         const subPartId = `sp_${id}_${dIdx}`;
         newSubParts.push({
@@ -446,9 +522,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           leadEmail: currentUser.email,
           leadRadioChannel: `Channel ${dIdx + 1}`,
           reportingGate: `${dept.name} Check-In Station`,
-          dressCodeNotes: 'Comfortable event attire',
+          dressCodeNotes: dept.dressCode || 'Comfortable event attire',
           suppliesNotes: 'Check in with lead',
-          budgetAllocated: Math.round(event.fundraisingGoal * 0.08),
+          budgetAllocated: dept.suggestedBudget || Math.round(event.fundraisingGoal * 0.08),
           budgetSpent: 0,
           shiftIds: [],
           itemSlotIds: []
@@ -460,12 +536,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             subPartId,
             eventId: id,
             title: s.title,
-            description: `Shift role for ${dept.name}`,
+            description: s.description || `Shift role for ${dept.name}`,
             startTime: event.startDate,
             endTime: event.endDate,
             capacity: s.capacity,
             claimedCount: 0,
-            requiresWaiver: true,
+            requiresWaiver: s.requiresWaiver,
             waiverTemplateId: 'waiver_general_liability',
             isApproved: true
           });
@@ -477,13 +553,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             subPartId,
             eventId: id,
             itemName: i.itemName,
-            category: 'Supplies',
+            category: i.category || 'Supplies',
             quantityNeeded: i.quantityNeeded,
             quantityPledged: 0,
             unit: i.unit,
             dropOffLocation: `${dept.name} Desk`,
-            dropOffDeadline: 'Event Morning'
+            dropOffDeadline: 'Event Morning',
+            estimatedFmvPerUnit: 20
           });
+        });
+      });
+
+      (template.ticketTiers || []).forEach((tt, ttIdx) => {
+        newTicketTiers.push({
+          id: `tier_${id}_${ttIdx}`,
+          eventId: id,
+          title: tt.title,
+          type: tt.type,
+          price: tt.price,
+          fairMarketValue: tt.fairMarketValue,
+          capacity: tt.capacity,
+          claimedCount: 0,
+          instantCheckout: tt.instantCheckout,
+          description: tt.description,
+          perks: tt.perks
         });
       });
     }
@@ -494,6 +587,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       subParts: [...newSubParts, ...prev.subParts],
       shifts: [...newShifts, ...prev.shifts],
       itemSlots: [...newItems, ...prev.itemSlots],
+      ticketTiers: [...newTicketTiers, ...prev.ticketTiers],
       currentEventId: event.id
     }));
 
