@@ -312,4 +312,49 @@ This document provides system knowledge, core architectural rules, and coding st
 - **Multi-Category Filter Tabs**:
   - Filter by *All Items*, *💎 Sponsor Packages*, *🎪 Vendor Booths*, and *🎟️ Admission Tickets* on both organizer hubs and public landing pages (`PublicEventLanding.tsx`).
 
+## 24. Participant Persona & Role Detection Intelligence
+
+### 24.1 Dynamic 3-Vector Detection (Zero Upfront Role Dropdowns)
+- Rather than forcing users through an artificial *"Select Your User Type"* select box, GatherRaise detects roles dynamically through 3 distinct operational vectors:
+  1. **Vector 1: Transaction & Cart Intent (What They Click)**:
+     - Selecting a volunteer shift $\rightarrow$ **Volunteer**.
+     - Registering a dependent with `relationship: 'Child'` or `isMinor: true` $\rightarrow$ **Parent / Household Guardian** (triggers Minor Safety Consent Parental Co-signature waiver and auto-enables the `Parent Volunteer` CRM tag).
+     - Purchasing an underwriting package $\rightarrow$ **Corporate Sponsor** (triggers company EIN capture, logo perk assets, IRS 501(c)(3) tax receipt).
+     - Selecting a vendor booth pitch $\rightarrow$ **Commercial Artisan / Food Truck Vendor** (triggers commercial intake: 110V/220V power, 10x10 footprint, COI insurance policy, health permits).
+     - Purchasing general admission wristbands $\rightarrow$ **Event Attendee / Ticket Buyer**.
+     - Pledging supply/equipment wishlist items $\rightarrow$ **In-Kind Property Donor** (triggers IRS Pub 526/561 non-cash receipt).
+  2. **Vector 2: Staff & Committee Leadership Delegation (Who Invited Them)**:
+     - **Org Super Admin (`org_admin`)**: Verified organization creator or promoted by existing Admin. Full governance, branding, and CPA reporting.
+     - **Event Planner / Chair (`event_planner`)**: Master chairperson assigned to designated campaigns with variable approval queue rights.
+     - **Committee Lead (`committee_lead`)**: Department-scoped lead invited via email/SMS OTP and mapped to a specific committee (`assignedSubPartIds`).
+  3. **Vector 3: Multi-Tenant Identity Resolution (`OrgMembership[]`)**:
+     - A single user account (`email`) holds distinct contextual roles across organizations (e.g. *Committee Lead* at High School PTA, *Volunteer / Parent* at Youth Soccer League, *Corporate Sponsor* at Community Foundation).
+
+### 24.2 Automated Behavioral CRM Tagging Engine
+- `Parent Volunteer`: Auto-applied when registrations link minor dependents.
+- `VIP Donor`: Auto-applied when cumulative giving or sponsorship reaches $\ge \$250$.
+- `Reliable Helper`: Auto-applied when attendance rate across multiple events reaches $\ge 95\%$.
+- `Student Service Volunteer`: Auto-applied when claiming service hours for school verification certificates.
+
+---
+
+## 25. Vendor, Contractor & Service Provider Mental Model & Decoupling Standard
+
+### 25.1 The 3 Distinct Vendor Archetypes
+
+| Archetype | Cash Flow Direction | Channel / Entry Point | Requirements & Compliance | Outcome & Deliverable |
+| :--- | :--- | :--- | :--- | :--- |
+| **Type A: Commercial Exhibitor / Market Merchant** | **Vendor $\rightarrow$ Pays Org** (Revenue Inflow) | Dedicated **Vendor Marketplace Portal** (`/e/:slug/vendors` or Commercial Tab) | Business EIN, Certificate of Insurance (COI), 110V/220V power needs, health/food permits | Numbered booth assignment (e.g. *Booth #A-14*), commercial invoice, sales permit |
+| **Type B: Hired / Paid Service Contractor** | **Org $\rightarrow$ Pays Contractor** (Expense Outflow) | **Organizer Procurement & Contracts Hub** (Internal Planner / Lead Workspace) | W-9 form, signed vendor service contract, milestone payment schedule, itemized invoice | Deducted against Department Budget, accounts payable tracking |
+| **Type C: Pro-Bono / Donated Service Provider** | **$0 Net Cash** (In-Kind Sponsorship) | **Community Partner Intake** or Sponsor Portal | Statement of work, estimated Fair Market Value (FMV), proof of insurance | Underwriting sponsor perks (stage logo, banner), official IRS 501(c)(3) in-kind tax receipt |
+
+### 25.2 Decoupling Vendors from the Public Volunteer Page
+- **Volunteer Page Purity**:
+  - The public event landing page (`PublicEventLanding.tsx`) is designed for **community volunteers, parents, and families**. It MUST focus strictly on volunteer shifts, supply drop-offs, admission tickets, and frictionless participation.
+  - Commercial vendor booths and contractor inquiries must NEVER be mingled into volunteer shift lists.
+- **Dedicated Commercial Inlets**:
+  - Commercial exhibitors and food trucks access a dedicated **Vendor Marketplace & Commercial Sponsorship Hub** where they select booth footprints, submit COIs, and configure power requirements without cluttering the community volunteer experience.
+- **Internal Contractor Management**:
+  - Hired contractors (paid DJ, sound engineering crew, tent rentals, security personnel) are managed internally within `MasterPlannerDashboard.tsx` and `LeadPortal.tsx` as contracted operational expenses against the department's allocated budget.
+
 ---
