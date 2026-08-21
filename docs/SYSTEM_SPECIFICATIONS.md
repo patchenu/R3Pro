@@ -50,6 +50,23 @@ graph TD
   * **Delegated Team Management**: Granular invitations for Event Planners and Committee Leads.
   * **Financial Substantiation**: Automated IRS-compliant 501(c)(3) tax acknowledgement letters with Fair Market Value (FMV) deduction offsets.
 
+#### 2.2.1 Volunteer & Donor CRM Tagging Intelligence & Historical Event Outcome Tie-Back
+1. **Automated Behavioral System Tags**:
+   * **`Reliable Helper`**: Awarded automatically when a volunteer maintains $\ge 95\%$ on-time attendance across historical events with 0 unexcused no-shows.
+   * **`VIP Donor`**: Awarded automatically when cumulative lifetime philanthropic financial contributions exceed the organization threshold ($\ge \$250$).
+   * **`Parent Volunteer`**: Awarded automatically when claiming shifts for household dependents/minors or co-signing minor digital waivers.
+   * **`Certified First Aid` / `Master Baker` / `STEM Advocate` / `Creative Lead`**: Automatically mapped from verified skill checkboxes and certifications submitted during registration.
+   * **`Alumni`**: Tagged when participant indicates past graduation or long-time community tenure.
+2. **Historical Event Outcome Tie-Back**:
+   * Every volunteer CRM profile contains a complete chronological record of **every event supported** (`eventHistory`).
+   * **Impact Ledger Fields**:
+     - Event Title & Date.
+     - Specific Shifts & Department Roles served (e.g. *Morning Canopy Setup & Sound Rig Tech, 4.5 hrs*).
+     - Supplies, equipment, or food items pledged & delivered (e.g. *4 Trays Gluten-Free Fudge Brownies*).
+     - Direct financial contributions to that campaign (e.g. *$150.00*).
+     - **Tied Campaign Outcome**: Displays the total funds raised and community outcome achieved by that specific event (e.g. *"Event Outcome: Raised $11,450 for Lincoln High STEM Lab"*).
+     - Verifying Coordinator on duty.
+
 ### 2.3 Persona 3: Event Chairs & Committee Leads
 * **Mental Model**: Flawless on-the-ground event execution, department delegation, shift capacity fulfillment, variable approval governance, and on-site door operations.
 * **Core Workflows**:

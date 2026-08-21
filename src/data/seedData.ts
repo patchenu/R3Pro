@@ -1252,7 +1252,53 @@ export const SEED_VOLUNTEER_CRM: VolunteerCrmRecord[] = [
     attendanceRate: 100,
     skills: ['Heavy Lifting', 'Morning Logistics', 'Electrical'],
     tags: ['Reliable Helper', 'Parent Volunteer', 'STEM Advocate'],
-    lastActive: '2026-08-15'
+    lastActive: '2026-08-15',
+    notes: 'Father of Emma (Age 11) & Lucas (Age 14). Consistently arrives 15 min early for morning canopy setup. Extremely reliable with power cables and physical setup.',
+    eventHistory: [
+      {
+        eventId: 'evt_fall_carnival_2026',
+        eventTitle: 'Lincoln High Fall Carnival & Bake Sale 2026',
+        eventDate: '2026-09-18',
+        rolesServed: ['Morning Canopy Tent & Sound Rig Setup', 'Bake Sale Assistant'],
+        hoursContributed: 4.5,
+        itemsDonated: ['2 Boxes of Gourmet Chocolate Chip Cookies', '1 Heavy Duty Extension Cord'],
+        amountDonated: 50,
+        eventOutcomeRaised: 11450,
+        verifiedBy: 'Marcus Vance (Chair)'
+      },
+      {
+        eventId: 'evt_spring_gala_2026',
+        eventTitle: 'Annual Spring Charity Gala & Silent Auction 2026',
+        eventDate: '2026-04-12',
+        rolesServed: ['Auction Item Runner & Audio Tech'],
+        hoursContributed: 5.0,
+        itemsDonated: ['Smart Home Tech Basket'],
+        amountDonated: 200,
+        eventOutcomeRaised: 28400,
+        verifiedBy: 'Elena Rostova (President)'
+      },
+      {
+        eventId: 'evt_stem_fair_2025',
+        eventTitle: 'Lincoln District Science & Robotics STEM Night 2025',
+        eventDate: '2025-11-08',
+        rolesServed: ['Robotics Arena Judge & Table Marshall'],
+        hoursContributed: 6.0,
+        itemsDonated: ['Safety Glasses (10ct)'],
+        amountDonated: 100,
+        eventOutcomeRaised: 8500,
+        verifiedBy: 'Dr. Michael Chang'
+      },
+      {
+        eventId: 'evt_fall_carnival_2025',
+        eventTitle: 'Lincoln High Fall Carnival 2025',
+        eventDate: '2025-09-20',
+        rolesServed: ['Obstacle Course Marshall', 'Evening Teardown Crew'],
+        hoursContributed: 5.5,
+        amountDonated: 100,
+        eventOutcomeRaised: 9800,
+        verifiedBy: 'Marcus Vance (Chair)'
+      }
+    ]
   },
   {
     id: 'crm_jessica_taylor',
@@ -1266,7 +1312,42 @@ export const SEED_VOLUNTEER_CRM: VolunteerCrmRecord[] = [
     attendanceRate: 100,
     skills: ['Bake Sale', 'Cashier', 'Hospitality'],
     tags: ['Master Baker', 'VIP Donor'],
-    lastActive: '2026-08-16'
+    lastActive: '2026-08-16',
+    notes: 'Professional pastry chef. Donates all baked goods with allergen-safe gluten-free labeling.',
+    eventHistory: [
+      {
+        eventId: 'evt_fall_carnival_2026',
+        eventTitle: 'Lincoln High Fall Carnival & Bake Sale 2026',
+        eventDate: '2026-09-18',
+        rolesServed: ['Artisan Bakery & Cake Walk Lead'],
+        hoursContributed: 4.0,
+        itemsDonated: ['4 Trays of Gluten-Free Fudge Brownies (48ct)'],
+        amountDonated: 150,
+        eventOutcomeRaised: 11450,
+        verifiedBy: 'Sarah Jenkins (Food Lead)'
+      },
+      {
+        eventId: 'evt_spring_gala_2026',
+        eventTitle: 'Annual Spring Charity Gala & Silent Auction 2026',
+        eventDate: '2026-04-12',
+        rolesServed: ['VIP Dessert Reception Host'],
+        hoursContributed: 6.0,
+        itemsDonated: ['Custom 3-Tier Charity Cake Lot'],
+        amountDonated: 250,
+        eventOutcomeRaised: 28400,
+        verifiedBy: 'Elena Rostova (President)'
+      },
+      {
+        eventId: 'evt_holiday_bake_2025',
+        eventTitle: 'Holiday Community Food & Baked Treats Drive 2025',
+        eventDate: '2025-12-14',
+        rolesServed: ['Bake Station Coordinator'],
+        hoursContributed: 8.0,
+        amountDonated: 200,
+        eventOutcomeRaised: 12200,
+        verifiedBy: 'Sarah Jenkins (Food Lead)'
+      }
+    ]
   },
   {
     id: 'crm_robert_williams',
@@ -1280,7 +1361,41 @@ export const SEED_VOLUNTEER_CRM: VolunteerCrmRecord[] = [
     attendanceRate: 95,
     skills: ['Grill Chef', 'Sound System Tech', 'First Aid Certified'],
     tags: ['Certified First Aid', 'VIP Donor', 'Alumni'],
-    lastActive: '2026-06-10'
+    lastActive: '2026-06-10',
+    notes: 'Lincoln High alumnus (Class of 04). Certified in CPR/AED and operates the master outdoor barbecue smoker.',
+    eventHistory: [
+      {
+        eventId: 'evt_fall_carnival_2026',
+        eventTitle: 'Lincoln High Fall Carnival & Bake Sale 2026',
+        eventDate: '2026-09-18',
+        rolesServed: ['Master Grill Chef & Smoker Host'],
+        hoursContributed: 4.0,
+        itemsDonated: ['2 Cases of Gourmet Hot Dogs (80ct)', 'Propane Tanks'],
+        amountDonated: 200,
+        eventOutcomeRaised: 11450,
+        verifiedBy: 'Sarah Jenkins (Food Lead)'
+      },
+      {
+        eventId: 'evt_sports_tournament_2026',
+        eventTitle: 'Spring Youth Athletics & Soccer Invitational 2026',
+        eventDate: '2026-05-02',
+        rolesServed: ['First Aid Tent & Concession Grill Lead'],
+        hoursContributed: 8.0,
+        amountDonated: 500,
+        eventOutcomeRaised: 15300,
+        verifiedBy: 'Coach Ramirez'
+      },
+      {
+        eventId: 'evt_spring_gala_2026',
+        eventTitle: 'Annual Spring Charity Gala 2026',
+        eventDate: '2026-04-12',
+        rolesServed: ['Sound & Stage Manager'],
+        hoursContributed: 6.0,
+        amountDonated: 500,
+        eventOutcomeRaised: 28400,
+        verifiedBy: 'Elena Rostova (President)'
+      }
+    ]
   },
   {
     id: 'crm_amanda_foster',
@@ -1294,7 +1409,31 @@ export const SEED_VOLUNTEER_CRM: VolunteerCrmRecord[] = [
     attendanceRate: 100,
     skills: ['Face Painting', 'Crafts', 'Photography'],
     tags: ['Creative Lead', 'Parent Volunteer'],
-    lastActive: '2026-05-20'
+    lastActive: '2026-05-20',
+    notes: 'Mother of two elementary students. Professional graphic designer who manages event face painting and creates signage.',
+    eventHistory: [
+      {
+        eventId: 'evt_fall_carnival_2026',
+        eventTitle: 'Lincoln High Fall Carnival & Bake Sale 2026',
+        eventDate: '2026-09-18',
+        rolesServed: ['Face Painting & Glitter Tattoo Artist'],
+        hoursContributed: 3.5,
+        itemsDonated: ['Hypoallergenic Washable Face Paint Kits (4ct)'],
+        amountDonated: 50,
+        eventOutcomeRaised: 11450,
+        verifiedBy: 'Marcus Vance (Chair)'
+      },
+      {
+        eventId: 'evt_art_festival_2026',
+        eventTitle: 'Spring Student Art Showcase & Auction 2026',
+        eventDate: '2026-03-22',
+        rolesServed: ['Gallery Curator & Photographer'],
+        hoursContributed: 5.0,
+        amountDonated: 150,
+        eventOutcomeRaised: 7900,
+        verifiedBy: 'Elena Rostova (President)'
+      }
+    ]
   }
 ];
 

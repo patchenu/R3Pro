@@ -295,6 +295,18 @@ export interface ApprovalRequest {
   payload?: any;
 }
 
+export interface VolunteerEventHistory {
+  eventId: string;
+  eventTitle: string;
+  eventDate: string;
+  rolesServed: string[];
+  hoursContributed: number;
+  itemsDonated?: string[];
+  amountDonated?: number;
+  eventOutcomeRaised?: number;
+  verifiedBy?: string;
+}
+
 export interface VolunteerCrmRecord {
   id: string;
   orgId: string;
@@ -306,9 +318,10 @@ export interface VolunteerCrmRecord {
   eventsParticipated: number;
   attendanceRate: number; // 0 - 100%
   skills: string[];
-  tags: string[]; // e.g. "VIP Donor", "Certified First Aid", "Reliable Driver"
+  tags: string[]; // e.g. "VIP Donor", "Certified First Aid", "Reliable Driver", "Parent Volunteer"
   lastActive: string;
   notes?: string;
+  eventHistory?: VolunteerEventHistory[];
 }
 
 export interface Announcement {
