@@ -3,7 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { 
   Calendar, MapPin, Share2, Clock, Users, HeartHandshake, 
   Store, Gift, Check, ShieldCheck, AlertTriangle, Sparkles, 
-  ExternalLink, ChevronRight, Info, Bell, Tag, ArrowRight 
+  ExternalLink, ChevronRight, Info, Bell, Tag, ArrowRight,
+  Shirt, ArrowUpDown
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatTimeRange, formatPercentage } from '../../utils/formatters';
 import { Thermometer } from '../common/Thermometer';
@@ -21,6 +22,8 @@ export const PublicEventLanding: React.FC = () => {
   const [selectedSubPartId, setSelectedSubPartId] = useState<string>('all');
   const [slotTypeFilter, setSlotTypeFilter] = useState<'all' | 'volunteer' | 'items' | 'tickets' | 'unfilled'>('all');
   const [timeSlotFilter, setTimeSlotFilter] = useState<'all' | 'morning' | 'midday' | 'afternoon_evening'>('all');
+  const [ticketCategoryFilter, setTicketCategoryFilter] = useState<'all' | 'sponsor_package' | 'vendor_booth' | 'admission_ticket'>('all');
+  const [ticketSortOrder, setTicketSortOrder] = useState<'default' | 'price_desc' | 'price_asc'>('default');
 
   // Selected Cart for Unified Registration
   const [selectedShiftIds, setSelectedShiftIds] = useState<string[]>([]);
@@ -171,6 +174,13 @@ export const PublicEventLanding: React.FC = () => {
                   </a>
                 )}
               </div>
+
+              {currentEvent.dressCode && (
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/15">
+                  <Shirt className="w-4 h-4 text-amber-300 shrink-0" />
+                  <span><strong>Attire:</strong> {currentEvent.dressCode}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -596,8 +606,8 @@ export const PublicEventLanding: React.FC = () => {
 
         {/* TICKETS, VENDORS & SPONSORSHIPS SECTION */}
         {(slotTypeFilter === 'all' || slotTypeFilter === 'tickets') && ticketTiers.length > 0 && (
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8">
-            <div className="flex flex-wrap justify-between items-baseline gap-2 mb-6">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+            <div className="flex flex-wrap justify-between items-baseline gap-2">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 flex items-center gap-1">
                   <Store className="w-4 h-4" />
@@ -610,8 +620,102 @@ export const PublicEventLanding: React.FC = () => {
               </span>
             </div>
 
+            {/* Category Filter Chips & Sort Controls */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+              {/* Category Filter Chips */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  onClick={() => setTicketCategoryFilter('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    ticketCategoryFilter === 'all'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  All Items ({ticketTiers.length})
+                </button>
+                <button
+                  onClick={() => setTicketCategoryFilter('sponsor_package')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
+                    ticketCategoryFilter === 'sponsor_package'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-white text-indigo-700 hover:bg-indigo-50 border border-slate-200'
+                  }`}
+                >
+                  💎 Sponsor Tiers ({ticketTiers.filter(t => t.type === 'sponsor_package').length})
+                </button>
+                <button
+                  onClick={() => setTicketCategoryFilter('vendor_booth')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
+                    ticketCategoryFilter === 'vendor_booth'
+                      ? 'bg-amber-600 text-white shadow-xs'
+                      : 'bg-white text-amber-800 hover:bg-amber-50 border border-slate-200'
+                  }`}
+                >
+                  🎪 Vendor Booths ({ticketTiers.filter(t => t.type === 'vendor_booth').length})
+                </button>
+                <button
+                  onClick={() => setTicketCategoryFilter('admission_ticket')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
+                    ticketCategoryFilter === 'admission_ticket'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-white text-emerald-800 hover:bg-emerald-50 border border-slate-200'
+                  }`}
+                >
+                  🎟️ Tickets ({ticketTiers.filter(t => t.type === 'admission_ticket' || t.type === 'raffle').length})
+                </button>
+              </div>
+
+              {/* Sort Order Controls */}
+              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200">
+                <span className="text-[10px] font-bold text-slate-400 px-1.5 flex items-center gap-1">
+                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                  <span>Sort:</span>
+                </span>
+                <button
+                  onClick={() => setTicketSortOrder('default')}
+                  className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition ${
+                    ticketSortOrder === 'default'
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  Featured
+                </button>
+                <button
+                  onClick={() => setTicketSortOrder('price_desc')}
+                  className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition ${
+                    ticketSortOrder === 'price_desc'
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700'
+                  }`}
+                  title="Highest to Lowest Price"
+                >
+                  $$$ &rarr; $ High to Low
+                </button>
+                <button
+                  onClick={() => setTicketSortOrder('price_asc')}
+                  className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition ${
+                    ticketSortOrder === 'price_asc'
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700'
+                  }`}
+                  title="Lowest to Highest Price"
+                >
+                  $ &rarr; $$$ Low to High
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {ticketTiers.map((tier) => {
+              {ticketTiers
+                .filter(t => ticketCategoryFilter === 'all' ? true : t.type === ticketCategoryFilter)
+                .sort((a, b) => {
+                  if (ticketSortOrder === 'price_desc') return b.price - a.price;
+                  if (ticketSortOrder === 'price_asc') return a.price - b.price;
+                  return 0;
+                })
+                .map((tier) => {
                 const selected = selectedTicketTiers.find(t => t.ticketTierId === tier.id);
                 const isVendorTier = tier.type === 'vendor_booth';
 

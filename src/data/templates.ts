@@ -157,7 +157,7 @@ export const EVENT_TEMPLATES: EventTemplatePreset[] = [
       {
         name: 'Hospitality & Beverage Service',
         category: 'hospitality_food',
-        leadTitle: 'Hospitality Lead',
+        leadTitle: 'Committee Lead',
         reportingGate: 'Banquet Kitchen Service Door',
         dressCode: 'Black button-down, black trousers, non-slip shoes',
         suggestedBudget: 1500,

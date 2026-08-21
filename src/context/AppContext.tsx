@@ -109,6 +109,7 @@ interface AppContextType {
   createTicketTier: (tierData: Omit<TicketTier, 'id' | 'claimedCount'>) => TicketTier;
   updateTicketTier: (tierId: string, updates: Partial<TicketTier>) => void;
   deleteTicketTier: (tierId: string) => void;
+  reorderTicketTiers: (orderedTiers: TicketTier[]) => void;
 
   // Vendor actions
   submitVendorApplication: (app: Omit<VendorApplication, 'id' | 'status' | 'submittedAt'>) => void;
@@ -1093,6 +1094,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('info', 'Tier Removed', 'Package / Tier has been deleted.');
   };
 
+  const reorderTicketTiers = (orderedTiers: TicketTier[]) => {
+    setData((prev: any) => {
+      const otherTiers = prev.ticketTiers.filter((t: TicketTier) => t.eventId !== currentEvent.id);
+      return {
+        ...prev,
+        ticketTiers: [...orderedTiers, ...otherTiers]
+      };
+    });
+
+    showToast('success', 'Tiers Reordered', 'Updated display order for tickets & sponsor packages.');
+  };
+
   const requestBudgetIncrease = (subPartId: string, amount: number, reason: string) => {
     const subPart = data.subParts.find((sp: SubPart) => sp.id === subPartId);
     const approvalReq: ApprovalRequest = {
@@ -1676,6 +1689,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createTicketTier,
       updateTicketTier,
       deleteTicketTier,
+      reorderTicketTiers,
       requestBudgetIncrease,
       approveRequest,
       rejectRequest,

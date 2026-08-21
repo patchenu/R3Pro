@@ -1530,7 +1530,7 @@ export const SEED_ANNOUNCEMENTS: Announcement[] = [
     subPartId: 'subpart_carnival_food',
     subPartName: 'Concessions & Bake Sale',
     senderName: 'Sarah Jenkins',
-    senderRole: 'Food & Hospitality Lead',
+    senderRole: 'Committee Lead',
     title: 'Reminder: Label all nut-free & gluten-free baked goods',
     message: 'When dropping off baked goods on Saturday morning, please attach an ingredient index card so we can keep our allergy-safe table certified.',
     urgency: 'important',

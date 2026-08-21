@@ -355,7 +355,7 @@ export const ItemReceivingHub: React.FC = () => {
                 type="text"
                 value={editReceivedBy}
                 onChange={(e) => setEditReceivedBy(e.target.value)}
-                placeholder="e.g. Sarah Jenkins (Food & Hospitality Lead)"
+                placeholder="e.g. Sarah Jenkins (Committee Lead)"
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
               />
             </div>

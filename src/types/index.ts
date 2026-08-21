@@ -85,6 +85,7 @@ export interface Event {
   approvalThresholdSlots: number;
   reminderCadence: 'standard' | 'intensive' | 'same_day' | 'custom';
   allowFeeCoverage: boolean;
+  dressCode?: string; // Global Event Volunteer Dress Code / Baseline Attire
   subPartIds: string[];
 }
 

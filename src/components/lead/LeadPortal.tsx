@@ -4,7 +4,7 @@ import { SubPart, Shift, ItemSlot } from '../../types';
 import { 
   Users, Plus, Gift, Clock, Send, ShieldCheck, CheckCircle2, 
   MapPin, Phone, AlertTriangle, DollarSign, QrCode, TrendingUp,
-  Edit3, Trash2, Package 
+  Edit3, Trash2, Package, Shirt 
 } from 'lucide-react';
 import { formatCurrency, formatTimeRange, formatPercentage } from '../../utils/formatters';
 import { LeadBroadcastModal } from './LeadBroadcastModal';
@@ -13,7 +13,7 @@ import { Modal } from '../common/Modal';
 export const LeadPortal: React.FC = () => {
   const { 
     currentEvent, subParts, shifts, itemSlots, registrations, currentUser, 
-    addShift, updateShift, deleteShift,
+    updateSubPart, addShift, updateShift, deleteShift,
     addItemSlot, updateItemSlot, deleteItemSlot,
     requestBudgetIncrease, toggleCheckIn 
   } = useApp();
@@ -29,6 +29,11 @@ export const LeadPortal: React.FC = () => {
   const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [isBudgetReqOpen, setIsBudgetReqOpen] = useState(false);
+  const [isEditDressCodeOpen, setIsEditDressCodeOpen] = useState(false);
+
+  // Dress Code Form State
+  const [leadDressCode, setLeadDressCode] = useState(currentSubPart?.dressCodeNotes || '');
+  const [leadSupplies, setLeadSupplies] = useState(currentSubPart?.suppliesNotes || '');
 
   // Shift Form State
   const [editingShift, setEditingShift] = useState<Shift | null>(null);
@@ -197,6 +202,21 @@ export const LeadPortal: React.FC = () => {
     setBudgetReqReason('');
   };
 
+  const handleOpenEditDressCode = () => {
+    setLeadDressCode(currentSubPart.dressCodeNotes || '');
+    setLeadSupplies(currentSubPart.suppliesNotes || '');
+    setIsEditDressCodeOpen(true);
+  };
+
+  const handleSaveDressCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateSubPart(currentSubPart.id, {
+      dressCodeNotes: leadDressCode.trim(),
+      suppliesNotes: leadSupplies.trim()
+    });
+    setIsEditDressCodeOpen(false);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
@@ -336,6 +356,39 @@ export const LeadPortal: React.FC = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* Dress Code & Equipment Guidelines */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <span className="p-2.5 rounded-xl bg-amber-50 text-amber-800 shrink-0">
+            <Shirt className="w-5 h-5" />
+          </span>
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="text-sm font-bold text-slate-900">Volunteer Attire & Equipment Guidelines</h4>
+              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-semibold">
+                Sent to team & check-in passes
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 mt-1 font-medium">
+              {currentSubPart.dressCodeNotes || currentEvent.dressCode || 'Comfortable attire & closed-toe shoes'}
+            </p>
+            {currentSubPart.suppliesNotes && (
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                <strong>Equipment Provided:</strong> {currentSubPart.suppliesNotes}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <button
+          onClick={handleOpenEditDressCode}
+          className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition shrink-0 flex items-center gap-1.5"
+        >
+          <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+          <span>Edit Attire & Gear Notes</span>
+        </button>
       </div>
 
       {/* SHIFTS MANAGEMENT TABLE */}
@@ -859,6 +912,89 @@ export const LeadPortal: React.FC = () => {
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-xl text-xs shadow-md transition"
               >
                 Submit Request to Planner
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* MODAL: EDIT DRESS CODE & GEAR NOTES */}
+      {isEditDressCodeOpen && (
+        <Modal
+          isOpen={isEditDressCodeOpen}
+          onClose={() => setIsEditDressCodeOpen(false)}
+          title={`Edit Attire & Equipment Guidelines: ${currentSubPart.name}`}
+          subtitle="Updates shift instructions and volunteer check-in pass requirements"
+        >
+          <form onSubmit={handleSaveDressCode} className="space-y-4 text-xs">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-bold text-slate-700">Volunteer Dress Code & Required Attire</label>
+                {currentEvent.dressCode && (
+                  <button
+                    type="button"
+                    onClick={() => setLeadDressCode(currentEvent.dressCode || '')}
+                    className="text-[10px] text-amber-700 hover:text-amber-900 font-bold underline"
+                  >
+                    Inherit Global ({currentEvent.dressCode})
+                  </button>
+                )}
+              </div>
+              <input
+                type="text"
+                value={leadDressCode}
+                onChange={(e) => setLeadDressCode(e.target.value)}
+                placeholder="e.g. Closed-toe shoes, work gloves, volunteer t-shirt"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+              />
+              <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                <span className="text-[10px] font-bold text-slate-400 mr-1">+ Quick Add:</span>
+                {[
+                  '+ Apron & Hairnet (provided)',
+                  '+ Heavy Work Gloves & Boots',
+                  '+ Sun Hat & Sunscreen',
+                  '+ Black Slacks & Non-Slip Shoes',
+                  '+ Safety Vest (provided)'
+                ].map((gear, gIdx) => (
+                  <button
+                    key={gIdx}
+                    type="button"
+                    onClick={() => {
+                      const item = gear.replace('+ ', '');
+                      setLeadDressCode(prev => prev ? `${prev}, ${item}` : item);
+                    }}
+                    className="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-md text-[10px] font-semibold transition"
+                  >
+                    {gear}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Department Equipment & Tooling Provided</label>
+              <textarea
+                rows={2}
+                value={leadSupplies}
+                onChange={(e) => setLeadSupplies(e.target.value)}
+                placeholder="e.g. Radios, clipboards, aprons, and badges provided at check-in station."
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+              />
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsEditDressCodeOpen(false)}
+                className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-xs"
+              >
+                Save Guidelines
               </button>
             </div>
           </form>

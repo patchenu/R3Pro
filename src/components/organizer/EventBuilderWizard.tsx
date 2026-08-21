@@ -6,7 +6,8 @@ import {
   Sparkles, Calendar, MapPin, DollarSign, Users, 
   Gift, Check, ChevronRight, ChevronLeft, Layers, LayoutTemplate,
   Tag, Plus, X, Copy, History, HelpCircle, Briefcase, Award,
-  ShieldCheck, Clock, Package, CheckCircle2, Edit3, Trash2, Radio
+  ShieldCheck, Clock, Package, CheckCircle2, Edit3, Trash2, Radio,
+  ArrowUp, ArrowDown, Shirt
 } from 'lucide-react';
 import { formatCurrency, formatTimeRange } from '../../utils/formatters';
 
@@ -88,7 +89,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const [selectedTemplate, setSelectedTemplate] = useState<EventTemplatePreset | null>(EVENT_TEMPLATES[0]);
   const [selectedPastEventId, setSelectedPastEventId] = useState<string>('');
 
-  // Step 2: Campaign Essentials
+  // Step 2: Campaign Essentials & Global Attire
   const [title, setTitle] = useState(EVENT_TEMPLATES[0]?.title || 'Annual Community Carnival');
   const [tagline, setTagline] = useState(EVENT_TEMPLATES[0]?.tagline || 'Family fun, food, and games supporting our local programs.');
   const [goal, setGoal] = useState(EVENT_TEMPLATES[0]?.defaultGoal || 15000);
@@ -97,6 +98,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const [startDate, setStartDate] = useState('2026-10-15T09:00:00');
   const [endDate, setEndDate] = useState('2026-10-15T17:00:00');
   const [coverImageUrl, setCoverImageUrl] = useState('https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&auto=format&fit=crop&q=80');
+  const [eventDressCode, setEventDressCode] = useState('Comfortable casual attire or volunteer shirt (provided)');
 
   // Step 3: Committee Departments & Leadership
   const [departments, setDepartments] = useState<WizardDepartment[]>([]);
@@ -127,6 +129,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const [deptRadio, setDeptRadio] = useState('Channel 1');
   const [deptGate, setDeptGate] = useState('Gate 1 Main Desk');
   const [deptBudget, setDeptBudget] = useState(400);
+  const [deptDressCode, setDeptDressCode] = useState('Comfortable attire');
 
   const [isAddShiftModalOpen, setIsAddShiftModalOpen] = useState(false);
   const [editingShiftIdx, setEditingShiftIdx] = useState<number | null>(null);
@@ -282,8 +285,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setDeptLeadEmail(currentUser.email);
     setDeptLeadPhone(currentUser.phone || '');
     setDeptRadio(`Channel ${departments.length + 1}`);
-    setDeptGate('Main Gate Station');
-    setDeptBudget(350);
+    setDeptGate(`Gate ${departments.length + 1} Station`);
+    setDeptBudget(400);
+    setDeptDressCode(eventDressCode || 'Comfortable casual attire');
     setIsAddDeptModalOpen(true);
   };
 
@@ -298,6 +302,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setDeptRadio(d.leadRadioChannel || 'Channel 1');
     setDeptGate(d.reportingGate);
     setDeptBudget(d.budgetAllocated);
+    setDeptDressCode(d.dressCodeNotes || eventDressCode || 'Comfortable casual attire');
     setIsAddDeptModalOpen(true);
   };
 
@@ -319,6 +324,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
       leadPhone: finalLeadPhone,
       leadRadioChannel: deptRadio,
       reportingGate: deptGate,
+      dressCodeNotes: deptDressCode.trim() || eventDressCode,
       budgetAllocated: Number(deptBudget) || 0
     };
 
@@ -542,6 +548,24 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setTiers(tiers.filter((_, i) => i !== idx));
   };
 
+  const handleMoveTier = (idx: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && idx === 0) return;
+    if (direction === 'down' && idx === tiers.length - 1) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    const newTiers = [...tiers];
+    const [moved] = newTiers.splice(idx, 1);
+    newTiers.splice(targetIdx, 0, moved);
+    setTiers(newTiers);
+  };
+
+  const handleSortTiers = (order: 'high_to_low' | 'low_to_high') => {
+    const sorted = [...tiers].sort((a, b) => 
+      order === 'high_to_low' ? b.price - a.price : a.price - b.price
+    );
+    setTiers(sorted);
+    showToast('info', 'Tiers Sorted', order === 'high_to_low' ? 'Sorted highest to lowest in cost.' : 'Sorted lowest to highest in cost.');
+  };
+
   // Tags
   const handleToggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -644,6 +668,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
       endDate,
       tags: selectedTags,
       coverImageUrl,
+      dressCode: eventDressCode,
       approvalThresholdBudget: thresholdBudget,
       approvalThresholdSlots: thresholdSlots
     }, undefined, customPayload);
@@ -931,6 +956,43 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
                 />
               </div>
+
+              {/* Global Event Volunteer Dress Code / Attire */}
+              <div className="sm:col-span-2 space-y-2 pt-2 border-t border-slate-200">
+                <div className="flex items-center justify-between">
+                  <label className="block font-bold text-slate-700 flex items-center gap-1.5">
+                    <Shirt className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Global Volunteer Dress Code / Baseline Attire</span>
+                  </label>
+                  <span className="text-[10px] text-slate-400">Defaults to all departments unless customized</span>
+                </div>
+                <input
+                  type="text"
+                  value={eventDressCode}
+                  onChange={(e) => setEventDressCode(e.target.value)}
+                  placeholder="e.g. Official Event Volunteer T-Shirt (provided) + comfortable sneakers"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                />
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] font-bold text-slate-500 mr-1">Quick Presets:</span>
+                  {[
+                    '👕 Casual Spirit / T-Shirt & Sneakers',
+                    '👔 Business Casual / Staff Polo',
+                    '🤵 Black-Tie / Formal Evening Attire',
+                    '🦺 Safety Vest & Work Boots',
+                    '🧑‍🍳 Food Safe Apron & Closed Shoes'
+                  ].map((preset, pIdx) => (
+                    <button
+                      key={pIdx}
+                      type="button"
+                      onClick={() => setEventDressCode(preset)}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-[11px] text-slate-700 font-medium transition shadow-2xs"
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -968,6 +1030,10 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                         <span><strong>Lead:</strong> {dept.leadName} ({dept.leadPhone || dept.leadEmail})</span>
                         <span>• <strong>Gate:</strong> {dept.reportingGate}</span>
                         <span>• <strong>Radio:</strong> {dept.leadRadioChannel || 'Ch 1'}</span>
+                      </div>
+                      <div className="pt-1 flex items-center gap-1 text-[10px] text-slate-500">
+                        <Shirt className="w-3 h-3 text-purple-600 shrink-0" />
+                        <span><strong>Attire / Gear:</strong> {dept.dressCodeNotes || eventDressCode || 'Comfortable attire'}</span>
                       </div>
                     </div>
 
@@ -1145,14 +1211,39 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                 <h3 className="text-sm font-bold text-slate-900">Step 6: Sponsorship Packages & Commercial Tiers</h3>
                 <p className="text-slate-500 text-xs">Build corporate underwriting packages, artisan vendor booths, and admission tickets</p>
               </div>
-              <button
-                type="button"
-                onClick={handleOpenAddTier}
-                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl flex items-center gap-1.5 self-start"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>+ Add Sponsor Package / Tier</span>
-              </button>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {tiers.length > 1 && (
+                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                    <span className="text-[10px] font-bold text-slate-500 px-1.5">Sort:</span>
+                    <button
+                      type="button"
+                      onClick={() => handleSortTiers('high_to_low')}
+                      className="px-2 py-1 bg-white hover:bg-amber-50 text-amber-900 font-bold text-[10px] rounded-lg shadow-2xs transition flex items-center gap-1"
+                      title="Sort packages by highest price first"
+                    >
+                      <span>$$$ &rarr; $ High to Low</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSortTiers('low_to_high')}
+                      className="px-2 py-1 bg-white hover:bg-amber-50 text-amber-900 font-bold text-[10px] rounded-lg shadow-2xs transition flex items-center gap-1"
+                      title="Sort packages by lowest price first"
+                    >
+                      <span>$ &rarr; $$$ Low to High</span>
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleOpenAddTier}
+                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl flex items-center gap-1.5 self-start"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Add Sponsor Package / Tier</span>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -1161,6 +1252,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                   <div key={idx} className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-500 font-mono text-[10px] rounded font-bold">
+                          #{idx + 1}
+                        </span>
                         <span className="font-bold text-slate-900 text-sm">{tier.title}</span>
                         <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-black text-xs">
                           {formatCurrency(tier.price)}
@@ -1178,11 +1272,38 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 self-end sm:self-center">
+                    <div className="flex items-center gap-1 self-end sm:self-center">
+                      <button
+                        type="button"
+                        onClick={() => handleMoveTier(idx, 'up')}
+                        disabled={idx === 0}
+                        className={`p-1.5 rounded-lg border transition ${
+                          idx === 0
+                            ? 'text-slate-300 border-slate-100 cursor-not-allowed'
+                            : 'text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
+                        }`}
+                        title="Shift Up / Move Earlier"
+                      >
+                        <ArrowUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveTier(idx, 'down')}
+                        disabled={idx === tiers.length - 1}
+                        className={`p-1.5 rounded-lg border transition ${
+                          idx === tiers.length - 1
+                            ? 'text-slate-300 border-slate-100 cursor-not-allowed'
+                            : 'text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
+                        }`}
+                        title="Shift Down / Move Later"
+                      >
+                        <ArrowDown className="w-3.5 h-3.5" />
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleOpenEditTier(idx)}
-                        className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
+                        className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg ml-1"
+                        title="Edit Tier"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
@@ -1190,6 +1311,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                         type="button"
                         onClick={() => handleDeleteTier(idx)}
                         className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
+                        title="Delete Tier"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -1435,6 +1557,52 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                 placeholder="e.g. Gate 2 Hospitality Tent"
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
               />
+            </div>
+
+            {/* Department-Specific Dress Code & Special Gear */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-bold text-slate-700 flex items-center gap-1.5">
+                  <Shirt className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Department Volunteer Attire & Gear Instructions</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setDeptDressCode(eventDressCode || 'Comfortable casual attire')}
+                  className="text-[10px] text-purple-700 hover:text-purple-900 font-bold underline"
+                >
+                  Inherit Global Attire
+                </button>
+              </div>
+              <input
+                type="text"
+                value={deptDressCode}
+                onChange={(e) => setDeptDressCode(e.target.value)}
+                placeholder="e.g. Work gloves, durable pants, closed-toe boots"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+              />
+              <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                <span className="text-[10px] font-bold text-slate-400 mr-1">+ Quick Add Gear:</span>
+                {[
+                  '+ Apron & Hairnet (provided)',
+                  '+ Work Gloves & Boots',
+                  '+ Sun Hat & Sunscreen',
+                  '+ Black Slacks & Non-Slip Shoes',
+                  '+ Safety Vest (provided)'
+                ].map((gear, gIdx) => (
+                  <button
+                    key={gIdx}
+                    type="button"
+                    onClick={() => {
+                      const item = gear.replace('+ ', '');
+                      setDeptDressCode(prev => prev ? `${prev}, ${item}` : item);
+                    }}
+                    className="px-2 py-0.5 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-md text-[10px] font-semibold transition"
+                  >
+                    {gear}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">

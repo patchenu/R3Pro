@@ -378,7 +378,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-left text-xs font-semibold text-slate-700"
                 >
                   <span className="block font-bold text-slate-900">Sarah Jenkins</span>
-                  <span className="text-[10px] text-indigo-600">Hospitality Lead</span>
+                  <span className="text-[10px] text-indigo-600">Committee Lead</span>
                 </button>
 
                 <button

@@ -26,11 +26,11 @@ export const RoleSwitcherBar: React.FC = () => {
     },
     {
       role: 'committee_lead',
-      label: 'Hospitality Lead',
+      label: 'Committee Lead',
       icon: <Utensils className="w-4 h-4" />,
       color: 'bg-amber-600 text-white',
       persona: 'Sarah Jenkins',
-      desc: 'Department-scoped Lead Portal, bake sale & volunteer check-in'
+      desc: 'Department-scoped Lead Portal, shifts, supplies & volunteer check-in'
     },
     {
       role: 'vendor',

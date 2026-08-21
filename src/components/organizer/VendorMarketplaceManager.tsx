@@ -3,7 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { VendorApplication, TicketTier, TicketType } from '../../types';
 import { 
   Store, Check, X, ShieldCheck, Zap, DollarSign, MapPin, 
-  Plus, Edit3, Trash2, Tag, Layers, Award, Sparkles, AlertCircle, FileText, CheckCircle2 
+  Plus, Edit3, Trash2, Tag, Layers, Award, Sparkles, AlertCircle, FileText, CheckCircle2,
+  ArrowUp, ArrowDown, ArrowUpDown
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { Modal } from '../common/Modal';
@@ -12,11 +13,13 @@ export const VendorMarketplaceManager: React.FC = () => {
   const { 
     currentEvent, ticketTiers, vendorApplications, 
     approveVendor, rejectVendor, 
-    createTicketTier, updateTicketTier, deleteTicketTier 
+    createTicketTier, updateTicketTier, deleteTicketTier, reorderTicketTiers,
+    showToast
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'tiers' | 'applications'>('tiers');
   const [tierFilter, setTierFilter] = useState<'all' | TicketType>('all');
+  const [sortBy, setSortBy] = useState<'custom' | 'price_desc' | 'price_asc'>('custom');
 
   // Modal State for Add / Edit Tier
   const [isTierModalOpen, setIsTierModalOpen] = useState(false);
@@ -139,6 +142,29 @@ export const VendorMarketplaceManager: React.FC = () => {
     setDeletingTierId(null);
   };
 
+  const handleMoveTier = (tierId: string, direction: 'up' | 'down') => {
+    const currentIdx = ticketTiers.findIndex(t => t.id === tierId);
+    if (currentIdx === -1) return;
+    if (direction === 'up' && currentIdx === 0) return;
+    if (direction === 'down' && currentIdx === ticketTiers.length - 1) return;
+
+    const targetIdx = direction === 'up' ? currentIdx - 1 : currentIdx + 1;
+    const newTiers = [...ticketTiers];
+    const [moved] = newTiers.splice(currentIdx, 1);
+    newTiers.splice(targetIdx, 0, moved);
+    reorderTicketTiers(newTiers);
+    setSortBy('custom');
+  };
+
+  const handleSortTiers = (order: 'price_desc' | 'price_asc') => {
+    setSortBy(order);
+    const sorted = [...ticketTiers].sort((a, b) => 
+      order === 'price_desc' ? b.price - a.price : a.price - b.price
+    );
+    reorderTicketTiers(sorted);
+    showToast('info', 'Tiers Sorted', order === 'price_desc' ? 'Sorted highest to lowest in cost.' : 'Sorted lowest to highest in cost.');
+  };
+
   const filteredTiers = ticketTiers.filter(t => {
     if (tierFilter === 'all') return true;
     return t.type === tierFilter;
@@ -198,7 +224,7 @@ export const VendorMarketplaceManager: React.FC = () => {
       {activeTab === 'tiers' && (
         <div className="space-y-6">
           
-          {/* Controls Bar: Filter & Add Actions */}
+          {/* Controls Bar: Filter, Sort & Add Actions */}
           <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200">
             {/* Filter Chips */}
             <div className="flex flex-wrap items-center gap-2">
@@ -250,8 +276,39 @@ export const VendorMarketplaceManager: React.FC = () => {
               </button>
             </div>
 
-            {/* Create Action Button */}
-            <div className="flex items-center gap-2">
+            {/* Sort Controls & Create Action Button */}
+            <div className="flex flex-wrap items-center gap-2">
+              {ticketTiers.length > 1 && (
+                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                  <span className="text-[10px] font-bold text-slate-500 px-1.5 flex items-center gap-1">
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    <span>Sort:</span>
+                  </span>
+                  <button
+                    onClick={() => handleSortTiers('price_desc')}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition shadow-2xs ${
+                      sortBy === 'price_desc'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-700'
+                    }`}
+                    title="Order packages from highest to lowest price"
+                  >
+                    $$$ &rarr; $ High to Low
+                  </button>
+                  <button
+                    onClick={() => handleSortTiers('price_asc')}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition shadow-2xs ${
+                      sortBy === 'price_asc'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-700'
+                    }`}
+                    title="Order packages from lowest to highest price"
+                  >
+                    $ &rarr; $$$ Low to High
+                  </button>
+                </div>
+              )}
+
               <button
                 onClick={() => handleOpenAddModal('sponsor_package')}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-sm transition flex items-center gap-1.5"
@@ -283,6 +340,7 @@ export const VendorMarketplaceManager: React.FC = () => {
               {filteredTiers.map((tier) => {
                 const percentSold = tier.capacity > 0 ? Math.round((tier.claimedCount / tier.capacity) * 100) : 0;
                 const taxDeductiblePortion = Math.max(0, tier.price - tier.fairMarketValue);
+                const overallIdx = ticketTiers.findIndex(t => t.id === tier.id);
 
                 return (
                   <div
@@ -290,17 +348,50 @@ export const VendorMarketplaceManager: React.FC = () => {
                     className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between hover:shadow-md transition relative group"
                   >
                     <div>
-                      {/* Top Header: Badge & Actions */}
+                      {/* Top Header: Badge, Shift Controls & Actions */}
                       <div className="flex items-center justify-between gap-2 mb-3">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          tier.type === 'sponsor_package' ? 'bg-indigo-100 text-indigo-800' :
-                          tier.type === 'vendor_booth' ? 'bg-amber-100 text-amber-800' :
-                          'bg-emerald-100 text-emerald-800'
-                        }`}>
-                          {tier.type.replace('_', ' ')}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 font-mono text-[10px] rounded font-bold">
+                            #{overallIdx + 1}
+                          </span>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            tier.type === 'sponsor_package' ? 'bg-indigo-100 text-indigo-800' :
+                            tier.type === 'vendor_booth' ? 'bg-amber-100 text-amber-800' :
+                            'bg-emerald-100 text-emerald-800'
+                          }`}>
+                            {tier.type.replace('_', ' ')}
+                          </span>
+                        </div>
 
                         <div className="flex items-center gap-1">
+                          {/* Shift Card Position */}
+                          <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden mr-1">
+                            <button
+                              onClick={() => handleMoveTier(tier.id, 'up')}
+                              disabled={overallIdx === 0}
+                              className={`p-1 transition ${
+                                overallIdx === 0 
+                                  ? 'text-slate-300 bg-slate-50 cursor-not-allowed' 
+                                  : 'text-slate-500 hover:text-indigo-700 hover:bg-indigo-50'
+                              }`}
+                              title="Shift Card Left / Up"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => handleMoveTier(tier.id, 'down')}
+                              disabled={overallIdx === ticketTiers.length - 1}
+                              className={`p-1 transition border-l border-slate-200 ${
+                                overallIdx === ticketTiers.length - 1 
+                                  ? 'text-slate-300 bg-slate-50 cursor-not-allowed' 
+                                  : 'text-slate-500 hover:text-indigo-700 hover:bg-indigo-50'
+                              }`}
+                              title="Shift Card Right / Down"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                          </div>
+
                           <button
                             onClick={() => handleOpenEditModal(tier)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition"

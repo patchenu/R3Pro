@@ -281,5 +281,35 @@ This document provides system knowledge, core architectural rules, and coding st
   - Volunteers can assign specific family members or dependents to distinct time slots.
   - Zero double-booking overlap engine strictly validates that no participant is assigned concurrent or conflicting shift times (`start1 < end2 && end1 > start2`).
 
----
+## 23. Role Architecture Hierarchy, Dress Code Customization & Commercial Tiers Reordering
 
+### 23.1 Role Distinction: Event Planner / Chair vs Committee Lead
+- **Event Planner / Chair**:
+  - **Master Event Authority**: Oversees the entire campaign portfolio, total fundraising goal ($), master schedule, and organization-level logistics.
+  - **Variable Approval Queue**: Exercises final review/approval rights on lead requests exceeding threshold boundaries (e.g. *Budget additions > $250* or *Shift additions > 5 spots*).
+  - **Global Settings**: Sets the baseline campaign rules, global volunteer attire guidelines, and fee coverage defaults.
+- **Committee Lead** (*Formerly referred to informally as department-specific titles like Hospitality Lead, Setup Lead*):
+  - **Strict Department Scope**: Granted operational control exclusively over their designated committee or sub-part (e.g. *Food & Hospitality*, *Labor & Setup*, *Vendor Marketplace*, *Silent Auction*).
+  - **Autonomous Execution Within Limits**: Leads can create and adjust volunteer shift slots, manage supply wishlist drop-offs, check in arriving volunteers, and broadcast urgent SMS/email updates to their specific committee roster.
+  - **Cannot Mutate Global Settings**: Leads cannot modify other departments, change total event goals, or exceed budget limits without automated planner approval.
+
+### 23.2 Global Event Dress Code vs Department-Specific Attire & Gear Instructions
+- **Global Event Baseline (`event.dressCode`)**:
+  - Defined in `EventBuilderWizard.tsx` (Step 2) or `MasterPlannerDashboard.tsx` (Campaign Settings).
+  - Quick Presets (*"👕 Casual Spirit / T-Shirt & Sneakers"*, *"👔 Business Casual / Staff Polo"*, *"🤵 Black-Tie / Formal Evening Attire"*, *"🦺 Safety Vest & Work Boots"*, *"🧑‍🍳 Food Safe Apron & Closed Shoes"*).
+- **Department Additions & Gear Customization (`subPart.dressCodeNotes`)**:
+  - Departments inherit the global event attire by default with 1-click **"Inherit Global Attire"** reset.
+  - Leads and Planners can layer on department-specific requirements via **+ Quick Add Gear** presets (*"+ Apron & Hairnet"*, *"+ Heavy Work Gloves & Steel-Toe Boots"*, *"+ Sun Hat & Sunscreen"*, *"+ Black Slacks & Non-Slip Shoes"*, *"+ High-Vis Safety Vest"*).
+  - Prominently rendered across public opportunity cards, mobile check-in passes, and calendar notes.
+
+### 23.3 Commercial Booths, Tickets & Sponsorships Reordering & Cost-Based Sorting
+- **Manual Position Shifting**:
+  - Organizers can shift cards around using **Move Up (`↑`) / Move Down (`↓`)** controls across `VendorMarketplaceManager.tsx`, `MasterPlannerDashboard.tsx`, and `EventBuilderWizard.tsx` (Step 6).
+  - Real-time persistence via `reorderTicketTiers(newTiers: TicketTier[])` in `AppContext.tsx`.
+- **1-Click Cost-Based Sorting**:
+  - **"$$$ → $ High to Low"**: Places high-value corporate title sponsors and premiere underwriting tiers at the top.
+  - **"$ → $$$ Low to High"**: Surfaces affordable admission tickets and micro-contributions first.
+- **Multi-Category Filter Tabs**:
+  - Filter by *All Items*, *💎 Sponsor Packages*, *🎪 Vendor Booths*, and *🎟️ Admission Tickets* on both organizer hubs and public landing pages (`PublicEventLanding.tsx`).
+
+---
