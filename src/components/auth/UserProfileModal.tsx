@@ -322,7 +322,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     </div>
 
                     <button
-                      onClick={() => printIrsTaxLetterHtml(don, currentOrg, events[0])}
+                      onClick={() => printIrsTaxLetterHtml(events.find(e => e.id === don.eventId) || events[0], currentOrg, don)}
                       className="flex items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-800 bg-purple-50 px-3 py-1.5 rounded-xl border border-purple-200 transition"
                     >
                       <Receipt className="w-3.5 h-3.5" />

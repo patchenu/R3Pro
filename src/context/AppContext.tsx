@@ -71,6 +71,12 @@ interface AppContextType {
 
   cancelRegistration: (manageToken: string) => boolean;
   toggleCheckIn: (registrationId: string, shiftId: string, memberId: string) => void;
+  toggleItemPledgeReceived: (
+    registrationId: string, 
+    itemSlotId: string, 
+    payload?: { receivedBy?: string; donorNotes?: string; estimatedFmv?: number }
+  ) => void;
+  updateOrganizationBranding: (orgId: string, updates: Partial<Organization>) => void;
   
   // Committee Lead & Threshold Actions
   addShift: (shiftData: Omit<Shift, 'id' | 'claimedCount' | 'isApproved'>) => { autoApproved: boolean; shiftId: string };
@@ -723,6 +729,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const toggleItemPledgeReceived = (
+    registrationId: string, 
+    itemSlotId: string, 
+    payload?: { receivedBy?: string; donorNotes?: string; estimatedFmv?: number }
+  ) => {
+    setData((prev: any) => {
+      const updatedRegistrations = prev.registrations.map((r: Registration) => {
+        if (r.id === registrationId) {
+          const updatedPledges = r.itemPledges.map(ip => {
+            if (ip.itemSlotId === itemSlotId) {
+              const newStatus = !ip.delivered;
+              return {
+                ...ip,
+                delivered: newStatus,
+                deliveredAt: newStatus ? new Date().toISOString() : undefined,
+                receivedBy: newStatus ? (payload?.receivedBy || currentUser.name) : undefined,
+                donorNotes: payload?.donorNotes !== undefined ? payload.donorNotes : ip.donorNotes,
+                estimatedFmv: payload?.estimatedFmv !== undefined ? payload.estimatedFmv : ip.estimatedFmv,
+                inKindReceiptNumber: newStatus && !ip.inKindReceiptNumber ? generateReceiptNumber() : ip.inKindReceiptNumber
+              };
+            }
+            return ip;
+          });
+          return { ...r, itemPledges: updatedPledges };
+        }
+        return r;
+      });
+
+      return {
+        ...prev,
+        registrations: updatedRegistrations
+      };
+    });
+
+    showToast('success', 'Item Drop-Off Updated', 'Pledged item status, timestamp, and receiving notes saved.');
+  };
+
+  const updateOrganizationBranding = (orgId: string, updates: Partial<Organization>) => {
+    setData((prev: any) => {
+      const updatedOrgs = prev.organizations.map((o: Organization) => {
+        if (o.id === orgId) {
+          return { ...o, ...updates };
+        }
+        return o;
+      });
+      return { ...prev, organizations: updatedOrgs };
+    });
+
+    showToast('success', 'Branding Saved', 'Organization logo, primary color, and signatory updated successfully.');
+  };
+
   const addShift = (shiftData: Omit<Shift, 'id' | 'claimedCount' | 'isApproved'>) => {
     const id = 'shift_' + Date.now();
     const exceedsThreshold = shiftData.capacity > currentEvent.approvalThresholdSlots;
@@ -1076,6 +1133,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       claimSlotsAndRegister,
       cancelRegistration,
       toggleCheckIn,
+      toggleItemPledgeReceived,
+      updateOrganizationBranding,
       addShift,
       addItemSlot,
       requestBudgetIncrease,

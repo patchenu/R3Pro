@@ -35,6 +35,10 @@ export interface Organization {
   address: string;
   logoUrl: string;
   primaryColor: string;
+  website?: string;
+  signatoryOfficerName?: string;
+  signatoryOfficerTitle?: string;
+  signatorySignatureUrl?: string;
   volunteerCount: number;
   totalFundsRaised: number;
   settings: {
@@ -130,6 +134,7 @@ export interface ItemSlot {
   unit: string; // e.g. "packs", "boxes", "tables", "trays"
   dropOffLocation: string;
   dropOffDeadline: string;
+  estimatedFmvPerUnit?: number;
 }
 
 export type TicketType = 'admission_ticket' | 'vendor_booth' | 'sponsor_package' | 'raffle';
@@ -201,6 +206,11 @@ export interface Registration {
     itemSlotId: string;
     quantity: number;
     delivered: boolean;
+    deliveredAt?: string;
+    receivedBy?: string;
+    donorNotes?: string;
+    estimatedFmv?: number;
+    inKindReceiptNumber?: string;
   }[];
   ticketPurchases: {
     ticketTierId: string;

@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { 
   BarChart3, Users, DollarSign, ShieldAlert, Sparkles, 
   Plus, Settings, CheckCircle2, ArrowRight, Layers, Store, HeartHandshake,
-  Printer, FileSpreadsheet, Search, Filter, ShieldCheck, Award, Share2, AlertTriangle, FileText
+  Printer, FileSpreadsheet, Search, Filter, ShieldCheck, Award, Share2, AlertTriangle, FileText, Package
 } from 'lucide-react';
 import { formatCurrency, formatPercentage, formatTimeRange } from '../../utils/formatters';
 import { exportRosterToCsv } from '../../utils/exportCsv';
@@ -14,6 +14,7 @@ import { VendorMarketplaceManager } from './VendorMarketplaceManager';
 import { EventMarketingHub } from '../marketing/EventMarketingHub';
 import { GapAnalysisDashboard } from '../intelligence/GapAnalysisDashboard';
 import { ReportsExportCenter } from './ReportsExportCenter';
+import { ItemReceivingHub } from './ItemReceivingHub';
 
 interface MasterPlannerDashboardProps {
   onOpenEventBuilder: () => void;
@@ -27,7 +28,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   const { currentEvent, currentOrg, subParts, shifts, itemSlots, registrations, donations, approvalRequests, toggleCheckIn } = useApp();
 
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
-  const [activePlannerTab, setActivePlannerTab] = useState<'overview' | 'volunteers' | 'marketing' | 'gaps' | 'vendors' | 'reports'>('overview');
+  const [activePlannerTab, setActivePlannerTab] = useState<'overview' | 'volunteers' | 'items' | 'marketing' | 'gaps' | 'vendors' | 'reports'>('overview');
 
   // Volunteer Management Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -152,6 +153,16 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
         >
           <Users className="w-4 h-4" />
           <span>Volunteer Manifest & Check-In ({allVolunteerRows.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActivePlannerTab('items')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activePlannerTab === 'items' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <Package className="w-4 h-4" />
+          <span>📦 Item Pledges & Receiving</span>
         </button>
 
         <button
@@ -413,7 +424,12 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
         </div>
       )}
 
-      {/* TAB 3: MARKETING, FLYERS & OUTREACH */}
+      {/* TAB 3: ITEM PLEDGES & PHYSICAL RECEIVING STATION */}
+      {activePlannerTab === 'items' && (
+        <ItemReceivingHub />
+      )}
+
+      {/* TAB 4: MARKETING, FLYERS & OUTREACH */}
       {activePlannerTab === 'marketing' && (
         <EventMarketingHub />
       )}

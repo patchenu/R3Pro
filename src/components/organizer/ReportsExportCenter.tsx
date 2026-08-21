@@ -27,7 +27,7 @@ export const ReportsExportCenter: React.FC = () => {
   const handlePrintTaxReceipt = (donationId: string) => {
     const don = donations.find(d => d.id === donationId);
     if (don) {
-      printIrsTaxLetterHtml(don, currentOrg, currentEvent);
+      printIrsTaxLetterHtml(currentEvent, currentOrg, don);
     }
   };
 

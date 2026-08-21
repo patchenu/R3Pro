@@ -9,8 +9,12 @@ export const SEED_ORGANIZATIONS: Organization[] = [
     contactEmail: 'treasurer@lincolnpta.org',
     phone: '(555) 234-8900',
     address: '1420 Lincoln Boulevard, Springfield, IL 62704',
+    website: 'https://lincolnpta.org',
     logoUrl: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=120&auto=format&fit=crop&q=80',
     primaryColor: '#4f46e5',
+    signatoryOfficerName: 'Elena Rostova',
+    signatoryOfficerTitle: 'PTA President & Authorized Signatory',
+    signatorySignatureUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=160&auto=format&fit=crop&q=80',
     volunteerCount: 428,
     totalFundsRaised: 48500,
     settings: {
@@ -28,8 +32,12 @@ export const SEED_ORGANIZATIONS: Organization[] = [
     contactEmail: 'contact@metrohope.org',
     phone: '(555) 789-1234',
     address: '500 Civic Center Plaza, Suite 400, Chicago, IL 60601',
+    website: 'https://metrohope.org',
     logoUrl: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=120&auto=format&fit=crop&q=80',
     primaryColor: '#059669',
+    signatoryOfficerName: 'Marcus Vance',
+    signatoryOfficerTitle: 'Executive Director',
+    signatorySignatureUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=160&auto=format&fit=crop&q=80',
     volunteerCount: 890,
     totalFundsRaised: 215000,
     settings: {
@@ -47,8 +55,12 @@ export const SEED_ORGANIZATIONS: Organization[] = [
     contactEmail: 'admin@springfieldsoccer.org',
     phone: '(555) 345-6789',
     address: '88 Soccer Park Way, Springfield, IL 62705',
+    website: 'https://springfieldsoccer.org',
     logoUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=120&auto=format&fit=crop&q=80',
     primaryColor: '#0284c7',
+    signatoryOfficerName: 'Coach Sarah Jenkins',
+    signatoryOfficerTitle: 'League Commissioner',
+    signatorySignatureUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=160&auto=format&fit=crop&q=80',
     volunteerCount: 310,
     totalFundsRaised: 28400,
     settings: {
@@ -616,7 +628,12 @@ export const SEED_REGISTRATIONS: Registration[] = [
       {
         itemSlotId: 'item_carnival_brownies',
         quantity: 2,
-        delivered: false
+        delivered: true,
+        deliveredAt: '2026-09-19T08:15:00',
+        receivedBy: 'Sarah Jenkins (Food Lead)',
+        donorNotes: 'Gluten-free double fudge brownies in 2 sealed party platters',
+        estimatedFmv: 30,
+        inKindReceiptNumber: 'INK-2026-0101'
       }
     ],
     ticketPurchases: [
@@ -696,7 +713,12 @@ export const SEED_REGISTRATIONS: Registration[] = [
       {
         itemSlotId: 'item_carnival_cupcakes',
         quantity: 2,
-        delivered: true
+        delivered: true,
+        deliveredAt: '2026-09-19T08:20:00',
+        receivedBy: 'Sarah Jenkins (Food Lead)',
+        donorNotes: 'Decorated vanilla & chocolate cupcakes with mascot sprinkles',
+        estimatedFmv: 35,
+        inKindReceiptNumber: 'INK-2026-0102'
       }
     ],
     ticketPurchases: [],
@@ -774,7 +796,12 @@ export const SEED_REGISTRATIONS: Registration[] = [
       {
         itemSlotId: 'item_carnival_canopies',
         quantity: 2,
-        delivered: true
+        delivered: true,
+        deliveredAt: '2026-09-19T07:15:00',
+        receivedBy: 'Mike Alvarez (Setup Lead)',
+        donorNotes: 'Two heavy duty 10x10 commercial EZ-UP canopies with 4 sandbag weights',
+        estimatedFmv: 180,
+        inKindReceiptNumber: 'INK-2026-0103'
       }
     ],
     ticketPurchases: [

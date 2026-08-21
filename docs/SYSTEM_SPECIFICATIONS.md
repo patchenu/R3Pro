@@ -267,8 +267,7 @@ classDiagram
 * **Embeddable Website Widget**: 1-line HTML `<iframe>` snippet for school and non-profit websites.
 * **Volunteer Pool Blast**: Re-engagement email composer to broadcast upcoming opportunities to previous event volunteers.
 
-### 6.5 Reports & IRS Substantiation Center (`ReportsExportCenter.tsx`)
-### 6.4 Volunteer Management, Printable Lanyards & Statutory Document Generators
+### 6.5 Reports & Document Generation Engines (`ReportsExportCenter.tsx`)
 R3Pro features comprehensive document generation and live attendance management engines accessible to Event Chairs and Committee Leads:
 
 1. **Live Volunteer Attendance Manifest & Check-In Hub (`MasterPlannerDashboard.tsx` & `LeadPortal.tsx`)**:
@@ -288,6 +287,37 @@ R3Pro features comprehensive document generation and live attendance management 
 4. **Official Student Community Service Verification Certificates (`printStudentServiceLetterHtml`)**:
    * Formal institutional verification letters certifying verified service hours for high school graduation requirements, National Honor Society, and Scouting rank advancement.
    * Details verified service hours, event title, date, venue location, and organizational seal.
+
+### 6.6 In-Kind Supply & Equipment Drop-Off Management (`ItemReceivingHub.tsx`)
+R3Pro provides complete operational tracking for physical supply and equipment items pledged by volunteers and community donors:
+1. **Interactive Receiving Station (`ItemReceivingHub.tsx`)**:
+   * Cross-department manifest listing all pledged items (e.g. *Bake Sale Brownies, 10x10 Pop-Up Canopies, Face Paint Kits*).
+   * Filterable by Department (*Food & Hospitality, Setup & Labor, Games & Prizes*) and Status (*Received & Verified* vs *Awaiting Drop-Off*).
+   * Real-time search across donor names, phone numbers, item descriptions, and condition notes.
+2. **Receiving Verification Workflow**:
+   * Logs exact drop-off timestamps and attributing receiving volunteer/gate lead (*"Received by Sarah Jenkins at Cafeteria Gate B"*).
+   * Captures condition and donor notes (*"Chilled in sealed containers, 2 party platters, excellent condition"*).
+   * Records donor's declared Fair Market Value (FMV) ($).
+3. **Statutory IRS In-Kind Tax Acknowledgement Letter (`printInKindTaxLetterHtml`)**:
+   * Under IRS Publication 526 and Publication 561, charities must acknowledge non-cash physical contributions with specific statutory disclosures.
+   * Generates a 1-click printable receipt containing the Organization's Official Logo, EIN, Donor Details, Description of Property, Quantity & Unit, Date Received, and the mandatory statutory clause (*"No goods or services were provided in exchange for this contribution other than intangible religious benefits"*).
+   * Renders the executive officer's signature vector and official title.
+4. **Physical Gate Drop-Off Manifest (`printItemReceivingManifestHtml`)**:
+   * Ready-to-print gate manifest for drop-off tables, cafeteria receiving gates, and equipment docks with volunteer signatures and check-boxes.
+
+### 6.7 Organization Branding, Logo & Executive Signatory Architecture (`OrgExecutiveDashboard.tsx`)
+Organizations maintain customized brand identities across all generated documents and donor interactions:
+1. **Logo & Asset Manager**:
+   * Direct file upload (PNG/JPG/SVG) converted to base64 Data URLs with real-time preview.
+   * Preset organizational crests (School Crest, Community Tree, Sports Shield, Helping Hands).
+2. **Brand Color Palette**:
+   * Customizable primary theme color applied dynamically to header accents, progress thermometers, name badges, and official letters.
+3. **Authorized Executive Signatory**:
+   * Officer Legal Name (e.g. *Elena Rostova*).
+   * Officer Official Title (e.g. *PTA President & Authorized Signatory*).
+   * Uploaded/drawn digital signature vector image automatically embedded on IRS 501(c)(3) cash donation receipts, in-kind non-cash contribution letters, and student service certificates.
+4. **Live Document Preview**:
+   * Instant visual preview showing how official IRS contribution letters and volunteer lanyards will render before publishing.
 
 
 ## 7. Turnkey Industry Presets Catalog
