@@ -3,18 +3,27 @@ import { useApp } from '../../context/AppContext';
 import { ORG_TEMPLATES } from '../../data/templates';
 import { VolunteerCrm } from './VolunteerCrm';
 import { LegalComplianceStudio } from './LegalComplianceStudio';
+import { Modal } from '../common/Modal';
 import { 
   Building2, Users, Shield, Award, DollarSign, 
   History, Plus, Check, Settings, Sparkles, Image, Palette, 
-  Upload, FileText, CheckCircle2, ShieldCheck 
+  Upload, FileText, CheckCircle2, ShieldCheck, UserPlus, Trash2, Mail, Phone, Briefcase 
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
 export const OrgExecutiveDashboard: React.FC = () => {
-  const { currentOrg, users, auditLogs, events, volunteerCrm, updateOrganizationBranding } = useApp();
+  const { currentOrg, users, auditLogs, events, volunteerCrm, updateOrganizationBranding, inviteTeamMember, removeTeamMember } = useApp();
   const [activeAdminTab, setActiveAdminTab] = useState<'crm' | 'branding' | 'legal' | 'team' | 'templates' | 'audit'>('crm');
 
   const totalOrgFunds = events.filter(e => e.orgId === currentOrg.id).reduce((sum, e) => sum + e.totalRaised, 0);
+
+  // Invite Team Member State
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteName, setInviteName] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePhone, setInvitePhone] = useState('');
+  const [inviteRole, setInviteRole] = useState<'committee_lead' | 'event_planner' | 'org_admin'>('committee_lead');
+  const [inviteDept, setInviteDept] = useState('Hospitality & Food Services');
 
   // Branding Form State
   const [logoUrl, setLogoUrl] = useState(currentOrg.logoUrl || '');
@@ -432,36 +441,205 @@ export const OrgExecutiveDashboard: React.FC = () => {
 
       {/* TAB 3: Team Members & Roles */}
       {activeAdminTab === 'team' && (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
-          <div className="flex justify-between items-center">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 className="text-lg font-bold text-slate-900">Organization Staff & Committee Leaders</h3>
-              <p className="text-xs text-slate-500">Manage role-based access control and scoped department assignments</p>
+              <p className="text-xs text-slate-500">Manage role-based access control, leadership invitations, and scoped department lead assignments</p>
             </div>
+
+            <button
+              onClick={() => {
+                setInviteName('');
+                setInviteEmail('');
+                setInvitePhone('');
+                setInviteRole('committee_lead');
+                setInviteDept('Hospitality & Food Services');
+                setIsInviteModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white font-extrabold py-2 px-4 rounded-xl text-xs shadow-sm transition whitespace-nowrap"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>+ Invite Leader / Committee Lead</span>
+            </button>
           </div>
 
-          <div className="divide-y divide-slate-100">
-            {users.filter(u => u.orgId === currentOrg.id).map(user => (
-              <div key={user.id} className="py-3 flex justify-between items-center text-xs">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-700 font-bold flex items-center justify-center">
-                    {user.name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900">{user.name}</h4>
-                    <p className="text-slate-500">{user.email} • {user.phone}</p>
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {users.filter(u => u.orgId === currentOrg.id).map(user => {
+              const isSuperAdmin = user.role === 'org_admin';
+              return (
+                <div key={user.id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:shadow-sm transition flex flex-col justify-between space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 font-black flex items-center justify-center text-sm shadow-xs">
+                        {user.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-sm">{user.name}</h4>
+                        <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                          <Mail className="w-3 h-3 text-slate-400" />
+                          <span>{user.email}</span>
+                        </div>
+                        {user.phone && (
+                          <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                            <Phone className="w-3 h-3 text-slate-400" />
+                            <span>{user.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
-                <div className="flex items-center gap-3">
-                  <span className="px-2.5 py-1 bg-slate-100 text-slate-800 rounded-lg font-bold uppercase text-[10px]">
-                    {user.role.replace('_', ' ')}
-                  </span>
+                    <span className={`px-2.5 py-1 rounded-lg font-bold uppercase text-[10px] ${
+                      user.role === 'org_admin' ? 'bg-purple-600 text-white shadow-xs' :
+                      user.role === 'event_planner' ? 'bg-indigo-100 text-indigo-800' :
+                      'bg-emerald-100 text-emerald-800'
+                    }`}>
+                      {user.role.replace('_', ' ')}
+                    </span>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200/60 flex justify-between items-center text-xs">
+                    <span className="text-[10px] text-slate-500 font-semibold flex items-center gap-1">
+                      <Briefcase className="w-3 h-3 text-slate-400" />
+                      {user.role === 'org_admin' ? 'Full Organization Scope' :
+                       user.role === 'event_planner' ? 'All Event Logistics & Approvals' :
+                       'Scoped Department Committee'}
+                    </span>
+
+                    {!isSuperAdmin && (
+                      <button
+                        onClick={() => {
+                          if (confirm(`Remove ${user.name} from organization roles?`)) {
+                            removeTeamMember(user.id);
+                          }
+                        }}
+                        className="text-rose-600 hover:text-rose-800 font-bold text-[11px] flex items-center gap-0.5"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Remove</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
+      )}
+
+      {/* MODAL: INVITE LEADERSHIP / COMMITTEE LEAD */}
+      {isInviteModalOpen && (
+        <Modal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+          title="Invite Leadership Member or Committee Lead"
+          subtitle={`Assign roles and department responsibilities for ${currentOrg.name}`}
+          maxWidth="lg"
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!inviteName.trim() || !inviteEmail.trim()) return;
+
+              inviteTeamMember({
+                orgId: currentOrg.id,
+                name: inviteName,
+                email: inviteEmail,
+                phone: invitePhone || '(555) 000-0000',
+                role: inviteRole,
+                assignedSubPartIds: []
+              });
+
+              setIsInviteModalOpen(false);
+            }}
+            className="space-y-4 text-xs"
+          >
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Full Legal Name *</label>
+              <input
+                type="text"
+                required
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+                placeholder="e.g. Rachel Adams, John Davis"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Email Address (Login ID) *</label>
+                <input
+                  type="email"
+                  required
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="rachel@lincolnpta.org"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Mobile Phone Number</label>
+                <input
+                  type="tel"
+                  value={invitePhone}
+                  onChange={(e) => setInvitePhone(e.target.value)}
+                  placeholder="(555) 234-8900"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Assigned Leadership Role *</label>
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as any)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800"
+              >
+                <option value="committee_lead">Committee / Sub-Part Lead (Scoped to 1 Department)</option>
+                <option value="event_planner">Event Planner / Chair (Master Event & Approval Queue)</option>
+                <option value="org_admin">Organization Super Admin (Full Governance & CRM)</option>
+              </select>
+            </div>
+
+            {inviteRole === 'committee_lead' && (
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Assigned Department Committee *</label>
+                <select
+                  value={inviteDept}
+                  onChange={(e) => setInviteDept(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800"
+                >
+                  <option value="Hospitality & Food Services">Hospitality & Food Services (Concessions/Bake Sale)</option>
+                  <option value="Labor & Physical Setup">Labor & Physical Setup (Tents, Sound, Logistics)</option>
+                  <option value="Vendor Marketplace & Sponsors">Vendor Marketplace & Corporate Sponsors</option>
+                  <option value="Auction & Fundraising Games">Auction & Fundraising Games (Raffle/Silent Auction)</option>
+                  <option value="Registration & Greeters">Registration & Door Greeters</option>
+                  <option value="General Operations">General Operations</option>
+                </select>
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsInviteModalOpen(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center gap-1.5"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Send Invitation & Grant Role</span>
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* TAB 4: Organization Setup Templates */}

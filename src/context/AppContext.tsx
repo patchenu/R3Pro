@@ -110,6 +110,8 @@ interface AppContextType {
   logout: () => void;
   resetPassword: (email: string, newPassword?: string) => boolean;
   updateUserProfile: (data: Partial<User>) => void;
+  inviteTeamMember: (memberData: Omit<User, 'id'>) => User;
+  removeTeamMember: (userId: string) => void;
 
   // Demo & Environment Mode
   isDemoMode: boolean;
@@ -1184,6 +1186,69 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('success', 'Profile Saved', 'Your account details have been updated.');
   };
 
+  const inviteTeamMember = (memberData: Omit<User, 'id'>): User => {
+    const id = 'user_' + Date.now();
+    const newUser: User = {
+      ...memberData,
+      id,
+      isRegisteredUser: true,
+      memberships: [
+        {
+          orgId: memberData.orgId,
+          orgName: currentOrg.name,
+          role: memberData.role,
+          status: 'active',
+          invitedAt: new Date().toISOString(),
+          assignedSubPartIds: memberData.assignedSubPartIds || []
+        }
+      ]
+    };
+
+    const newAuditLog: AuditLog = {
+      id: 'log_' + Date.now(),
+      orgId: memberData.orgId,
+      actorId: currentUser.id,
+      actorName: currentUser.name,
+      actorRole: currentUser.role,
+      action: 'INVITE_TEAM_MEMBER',
+      details: `Invited ${memberData.name} (${memberData.email}) as ${memberData.role.replace('_', ' ')}`,
+      timestamp: new Date().toISOString()
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      users: [...prev.users, newUser],
+      auditLogs: [newAuditLog, ...(prev.auditLogs || [])]
+    }));
+
+    showToast('success', 'Leadership Member Added', `Invitation sent to ${memberData.name} (${memberData.email}) as ${memberData.role.replace('_', ' ')}.`);
+    return newUser;
+  };
+
+  const removeTeamMember = (userId: string) => {
+    const member = data.users.find((u: User) => u.id === userId);
+    if (!member) return;
+
+    const newAuditLog: AuditLog = {
+      id: 'log_' + Date.now(),
+      orgId: currentOrg.id,
+      actorId: currentUser.id,
+      actorName: currentUser.name,
+      actorRole: currentUser.role,
+      action: 'REMOVE_TEAM_MEMBER',
+      details: `Removed ${member.name} (${member.email}) from organization roles`,
+      timestamp: new Date().toISOString()
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      users: prev.users.filter((u: User) => u.id !== userId),
+      auditLogs: [newAuditLog, ...(prev.auditLogs || [])]
+    }));
+
+    showToast('info', 'Team Member Removed', `${member.name} has been removed from organization staff.`);
+  };
+
   return (
     <AppContext.Provider value={{
       currentOrg,
@@ -1240,6 +1305,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       logout,
       resetPassword,
       updateUserProfile,
+      inviteTeamMember,
+      removeTeamMember,
       dismissToast,
       showToast,
       resetDemoData

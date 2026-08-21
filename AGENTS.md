@@ -94,4 +94,28 @@ This document provides system knowledge, core architectural rules, and coding st
 - Live e-sign preview sandbox for testing vector canvas signature capture.
 - Executed e-signatures compliance audit ledger tracking all signed agreements with 1-click export for insurance underwriters.
 
+---
+
+## 10. GitHub Remote Operations & Authentication Standard
+- **Primary GitHub Account**: **`patchenu`** (`patchenu@yahoo.com`).
+- All remote git pushes, branch updates, and repository operations MUST be pushed to `https://github.com/patchenu/R3Pro.git` via the `patchenu` account.
+- Never use personal or secondary accounts (`pathen-uchiyama`, `ainewsgen`) for commits or pushes to this repository.
+
+---
+
+## 11. Leadership & Committee Leads Delegation Architecture
+- Super Admins manage organization leadership staff under `OrgExecutiveDashboard.tsx` (`Leadership & Committee Leads` tab).
+- **Invitations & Role Assignment**:
+  - `event_planner`: Granted full master event chair control and 1-click variable approval queue rights.
+  - `committee_lead`: Strictly scoped to designated departments (*Food & Hospitality*, *Labor & Setup*, *Vendor Marketplace*, etc.).
+  - `org_admin`: Granted full organization governance, CRM, and financial substantiation rights.
+- **Audit Logging**: Every team invitation or removal emits an immutable `AuditLog` record.
+
+---
+
+## 12. Organization Setup Templates & Industry Blueprints
+- `ORG_TEMPLATES` (*School/PTA, Non-Profit Foundation, Youth Sports League, Faith Community, Corporate Giving*) serve as turnkey onboarding blueprints.
+- **New Organization Creation**: Selecting a template pre-populates default committee departments, standard waiver requirements, suggested campaign goals, and sample recurring events.
+- **Existing Organizations**: Org Admins can review and apply industry presets to instantly batch-provision missing standard operational departments.
+
 
