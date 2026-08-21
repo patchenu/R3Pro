@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Event, TicketTier } from '../../types';
 import { Modal } from '../common/Modal';
-import { Store, FileText, Zap, ShieldCheck, Check, DollarSign } from 'lucide-react';
+import { Store, FileText, Zap, ShieldCheck, Check, DollarSign, UserCheck, CheckCircle } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 
 interface VendorApplicationModalProps {
@@ -18,18 +18,56 @@ export const VendorApplicationModal: React.FC<VendorApplicationModalProps> = ({
   event,
   selectedTier
 }) => {
-  const { submitVendorApplication } = useApp();
+  const { currentUser, vendorApplications, submitVendorApplication } = useApp();
 
-  const [businessName, setBusinessName] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [einTaxId, setEinTaxId] = useState('');
-  const [website, setWebsite] = useState('');
+  const isLoggedIn = Boolean(currentUser && currentUser.id !== 'user_guest' && currentUser.name && currentUser.name !== 'Guest Visitor');
+
+  // Lookup prior vendor submissions
+  const pastVendorApp = vendorApplications.find(v => 
+    (currentUser.email && v.email && v.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+    (currentUser.name && (v.contactName.toLowerCase() === currentUser.name.toLowerCase() || v.businessName.toLowerCase() === currentUser.name.toLowerCase()))
+  );
+
+  const initialBusiness = currentUser.role === 'vendor' ? currentUser.name : (pastVendorApp?.businessName || '');
+  const initialContact = isLoggedIn ? currentUser.name : (pastVendorApp?.contactName || '');
+  const initialEmail = isLoggedIn ? currentUser.email : (pastVendorApp?.email || '');
+  const initialPhone = (isLoggedIn && currentUser.phone) ? currentUser.phone : (pastVendorApp?.phone || '');
+  const initialEin = pastVendorApp?.einTaxId || (currentUser.role === 'vendor' ? '82-1928401' : '');
+  const initialWeb = pastVendorApp?.website || (currentUser.role === 'vendor' ? 'https://artisanbakes.com' : '');
+  const initialCoi = pastVendorApp?.coiPolicyNumber || (currentUser.role === 'vendor' ? 'STATE-FARM-9812401' : '');
+
+  const [businessName, setBusinessName] = useState(initialBusiness);
+  const [contactName, setContactName] = useState(initialContact);
+  const [email, setEmail] = useState(initialEmail);
+  const [phone, setPhone] = useState(initialPhone);
+  const [einTaxId, setEinTaxId] = useState(initialEin);
+  const [website, setWebsite] = useState(initialWeb);
   const [electricityNeeded, setElectricityNeeded] = useState<'none' | '110v_standard' | '220v_heavy' | 'self_generator'>('none');
   const [spaceRequirement, setSpaceRequirement] = useState(selectedTier?.boothDimensions || '10x10');
-  const [coiPolicyNumber, setCoiPolicyNumber] = useState('');
+  const [coiPolicyNumber, setCoiPolicyNumber] = useState(initialCoi);
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const bName = currentUser.role === 'vendor' ? currentUser.name : (pastVendorApp?.businessName || '');
+      const cName = isLoggedIn ? currentUser.name : (pastVendorApp?.contactName || '');
+      const mail = isLoggedIn ? currentUser.email : (pastVendorApp?.email || '');
+      const ph = (isLoggedIn && currentUser.phone) ? currentUser.phone : (pastVendorApp?.phone || '');
+      const ein = pastVendorApp?.einTaxId || (currentUser.role === 'vendor' ? '82-1928401' : '');
+      const web = pastVendorApp?.website || (currentUser.role === 'vendor' ? 'https://artisanbakes.com' : '');
+      const coi = pastVendorApp?.coiPolicyNumber || (currentUser.role === 'vendor' ? 'STATE-FARM-9812401' : '');
+
+      setBusinessName(bName);
+      setContactName(cName);
+      setEmail(mail);
+      setPhone(ph);
+      setEinTaxId(ein);
+      setWebsite(web);
+      setCoiPolicyNumber(coi);
+      setSpaceRequirement(selectedTier?.boothDimensions || '10x10');
+      setSubmitted(false);
+    }
+  }, [isOpen, currentUser.id, selectedTier?.id]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +118,27 @@ export const VendorApplicationModal: React.FC<VendorApplicationModalProps> = ({
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
+          {isLoggedIn && (
+            <div className="p-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 text-emerald-950 rounded-2xl text-xs flex items-center justify-between shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  <UserCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold text-slate-900 block">
+                    Pre-filled from Vendor Profile ({currentUser.name})
+                  </span>
+                  <span className="text-[11px] text-slate-600">
+                    Contact and tax info pre-populated. Please validate and select electrical specifications below.
+                  </span>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 bg-emerald-200/80 text-emerald-900 font-bold text-[10px] rounded-md shrink-0">
+                ✓ Auto-Populated
+              </span>
+            </div>
+          )}
+
           <div className="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100 text-xs text-indigo-950 flex items-start gap-3">
             <Store className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
             <div>

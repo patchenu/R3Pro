@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Event, Shift, ItemSlot, TicketTier, SubPart } from '../../types';
+import { Event, Shift, ItemSlot, TicketTier, SubPart, GroupMember } from '../../types';
 import { Modal } from '../common/Modal';
 import { SignaturePad } from '../common/SignaturePad';
 import { 
   Users, UserPlus, Trash2, Calendar, Gift, HeartHandshake, 
   CreditCard, ShieldCheck, AlertCircle, Sparkles, Check, ChevronRight,
-  Cake, Key, Lock, HelpCircle
+  Cake, Key, Lock, HelpCircle, CheckCircle, UserCheck
 } from 'lucide-react';
 import { formatCurrency, formatTimeRange, calculateAge, formatBirthDate } from '../../utils/formatters';
 import { WAIVER_TEMPLATES_DATA } from '../../data/templates';
@@ -32,16 +32,42 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
   initialDonation,
   onSuccess
 }) => {
-  const { shifts, itemSlots, ticketTiers, subParts, claimSlotsAndRegister } = useApp();
+  const { shifts, itemSlots, ticketTiers, subParts, currentUser, volunteerCrm, registrations, claimSlotsAndRegister } = useApp();
+
+  // Determine if active user is logged in
+  const isLoggedIn = Boolean(currentUser && currentUser.id !== 'user_guest' && currentUser.name && currentUser.name !== 'Guest Visitor');
+
+  // Lookup CRM record and historical registrations
+  const matchingCrm = volunteerCrm.find(c => 
+    (currentUser.email && c.email && c.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+    (currentUser.name && c.name.toLowerCase() === currentUser.name.toLowerCase())
+  );
+
+  const pastRegistration = registrations.find(r => 
+    (currentUser.email && r.primaryEmail.toLowerCase() === currentUser.email.toLowerCase()) ||
+    (currentUser.name && r.primaryName.toLowerCase() === currentUser.name.toLowerCase())
+  );
+
+  // Extract saved household dependents from past registrations
+  const savedDependents: GroupMember[] = pastRegistration?.members.filter(m => m.relationship !== 'Self') || [];
+
+  // Compute smart prefilled defaults
+  const initialName = isLoggedIn ? currentUser.name : (pastRegistration?.primaryName || '');
+  const initialEmail = isLoggedIn ? currentUser.email : (pastRegistration?.primaryEmail || '');
+  const initialPhone = (isLoggedIn && currentUser.phone) 
+    ? currentUser.phone 
+    : (matchingCrm?.phone || pastRegistration?.primaryPhone || '(555) 456-7890');
+  const initialDob = matchingCrm?.birthDate || pastRegistration?.birthDate || '1990-06-15';
+  const initialAge = calculateAge(initialDob) || 36;
 
   // Form State
-  const [primaryName, setPrimaryName] = useState('');
-  const [primaryEmail, setPrimaryEmail] = useState('');
-  const [primaryPhone, setPrimaryPhone] = useState('');
-  const [primaryBirthDate, setPrimaryBirthDate] = useState('1990-06-15');
+  const [primaryName, setPrimaryName] = useState(initialName);
+  const [primaryEmail, setPrimaryEmail] = useState(initialEmail);
+  const [primaryPhone, setPrimaryPhone] = useState(initialPhone);
+  const [primaryBirthDate, setPrimaryBirthDate] = useState(initialDob);
   const [notes, setNotes] = useState('');
   
-  // Optional Account Creation Password State
+  // Optional Account Creation Password State (disabled/hidden if already logged in)
   const [createAccount, setCreateAccount] = useState(false);
   const [accountPassword, setAccountPassword] = useState('');
 
@@ -59,23 +85,65 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
     dietaryNotes: string;
   }[]>([
     {
-      name: '',
-      email: '',
-      phone: '',
+      name: initialName,
+      email: initialEmail,
+      phone: initialPhone,
       relationship: 'Self',
-      isMinor: false,
-      birthDate: '1990-06-15',
-      age: 36,
+      isMinor: initialAge < 18,
+      birthDate: initialDob,
+      age: initialAge,
       emergencyContactName: '',
       emergencyContactPhone: '',
       dietaryNotes: ''
     }
   ]);
 
+  // Synchronize and pre-fill form whenever modal opens or user identity changes
+  useEffect(() => {
+    if (isOpen) {
+      const name = isLoggedIn ? currentUser.name : (pastRegistration?.primaryName || '');
+      const email = isLoggedIn ? currentUser.email : (pastRegistration?.primaryEmail || '');
+      const phone = (isLoggedIn && currentUser.phone) 
+        ? currentUser.phone 
+        : (matchingCrm?.phone || pastRegistration?.primaryPhone || '');
+      const dob = matchingCrm?.birthDate || pastRegistration?.birthDate || '1990-06-15';
+      const age = calculateAge(dob) || 36;
+
+      setPrimaryName(name);
+      setPrimaryEmail(email);
+      setPrimaryPhone(phone);
+      setPrimaryBirthDate(dob);
+
+      setMembers([
+        {
+          name,
+          email,
+          phone,
+          relationship: 'Self',
+          isMinor: age < 18,
+          birthDate: dob,
+          age,
+          emergencyContactName: '',
+          emergencyContactPhone: '',
+          dietaryNotes: ''
+        }
+      ]);
+
+      // Reset step
+      setStep(1);
+      setFormError(null);
+    }
+  }, [isOpen, currentUser.id, currentUser.email]);
+
   // Mapping which member is taking which shift
   const [shiftAssignments, setShiftAssignments] = useState<{ shiftId: string; memberIndex: number }[]>(
     selectedShiftIds.map(id => ({ shiftId: id, memberIndex: 0 }))
   );
+
+  // Sync shift assignments if selectedShiftIds changes
+  useEffect(() => {
+    setShiftAssignments(selectedShiftIds.map(id => ({ shiftId: id, memberIndex: 0 })));
+  }, [selectedShiftIds]);
 
   // Financials State
   const [donationAmount, setDonationAmount] = useState(initialDonation);
@@ -129,6 +197,26 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
         emergencyContactName: primaryName,
         emergencyContactPhone: primaryPhone,
         dietaryNotes: ''
+      }
+    ]);
+  };
+
+  // Quick-Add Saved Household Dependent from Historical CRM
+  const handleQuickAddDependent = (dep: GroupMember) => {
+    const computedAge = dep.birthDate ? calculateAge(dep.birthDate) : dep.age || 14;
+    setMembers(prev => [
+      ...prev,
+      {
+        name: dep.name,
+        email: dep.email || '',
+        phone: dep.phone || primaryPhone,
+        relationship: (dep.relationship as any) || 'Child',
+        isMinor: dep.isMinor ?? (computedAge !== undefined && computedAge < 18),
+        birthDate: dep.birthDate || '2012-08-14',
+        age: computedAge,
+        emergencyContactName: dep.emergencyContactName || primaryName,
+        emergencyContactPhone: dep.emergencyContactPhone || primaryPhone,
+        dietaryNotes: dep.dietaryNotes || ''
       }
     ]);
   };
@@ -274,6 +362,39 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
       {step === 1 && (
         <form onSubmit={handleStep1Submit} className="space-y-6">
           
+          {/* Smart Pre-fill Account Status Banner */}
+          {isLoggedIn ? (
+            <div className="p-3.5 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 text-emerald-950 rounded-2xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
+                  <UserCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                    Welcome back, {currentUser.name}!
+                    <span className="px-2 py-0.5 bg-emerald-200 text-emerald-900 rounded font-black text-[10px]">
+                      VERIFIED PROFILE
+                    </span>
+                  </span>
+                  <span className="text-[11px] text-slate-600 block mt-0.5">
+                    We&apos;ve pre-filled your contact details ({currentUser.email}{currentUser.phone ? ` • ${currentUser.phone}` : ''}) from your account. Please review & validate below.
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-[11px] text-emerald-800 font-semibold bg-white/80 px-2.5 py-1 rounded-xl border border-emerald-200/60 shrink-0">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Auto-Populated</span>
+              </div>
+            </div>
+          ) : (
+            <div className="p-3 bg-indigo-50/60 border border-indigo-100 rounded-2xl text-xs text-indigo-900 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+              <span>
+                <strong>Quick Sign-Up:</strong> Register in seconds. No upfront password required — we&apos;ll issue your instant check-in pass.
+              </span>
+            </div>
+          )}
+
           {/* Primary Contact */}
           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
             <div className="flex items-center justify-between">
@@ -296,7 +417,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
                   value={members[0].name}
                   onChange={(e) => updateMember(0, 'name', e.target.value)}
                   placeholder="e.g. David Chen"
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-medium"
                 />
               </div>
 
@@ -308,7 +429,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
                   value={members[0].email}
                   onChange={(e) => updateMember(0, 'email', e.target.value)}
                   placeholder="david@example.com"
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-medium"
                 />
               </div>
 
@@ -320,7 +441,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
                   value={members[0].phone}
                   onChange={(e) => updateMember(0, 'phone', e.target.value)}
                   placeholder="(555) 000-0000"
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-medium"
                 />
               </div>
 
@@ -337,7 +458,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
                     setPrimaryBirthDate(e.target.value);
                     updateMember(0, 'birthDate', e.target.value);
                   }}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-medium"
                 />
               </div>
             </div>
@@ -348,8 +469,8 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
           </div>
 
           {/* Additional Family / Group Members */}
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
-            <div className="flex justify-between items-center mb-3">
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+            <div className="flex justify-between items-center">
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                   <UserPlus className="w-4 h-4 text-emerald-600" />
@@ -367,6 +488,29 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
                 Add Child / Family Member
               </button>
             </div>
+
+            {/* Quick-Add Saved Dependents from CRM/History */}
+            {savedDependents.length > 0 && (
+              <div className="p-3 bg-indigo-50/80 border border-indigo-100 rounded-xl space-y-1.5">
+                <span className="text-[10px] uppercase font-bold text-indigo-900 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-indigo-600" />
+                  Quick-Add Saved Family Dependents:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {savedDependents.map((dep, depIdx) => (
+                    <button
+                      key={depIdx}
+                      type="button"
+                      onClick={() => handleQuickAddDependent(dep)}
+                      className="px-2.5 py-1 bg-white border border-indigo-200 hover:border-indigo-400 text-indigo-900 text-xs font-semibold rounded-lg shadow-2xs transition flex items-center gap-1"
+                    >
+                      <UserPlus className="w-3 h-3 text-indigo-600" />
+                      <span>+ {dep.name} ({dep.relationship}{dep.age ? `, Age ${dep.age}` : ''})</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {members.slice(1).map((member, idx) => {
               const actualIdx = idx + 1;
@@ -724,46 +868,67 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
             )}
           </div>
 
-          {/* Optional Password / Account Creation Card */}
-          <div className="p-4 bg-slate-100 rounded-2xl border border-slate-200/80 space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={createAccount}
-                  onChange={(e) => setCreateAccount(e.target.checked)}
-                  className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
-                />
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Key className="w-3.5 h-3.5 text-indigo-600" />
-                  Save Volunteer Profile & Create Password (Optional)
-                </span>
-              </label>
-              <span className="text-[10px] text-slate-400 font-semibold">1-Click Access</span>
-            </div>
-
-            <p className="text-[11px] text-slate-500 pl-6 leading-relaxed">
-              Save your contact & family info for future events and track all verified service hours and certificates in your personal GatherRaise dashboard.
-            </p>
-
-            {createAccount && (
-              <div className="pl-6 pt-2 animate-in fade-in space-y-2">
-                <div className="max-w-xs">
-                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Create Account Password</label>
-                  <div className="relative">
-                    <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="password"
-                      value={accountPassword}
-                      onChange={(e) => setAccountPassword(e.target.value)}
-                      placeholder="Minimum 6 characters"
-                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs"
-                    />
-                  </div>
+          {/* Account Profile Sync / Creation Status Card */}
+          {isLoggedIn ? (
+            <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 text-xs flex items-center justify-between shadow-2xs">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold text-slate-900 block">
+                    Auto-Synced to Your Profile: {currentUser.name}
+                  </span>
+                  <span className="text-[11px] text-slate-600">
+                    This registration and verified service hours will automatically link to <strong>{currentUser.email}</strong>.
+                  </span>
                 </div>
               </div>
-            )}
-          </div>
+              <span className="px-2.5 py-1 bg-emerald-200/80 text-emerald-900 font-bold text-[10px] rounded-lg shrink-0">
+                ✓ Auto-Linked
+              </span>
+            </div>
+          ) : (
+            <div className="p-4 bg-slate-100 rounded-2xl border border-slate-200/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={createAccount}
+                    onChange={(e) => setCreateAccount(e.target.checked)}
+                    className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                  />
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Key className="w-3.5 h-3.5 text-indigo-600" />
+                    Save Volunteer Profile & Create Password (Optional)
+                  </span>
+                </label>
+                <span className="text-[10px] text-slate-400 font-semibold">1-Click Access</span>
+              </div>
+
+              <p className="text-[11px] text-slate-500 pl-6 leading-relaxed">
+                Save your contact & family info for future events and track all verified service hours and certificates in your personal GatherRaise dashboard.
+              </p>
+
+              {createAccount && (
+                <div className="pl-6 pt-2 animate-in fade-in space-y-2">
+                  <div className="max-w-xs">
+                    <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Create Account Password</label>
+                    <div className="relative">
+                      <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        value={accountPassword}
+                        onChange={(e) => setAccountPassword(e.target.value)}
+                        placeholder="Minimum 6 characters"
+                        className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Payment Method Selector if Total > 0 */}
           {grandTotal > 0 && (
