@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { 
   Sparkles, Calendar, Users, BarChart3, 
   Building2, CheckCircle2, Share2, Plus, 
-  ChevronDown, User as UserIcon, LogIn, HeartHandshake
+  ChevronDown, User as UserIcon, LogIn, HeartHandshake, Store
 } from 'lucide-react';
 import { UserProfileModal } from '../auth/UserProfileModal';
 import { OrgOnboardingModal } from '../organizer/OrgOnboardingModal';
@@ -261,7 +261,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* 6. Door Check-In Kiosk */}
+            {/* 6. Vendor & Sponsor Hub */}
+            <button
+              onClick={() => setActiveTab('vendor_portal')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'vendor_portal'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <Store className="w-4 h-4 text-emerald-500" />
+              <span>Vendor & Sponsor Hub</span>
+            </button>
+
+            {/* 7. Door Check-In Kiosk */}
             <button
               onClick={() => setActiveTab('kiosk_mode')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${

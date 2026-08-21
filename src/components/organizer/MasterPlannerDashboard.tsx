@@ -567,53 +567,114 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
-      {/* Event Header Banner */}
-      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold uppercase tracking-wider border border-purple-500/30">
-              Event Planner & Chair Hub
-            </span>
-            <span className="text-xs text-slate-300">
-              Organization: <strong>{currentOrg.name}</strong>
-            </span>
+      {/* 1. LIFECYCLE STAGE & COMMAND HEADER */}
+      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-indigo-500/20 space-y-6">
+        
+        {/* Top Meta Bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-black uppercase tracking-wider border border-purple-500/30">
+                Event Chair Command Center
+              </span>
+              <span className="text-xs text-slate-400">
+                Host: <strong>{currentOrg.name}</strong>
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-black text-white mt-1">
+              {currentEvent.title}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
+              {currentEvent.tagline || 'Manage your campaign lifecycle, department committees, volunteer rosters, and commercial sponsors.'}
+            </p>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
-            {currentEvent.title}
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl">
-            Complete command center coordinating {subParts.length} Departments, {shifts.length} Volunteer Shifts, and {formatCurrency(currentEvent.fundraisingGoal)} Campaign Target.
-          </p>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {pendingApprovalsCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
-              onClick={() => setIsApprovalModalOpen(true)}
-              className="flex items-center gap-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black py-2.5 px-4 rounded-xl text-xs shadow-md transition animate-bounce"
+              onClick={() => setActivePlannerTab('reports')}
+              className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-3.5 rounded-xl text-xs border border-white/20 transition"
             >
-              <ShieldAlert className="w-4 h-4" />
-              <span>Approval Queue ({pendingApprovalsCount})</span>
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print Badges & Reports</span>
             </button>
-          )}
 
-          <button
-            onClick={() => setActivePlannerTab('gaps')}
-            className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 px-4 rounded-xl text-xs border border-white/20 transition"
-          >
-            <AlertTriangle className="w-4 h-4 text-amber-400" />
-            <span>Gap Analysis</span>
-          </button>
-
-          <button
-            onClick={() => setActivePlannerTab('reports')}
-            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-md transition"
-          >
-            <Printer className="w-4 h-4" />
-            <span>Reports & Badges</span>
-          </button>
+            <button
+              onClick={() => onOpenEventBuilder?.()}
+              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3.5 rounded-xl text-xs shadow-md transition"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span>Event Settings</span>
+            </button>
+          </div>
         </div>
+
+        {/* Lifecycle Stage Progress Indicator */}
+        <div className="pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mb-2">
+            <span className="text-white uppercase tracking-wider">Campaign Lifecycle: Phase 2 of 4</span>
+            <span className="text-indigo-400">Active Recruitment & Commercial Sales</span>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2">
+            <div className="p-2.5 rounded-xl bg-white/10 border border-white/15 text-center">
+              <span className="block text-[10px] font-extrabold text-emerald-400">✓ Phase 1</span>
+              <span className="block text-xs font-bold text-white mt-0.5 truncate">Planning & Setup</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-indigo-600/60 border border-indigo-400/50 text-center shadow-inner">
+              <span className="block text-[10px] font-extrabold text-amber-300">● Phase 2 (Active)</span>
+              <span className="block text-xs font-black text-white mt-0.5 truncate">Recruit & Sales</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center text-slate-400">
+              <span className="block text-[10px] font-bold">Phase 3</span>
+              <span className="block text-xs font-semibold mt-0.5 truncate">Day-Of Kiosk</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center text-slate-400">
+              <span className="block text-[10px] font-bold">Phase 4</span>
+              <span className="block text-xs font-semibold mt-0.5 truncate">Post-Event 990</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. ACTION REQUIRED FOCUS QUEUE (COMMAND BY EXCEPTION) */}
+        {(pendingApprovalsCount > 0 || shifts.some(s => s.claimedCount < s.capacity * 0.5)) && (
+          <div className="p-4 bg-amber-500/15 border border-amber-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-400 text-slate-950 rounded-xl font-black shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-xs font-black uppercase tracking-wider text-amber-300 block">
+                  Action Required Focus Queue
+                </span>
+                <p className="text-xs text-slate-200">
+                  {pendingApprovalsCount > 0 
+                    ? `${pendingApprovalsCount} lead request(s) exceed variable thresholds and await your authorization.` 
+                    : 'Critical volunteer shift shortages detected for this weekend.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {pendingApprovalsCount > 0 && (
+                <button
+                  onClick={() => setIsApprovalModalOpen(true)}
+                  className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <ShieldAlert className="w-4 h-4" />
+                  <span>Review Approvals ({pendingApprovalsCount})</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => setActivePlannerTab('gaps')}
+                className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition"
+              >
+                <span>Inspect Shortages &rarr;</span>
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* Campaign Progress Thermometer */}
@@ -625,7 +686,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
         currency={currentEvent.currency}
       />
 
-      {/* Unified Event Planner Sub-Tabs Navigation */}
+      {/* UNIFIED 4-TAB BENTO NAVIGATION */}
       <div className="flex items-center gap-2 border-b-2 border-slate-200 pb-2 overflow-x-auto">
         <button
           onClick={() => setActivePlannerTab('overview')}
@@ -644,37 +705,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
           }`}
         >
           <Users className="w-4 h-4" />
-          <span>Volunteer Manifest & Check-In ({allVolunteerRows.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActivePlannerTab('items')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
-            activePlannerTab === 'items' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
-          }`}
-        >
-          <Package className="w-4 h-4" />
-          <span>📦 Item Pledges & Receiving</span>
-        </button>
-
-        <button
-          onClick={() => setActivePlannerTab('marketing')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
-            activePlannerTab === 'marketing' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
-          }`}
-        >
-          <Share2 className="w-4 h-4" />
-          <span>Marketing, Flyers & Broadcast</span>
-        </button>
-
-        <button
-          onClick={() => setActivePlannerTab('gaps')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
-            activePlannerTab === 'gaps' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4" />
-          <span>Gap Analysis & Health</span>
+          <span>Volunteer Manifest ({allVolunteerRows.length})</span>
         </button>
 
         <button
@@ -684,7 +715,37 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
           }`}
         >
           <Store className="w-4 h-4" />
-          <span>Vendor Marketplace & Booths</span>
+          <span>Sponsors & Vendor Tiers ({ticketTiers.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActivePlannerTab('items')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activePlannerTab === 'items' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <Package className="w-4 h-4" />
+          <span>📦 Item Receiving Dock ({itemSlots.filter(i => i.eventId === currentEvent.id).length})</span>
+        </button>
+
+        <button
+          onClick={() => setActivePlannerTab('marketing')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activePlannerTab === 'marketing' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <Share2 className="w-4 h-4" />
+          <span>Marketing & Broadcasts</span>
+        </button>
+
+        <button
+          onClick={() => setActivePlannerTab('gaps')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activePlannerTab === 'gaps' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" />
+          <span>Gap Analysis</span>
         </button>
 
         <button
@@ -694,7 +755,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
           }`}
         >
           <FileText className="w-4 h-4" />
-          <span>Reports, Badges & IRS Receipts</span>
+          <span>Reports & Badges</span>
         </button>
       </div>
 

@@ -8,6 +8,7 @@ import { PublicEventLanding } from './components/public/PublicEventLanding';
 import { MasterPlannerDashboard } from './components/organizer/MasterPlannerDashboard';
 import { LeadPortal } from './components/lead/LeadPortal';
 import { OrgExecutiveDashboard } from './components/organizer/OrgExecutiveDashboard';
+import { VendorSponsorDashboard } from './components/vendor/VendorSponsorDashboard';
 import { GapAnalysisDashboard } from './components/intelligence/GapAnalysisDashboard';
 import { ReportsExportCenter } from './components/organizer/ReportsExportCenter';
 import { EventMarketingHub } from './components/marketing/EventMarketingHub';
@@ -67,7 +68,7 @@ const MainLayout: React.FC = () => {
   if (activeRole === 'kiosk' || activeTab === 'kiosk_mode') {
     return (
       <div className="min-h-screen bg-slate-900">
-        <RoleSwitcherBar />
+        <RoleSwitcherBar setActiveTab={setActiveTab} />
         <div className="p-2 bg-slate-950 text-right">
           <button
             onClick={() => setActiveTab('discovery_hub')}
@@ -85,7 +86,7 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-indigo-500 selection:text-white">
       {/* Top Role Simulator Switcher Bar */}
-      {showRoleSimulator && <RoleSwitcherBar />}
+      {showRoleSimulator && <RoleSwitcherBar setActiveTab={setActiveTab} />}
 
       {/* Main Navbar */}
       <Navbar
@@ -102,6 +103,7 @@ const MainLayout: React.FC = () => {
             onOpenOrgWizard={handleOpenOrgWizard}
             onOpenEventBuilder={() => setIsEventBuilderOpen(true)}
             onOpenAuth={handleOpenAuth}
+            onNavigateToVendorHub={() => setActiveTab('vendor_portal')}
           />
         )}
         
@@ -120,6 +122,8 @@ const MainLayout: React.FC = () => {
         {activeTab === 'lead_portal' && <LeadPortal />}
         
         {activeTab === 'org_admin_view' && <OrgExecutiveDashboard />}
+
+        {activeTab === 'vendor_portal' && <VendorSponsorDashboard />}
         
         {activeTab === 'gap_analysis' && (
           <GapAnalysisDashboard onOpenBroadcast={() => setActiveTab('lead_portal')} />

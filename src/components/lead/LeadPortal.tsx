@@ -25,6 +25,8 @@ export const LeadPortal: React.FC = () => {
   const [activeSubPartId, setActiveSubPartId] = useState<string>(assignedSubPart?.id || (subParts[0]?.id ?? ''));
   const currentSubPart = subParts.find(sp => sp.id === activeSubPartId) || subParts[0];
 
+  const [activeLeadTab, setActiveLeadTab] = useState<'shifts_checkin' | 'supplies' | 'contractors'>('shifts_checkin');
+
   // Modals
   const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
   const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);
@@ -392,303 +394,375 @@ export const LeadPortal: React.FC = () => {
         </button>
       </div>
 
-      {/* SHIFTS MANAGEMENT TABLE */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Volunteer Shift Roster</h3>
-            <p className="text-xs text-slate-500">Monitor volunteer registrations and adjust shift capacities</p>
-          </div>
-          <button
-            onClick={handleOpenAddShift}
-            className="flex items-center gap-1 text-xs font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            New Shift
-          </button>
-        </div>
+      {/* OPERATIONAL CLIPBOARD TABS */}
+      <div className="flex items-center gap-2 border-b-2 border-slate-200 pb-2 overflow-x-auto">
+        <button
+          onClick={() => setActiveLeadTab('shifts_checkin')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activeLeadTab === 'shifts_checkin'
+              ? 'bg-amber-600 text-white shadow-md'
+              : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>🙋 Shifts & Live Check-In ({subPartShifts.length})</span>
+        </button>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider font-semibold">
-                <th className="pb-3 font-bold">Shift Role</th>
-                <th className="pb-3 font-bold">Schedule</th>
-                <th className="pb-3 font-bold">Filled / Capacity</th>
-                <th className="pb-3 font-bold">Waiver Req</th>
-                <th className="pb-3 font-bold">Status</th>
-                <th className="pb-3 font-bold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {subPartShifts.map((shift) => (
-                <tr key={shift.id} className="hover:bg-slate-50/80 transition">
-                  <td className="py-3 font-bold text-slate-900">
-                    {shift.title}
-                    <span className="block text-[11px] text-slate-500 font-normal">{shift.description}</span>
-                  </td>
-                  <td className="py-3 text-slate-700 font-semibold">
-                    {formatTimeRange(shift.startTime, shift.endTime)}
-                  </td>
-                  <td className="py-3">
-                    <span className={`px-2 py-0.5 rounded-md font-bold ${
-                      shift.claimedCount >= shift.capacity ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'
-                    }`}>
-                      {shift.claimedCount} / {shift.capacity}
-                    </span>
-                  </td>
-                  <td className="py-3">
-                    {shift.requiresWaiver ? (
-                      <span className="text-amber-700 font-bold flex items-center gap-1">
-                        <ShieldCheck className="w-3.5 h-3.5 text-amber-600" /> Yes
-                      </span>
-                    ) : (
-                      <span className="text-slate-400">None</span>
-                    )}
-                  </td>
-                  <td className="py-3">
-                    {shift.isApproved ? (
-                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full font-bold text-[10px]">
-                        Active
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold text-[10px]">
-                        Pending Approval
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        onClick={() => handleOpenEditShift(shift)}
-                        className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                        title="Edit Shift"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteShift(shift.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                        title="Delete Shift"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <button
+          onClick={() => setActiveLeadTab('supplies')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activeLeadTab === 'supplies'
+              ? 'bg-amber-600 text-white shadow-md'
+              : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <Gift className="w-4 h-4" />
+          <span>🎁 Supply Wishlist & Drop-Offs ({subPartItems.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveLeadTab('contractors')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
+            activeLeadTab === 'contractors'
+              ? 'bg-amber-600 text-white shadow-md'
+              : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <Briefcase className="w-4 h-4" />
+          <span>🛠️ Hired Contractors & Budget ({((contractors || []).filter(c => c.subPartId === currentSubPart.id)).length})</span>
+        </button>
       </div>
 
-      {/* SUPPLY WISHLIST & ITEM DROP-OFFS TABLE */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Department Supply & Wishlist Drop-Offs</h3>
-            <p className="text-xs text-slate-500">Track pledged items, drop-off locations, and IRS Fair Market Value offsets</p>
-          </div>
-          <button
-            onClick={handleOpenAddItem}
-            className="flex items-center gap-1 text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            New Wishlist Item
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider font-semibold">
-                <th className="pb-3 font-bold">Item Description</th>
-                <th className="pb-3 font-bold">Category</th>
-                <th className="pb-3 font-bold">Pledged / Needed</th>
-                <th className="pb-3 font-bold">Drop-Off Point & Deadline</th>
-                <th className="pb-3 font-bold">Est. FMV</th>
-                <th className="pb-3 font-bold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {subPartItems.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/80 transition">
-                  <td className="py-3 font-bold text-slate-900">
-                    {item.itemName}
-                  </td>
-                  <td className="py-3">
-                    <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-semibold text-[11px]">
-                      {item.category}
-                    </span>
-                  </td>
-                  <td className="py-3">
-                    <span className={`px-2 py-0.5 rounded-md font-bold ${
-                      item.quantityPledged >= item.quantityNeeded ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                    }`}>
-                      {item.quantityPledged} / {item.quantityNeeded} {item.unit}
-                    </span>
-                  </td>
-                  <td className="py-3 text-slate-600 font-medium">
-                    <div>{item.dropOffLocation}</div>
-                    <span className="text-[10px] text-slate-400">By: {item.dropOffDeadline}</span>
-                  </td>
-                  <td className="py-3 font-bold text-emerald-700">
-                    {formatCurrency(item.estimatedFmvPerUnit || 25)} / {item.unit}
-                  </td>
-                  <td className="py-3 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        onClick={() => handleOpenEditItem(item)}
-                        className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
-                        title="Edit Item"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteItem(item.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                        title="Delete Item"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* DEPARTMENT HIRED CONTRACTORS & SERVICES CARD */}
-      {(() => {
-        const deptContractors = (contractors || []).filter(c => c.subPartId === currentSubPart.id);
-        if (deptContractors.length === 0) return null;
-        const totalDeptContracted = deptContractors.reduce((sum, c) => sum + Number(c.contractAmount), 0);
-
-        return (
+      {/* TAB 1: SHIFTS & LIVE ATTENDANCE */}
+      {activeLeadTab === 'shifts_checkin' && (
+        <div className="space-y-6">
+          {/* SHIFTS MANAGEMENT TABLE */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
             <div className="flex justify-between items-center">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-blue-50 text-blue-700">
-                    <Briefcase className="w-4 h-4" />
-                  </span>
-                  <h3 className="text-base font-extrabold text-slate-900">
-                    Assigned Hired Contractors & Professional Services ({deptContractors.length})
-                  </h3>
-                </div>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Paid vendors and equipment providers allocated to {currentSubPart.name} ({formatCurrency(totalDeptContracted)} total spend).
-                </p>
+                <h3 className="text-lg font-bold text-slate-900">Volunteer Shift Roster</h3>
+                <p className="text-xs text-slate-500">Monitor volunteer registrations and adjust shift capacities</p>
+              </div>
+              <button
+                onClick={handleOpenAddShift}
+                className="flex items-center gap-1 text-xs font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                New Shift
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider font-semibold">
+                    <th className="pb-3 font-bold">Shift Role</th>
+                    <th className="pb-3 font-bold">Schedule</th>
+                    <th className="pb-3 font-bold">Filled / Capacity</th>
+                    <th className="pb-3 font-bold">Waiver Req</th>
+                    <th className="pb-3 font-bold">Status</th>
+                    <th className="pb-3 font-bold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {subPartShifts.map((shift) => (
+                    <tr key={shift.id} className="hover:bg-slate-50/80 transition">
+                      <td className="py-3 font-bold text-slate-900">
+                        {shift.title}
+                        <span className="block text-[11px] text-slate-500 font-normal">{shift.description}</span>
+                      </td>
+                      <td className="py-3 text-slate-700 font-semibold">
+                        {formatTimeRange(shift.startTime, shift.endTime)}
+                      </td>
+                      <td className="py-3">
+                        <span className={`px-2 py-0.5 rounded-md font-bold ${
+                          shift.claimedCount >= shift.capacity ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'
+                        }`}>
+                          {shift.claimedCount} / {shift.capacity}
+                        </span>
+                      </td>
+                      <td className="py-3">
+                        {shift.requiresWaiver ? (
+                          <span className="text-amber-700 font-bold flex items-center gap-1">
+                            <ShieldCheck className="w-3.5 h-3.5 text-amber-600" /> Yes
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">None</span>
+                        )}
+                      </td>
+                      <td className="py-3">
+                        {shift.isApproved ? (
+                          <span className="text-emerald-700 font-bold flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Live
+                          </span>
+                        ) : (
+                          <span className="text-amber-600 font-bold">Pending Review</span>
+                        )}
+                      </td>
+                      <td className="py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleOpenEditShift(shift)}
+                            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                            title="Edit Shift"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteShift(shift.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                            title="Delete Shift"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* VOLUNTEER ATTENDANCE & CHECK-IN TABLE */}
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Live Station Volunteer Check-In</h3>
+                <p className="text-xs text-slate-500">Tap to check in volunteers as they arrive at {currentSubPart.name}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {deptContractors.map(c => (
-                <div key={c.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-2">
-                  <div className="flex justify-between items-start">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
-                      {c.serviceCategory}
-                    </span>
-                    <span className="font-mono text-[10px] text-slate-500">{c.invoiceNumber || 'No invoice #'}</span>
-                  </div>
-
-                  <div>
-                    <h4 className="font-extrabold text-sm text-slate-900">{c.businessName}</h4>
-                    <div className="text-base font-black text-slate-900 mt-0.5">{formatCurrency(c.contractAmount)}</div>
-                    <div className="text-slate-600 mt-0.5">
-                      Contact: <strong>{c.contactName}</strong> • {c.phone || c.email}
-                    </div>
-                  </div>
-
-                  {c.notes && (
-                    <p className="text-[11px] text-slate-500 italic bg-white p-2 rounded-lg border border-slate-100">
-                      "{c.notes}"
-                    </p>
-                  )}
-
-                  <div className="pt-2 border-t border-slate-200/80 flex items-center gap-2 text-[10px]">
-                    <span className={`px-2 py-0.5 rounded font-bold ${c.w9Received ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                      {c.w9Received ? '✓ W-9 on file' : '✗ W-9 Needed'}
-                    </span>
-                    <span className={`px-2 py-0.5 rounded font-bold ${c.coiReceived ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                      {c.coiReceived ? '✓ COI Verified' : '⚠ COI Pending'}
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-bold ml-auto">
-                      {c.paymentStatus.replace('_', ' ')}
-                    </span>
-                  </div>
+            <div className="space-y-2">
+              {subPartRegistrations.length === 0 ? (
+                <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-500">
+                  No volunteers registered for this department's shifts yet.
                 </div>
-              ))}
+              ) : (
+                subPartRegistrations.map((reg) => {
+                  return reg.shiftClaims
+                    .filter(sc => subPartShifts.some(s => s.id === sc.shiftId))
+                    .map((claim, idx) => {
+                      const shift = subPartShifts.find(s => s.id === claim.shiftId);
+                      const member = reg.members.find(m => m.id === claim.groupMemberId) || reg.members[0];
+                      const waiver = reg.waivers.find(w => w.groupMemberId === member.id);
+
+                      return (
+                        <div
+                          key={`${reg.id}_${idx}`}
+                          className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                        >
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900 text-sm">{member.name}</span>
+                              {member.isMinor && (
+                                <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-semibold">
+                                  Minor / Student
+                                </span>
+                              )}
+                              <span className="text-xs text-indigo-600 font-semibold">{shift?.title}</span>
+                            </div>
+
+                            <div className="text-[11px] text-slate-500 mt-1 flex flex-wrap items-center gap-3">
+                              <span>Schedule: {formatTimeRange(shift?.startTime || '', shift?.endTime || '')}</span>
+                              <span>•</span>
+                              <span>Contact: {reg.primaryPhone || reg.primaryEmail}</span>
+                              {waiver && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-emerald-700 font-medium flex items-center gap-1">
+                                    <ShieldCheck className="w-3 h-3" /> Signed: {waiver.signerName} ({waiver.signerRelationship})
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => toggleCheckIn(reg.id, claim.shiftId, claim.groupMemberId)}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shrink-0 cursor-pointer ${
+                              claim.checkedIn
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'bg-slate-200 text-slate-700 hover:bg-emerald-500 hover:text-white'
+                            }`}
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>{claim.checkedIn ? 'Checked In' : 'Tap to Check In'}</span>
+                          </button>
+                        </div>
+                      );
+                    });
+                })
+              )}
             </div>
           </div>
-        );
-      })()}
+        </div>
+      )}
 
-      {/* VOLUNTEER ATTENDANCE & CHECK-IN TABLE */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Live Station Volunteer Check-In</h3>
-            <p className="text-xs text-slate-500">Tap to check in volunteers as they arrive at {currentSubPart.name}</p>
+      {/* TAB 2: SUPPLY WISHLIST & DROP-OFFS */}
+      {activeLeadTab === 'supplies' && (
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Department Supply & Wishlist Drop-Offs</h3>
+              <p className="text-xs text-slate-500">Track pledged items, drop-off locations, and IRS Fair Market Value offsets</p>
+            </div>
+            <button
+              onClick={handleOpenAddItem}
+              className="flex items-center gap-1 text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Wishlist Item
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider font-semibold">
+                  <th className="pb-3 font-bold">Item Description</th>
+                  <th className="pb-3 font-bold">Category</th>
+                  <th className="pb-3 font-bold">Pledged / Needed</th>
+                  <th className="pb-3 font-bold">Drop-Off Point & Deadline</th>
+                  <th className="pb-3 font-bold">Est. FMV</th>
+                  <th className="pb-3 font-bold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {subPartItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50/80 transition">
+                    <td className="py-3 font-bold text-slate-900">
+                      {item.itemName}
+                    </td>
+                    <td className="py-3">
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-semibold text-[11px]">
+                        {item.category}
+                      </span>
+                    </td>
+                    <td className="py-3">
+                      <span className={`px-2 py-0.5 rounded-md font-bold ${
+                        item.quantityPledged >= item.quantityNeeded ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {item.quantityPledged} / {item.quantityNeeded} {item.unit}
+                      </span>
+                    </td>
+                    <td className="py-3 text-slate-600 font-medium">
+                      <div>{item.dropOffLocation}</div>
+                      <span className="text-[10px] text-slate-400">By: {item.dropOffDeadline}</span>
+                    </td>
+                    <td className="py-3 font-bold text-emerald-700">
+                      {formatCurrency(item.estimatedFmvPerUnit || 25)} / {item.unit}
+                    </td>
+                    <td className="py-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleOpenEditItem(item)}
+                          className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+                          title="Edit Item"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteItem(item.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                          title="Delete Item"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
+      )}
 
-        <div className="space-y-2">
-          {subPartRegistrations.map((reg) => {
-            return reg.shiftClaims
-              .filter(sc => subPartShifts.some(s => s.id === sc.shiftId))
-              .map((claim, idx) => {
-                const shift = subPartShifts.find(s => s.id === claim.shiftId);
-                const member = reg.members.find(m => m.id === claim.groupMemberId) || reg.members[0];
-                const waiver = reg.waivers.find(w => w.groupMemberId === member.id);
+      {/* TAB 3: HIRED CONTRACTORS & DEPARTMENT EXPENSES */}
+      {activeLeadTab === 'contractors' && (
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+          {(() => {
+            const deptContractors = (contractors || []).filter(c => c.subPartId === currentSubPart.id);
+            const totalDeptContracted = deptContractors.reduce((sum, c) => sum + Number(c.contractAmount), 0);
 
-                return (
-                  <div
-                    key={`${reg.id}_${idx}`}
-                    className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+            if (deptContractors.length === 0) {
+              return (
+                <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
+                  <Briefcase className="w-8 h-8 text-slate-300 mx-auto" />
+                  <h4 className="text-xs font-bold text-slate-700">No Hired Contractors Allocated to {currentSubPart.name}</h4>
+                  <p className="text-[11px] text-slate-500">If you need professional sound, sanitation, or stage rentals, submit a budget request to the Event Chair.</p>
+                  <button
+                    onClick={() => setIsBudgetReqOpen(true)}
+                    className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition"
                   >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-900 text-sm">{member.name}</span>
-                        {member.isMinor && (
-                          <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-semibold">
-                            Minor / Student
-                          </span>
-                        )}
-                        {waiver ? (
-                          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-semibold flex items-center gap-0.5">
-                            <ShieldCheck className="w-3 h-3 text-emerald-600" /> Waiver Signed
-                          </span>
-                        ) : (
-                          <span className="text-[10px] bg-rose-100 text-rose-800 px-1.5 py-0.2 rounded font-semibold">
-                            ⚠️ Waiver Pending
-                          </span>
-                        )}
+                    + Request Additional Budget
+                  </button>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 rounded-lg bg-blue-50 text-blue-700">
+                        <Briefcase className="w-4 h-4" />
+                      </span>
+                      <h3 className="text-base font-extrabold text-slate-900">
+                        Assigned Hired Contractors & Professional Services ({deptContractors.length})
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Paid vendors and equipment providers allocated to {currentSubPart.name} ({formatCurrency(totalDeptContracted)} total spend).
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {deptContractors.map(c => (
+                    <div key={c.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-2">
+                      <div className="flex justify-between items-start">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
+                          {c.serviceCategory}
+                        </span>
+                        <span className="font-mono text-[10px] text-slate-500">{c.invoiceNumber || 'No invoice #'}</span>
                       </div>
-                      <div className="text-xs text-slate-600 mt-0.5">
-                        Shift: <strong>{shift?.title}</strong> • Contact: {member.phone || reg.primaryPhone}
+
+                      <div>
+                        <h4 className="font-extrabold text-sm text-slate-900">{c.businessName}</h4>
+                        <div className="text-base font-black text-slate-900 mt-0.5">{formatCurrency(c.contractAmount)}</div>
+                        <div className="text-slate-600 mt-0.5">
+                          Contact: <strong>{c.contactName}</strong> • {c.phone || c.email}
+                        </div>
+                      </div>
+
+                      {c.notes && (
+                        <p className="text-[11px] text-slate-500 italic bg-white p-2 rounded-lg border border-slate-100">
+                          "{c.notes}"
+                        </p>
+                      )}
+
+                      <div className="pt-2 border-t border-slate-200/80 flex items-center gap-2 text-[10px]">
+                        <span className={`px-2 py-0.5 rounded font-bold ${c.w9Received ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                          {c.w9Received ? '✓ W-9 on file' : '✗ W-9 Needed'}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded font-bold ${c.coiReceived ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                          {c.coiReceived ? '✓ COI Verified' : '⚠ COI Pending'}
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-bold ml-auto">
+                          {c.paymentStatus.replace('_', ' ')}
+                        </span>
                       </div>
                     </div>
-
-                    <button
-                      onClick={() => toggleCheckIn(reg.id, claim.shiftId, member.id)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                        claim.checkedIn
-                          ? 'bg-emerald-600 text-white shadow-sm'
-                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
-                      }`}
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>{claim.checkedIn ? 'Checked In' : 'Tap to Check In'}</span>
-                    </button>
-                  </div>
-                );
-              });
-          })}
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
-      </div>
+      )}
 
       {/* Modals */}
       {isBroadcastOpen && (

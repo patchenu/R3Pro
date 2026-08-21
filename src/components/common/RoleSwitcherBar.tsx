@@ -3,7 +3,11 @@ import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
 import { Crown, ClipboardList, Utensils, Store, HeartHandshake, Tablet, RotateCcw, Sparkles, Globe, UserCheck, CheckCircle2 } from 'lucide-react';
 
-export const RoleSwitcherBar: React.FC = () => {
+interface RoleSwitcherBarProps {
+  setActiveTab?: (tab: string) => void;
+}
+
+export const RoleSwitcherBar: React.FC<RoleSwitcherBarProps> = ({ setActiveTab }) => {
   const { activeRole, switchRole, currentOrg, currentUser, isAuthenticated, isDemoMode, toggleDemoMode, resetDemoData, approvalRequests } = useApp();
 
   const roles: { role: UserRole; label: string; icon: React.ReactNode; color: string; desc: string; persona: string; badgeCount?: number }[] = [
@@ -120,10 +124,22 @@ export const RoleSwitcherBar: React.FC = () => {
         <div className="flex flex-wrap items-center gap-1.5">
           {roles.map(r => {
             const isActive = activeRole === r.role;
+            const handleSelectRole = () => {
+              switchRole(r.role);
+              if (setActiveTab) {
+                if (r.role === 'event_planner') setActiveTab('planner_dashboard');
+                else if (r.role === 'org_admin') setActiveTab('org_admin_view');
+                else if (r.role === 'committee_lead') setActiveTab('lead_portal');
+                else if (r.role === 'vendor') setActiveTab('vendor_portal');
+                else if (r.role === 'volunteer') setActiveTab('public_landing');
+                else if (r.role === 'kiosk') setActiveTab('kiosk_mode');
+              }
+            };
+
             return (
               <button
                 key={r.role}
-                onClick={() => switchRole(r.role)}
+                onClick={handleSelectRole}
                 className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 text-xs ${
                   isActive
                     ? `${r.color} ring-2 ring-white shadow-md scale-105`

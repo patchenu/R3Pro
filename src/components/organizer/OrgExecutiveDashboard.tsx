@@ -282,83 +282,56 @@ export const OrgExecutiveDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
+      {/* Consolidated 5 Master Executive Tabs */}
+      <div className="flex items-center gap-2 border-b-2 border-slate-200 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveAdminTab('events')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-            activeAdminTab === 'events' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            activeAdminTab === 'events' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
-          <Calendar className="w-3.5 h-3.5" />
-          <span>🎪 All Events Portfolio & Outcomes ({orgEvents.length})</span>
+          <Calendar className="w-4 h-4" />
+          <span>🎯 Campaign Portfolio & 990s ({orgEvents.length})</span>
         </button>
 
         <button
           onClick={() => setActiveAdminTab('crm')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-            activeAdminTab === 'crm' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            activeAdminTab === 'crm' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
-          Volunteer & Donor CRM Directory ({volunteerCrm.length})
-        </button>
-
-        <button
-          onClick={() => setActiveAdminTab('branding')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-            activeAdminTab === 'branding' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <Palette className="w-3.5 h-3.5" />
-          <span>🎨 Branding, Logos & Signatory</span>
-        </button>
-
-        <button
-          onClick={() => setActiveAdminTab('legal')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-            activeAdminTab === 'legal' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>⚖️ Legal Waivers & E-Sign Studio</span>
+          <Users className="w-4 h-4" />
+          <span>👥 Supporter & Donor CRM ({volunteerCrm.length})</span>
         </button>
 
         <button
           onClick={() => setActiveAdminTab('team')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-            activeAdminTab === 'team' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            activeAdminTab === 'team' || activeAdminTab === 'templates' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
-          Leadership & Committee Leads ({users.length})
+          <Award className="w-4 h-4" />
+          <span>👑 Leadership & Committee Delegation ({users.length})</span>
         </button>
 
         <button
-          onClick={() => setActiveAdminTab('templates')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-            activeAdminTab === 'templates' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          onClick={() => setActiveAdminTab('branding')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            activeAdminTab === 'branding' || activeAdminTab === 'legal' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
-          Organization Blueprints ({ORG_TEMPLATES.length})
-        </button>
-
-        <button
-          onClick={() => setActiveAdminTab('audit')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-            activeAdminTab === 'audit' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <Shield className="w-3.5 h-3.5" />
-          <span>Security Audit Logs ({auditLogs.length})</span>
+          <Palette className="w-4 h-4" />
+          <span>🛡️ Brand, Signatories & Waivers</span>
         </button>
 
         <button
           onClick={() => setActiveAdminTab('integrations')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
-            activeAdminTab === 'integrations' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            activeAdminTab === 'integrations' || activeAdminTab === 'audit' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'
           }`}
         >
-          <Mail className="w-3.5 h-3.5" />
-          <span>📧 Email & SMS Dispatch Studio</span>
+          <Mail className="w-4 h-4" />
+          <span>⚡ Email, SMS & Security Logs</span>
         </button>
       </div>
 
