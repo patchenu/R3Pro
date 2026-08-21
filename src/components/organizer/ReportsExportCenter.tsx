@@ -108,25 +108,68 @@ export const ReportsExportCenter: React.FC = () => {
           </div>
         </div>
 
-        {/* Card 3: Volunteer Name Badges & Lanyards */}
+        {/* Card 3: Legal Compliance & E-Signature Audit Ledger */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between space-y-4">
           <div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
-              <FileText className="w-5 h-5" />
+              <ShieldCheck className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Printable Volunteer Name Badges</h3>
+            <h3 className="text-lg font-bold text-slate-900">Legal Waivers & E-Sign Audit Ledger</h3>
             <p className="text-xs text-slate-500 mt-1">
-              Ready-to-cut 2-column grid of lanyard inserts with organization logo, volunteer name, department role, reporting gate, and check-in QR pass.
+              Complete signed agreement ledger capturing vector signatures, minor parental consent co-signatures, timestamps, and IP addresses.
             </p>
           </div>
 
-          <div className="pt-2">
+          <div className="flex gap-2 pt-2">
             <button
-              onClick={handlePrintBadges}
-              className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition"
+              onClick={() => {
+                const printWindow = window.open('', '_blank');
+                if (!printWindow) return;
+                const allSigned = registrations.flatMap(r => r.waivers || []);
+                const html = `
+                  <!DOCTYPE html>
+                  <html>
+                    <head>
+                      <title>Legal E-Signature Audit Ledger - ${currentEvent.title}</title>
+                      <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; padding: 32px; font-size: 11px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+                        th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
+                        th { background: #f8fafc; font-weight: bold; }
+                      </style>
+                    </head>
+                    <body>
+                      <h2>${currentEvent.title} — E-Signature Compliance Audit</h2>
+                      <div>Organization: <b>${currentOrg.name}</b> (EIN: ${currentOrg.ein})</div>
+                      <div>Total Executed Digital Signatures: <b>${allSigned.length}</b></div>
+                      <table>
+                        <thead>
+                          <tr><th>Signer Legal Name</th><th>Signer Relationship</th><th>Waiver Title</th><th>Timestamp</th><th>IP Address</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                          ${allSigned.map(w => `
+                            <tr>
+                              <td><b>${w.signerName}</b></td>
+                              <td>${w.signerRelationship}</td>
+                              <td>${w.waiverTitle}</td>
+                              <td>${formatDate(w.signedAt)}</td>
+                              <td><code>${w.ipAddress}</code></td>
+                              <td>${w.isVerifiedAtDoor ? 'Verified Door ✓' : 'Online Signed'}</td>
+                            </tr>
+                          `).join('')}
+                        </tbody>
+                      </table>
+                      <script>window.onload = function() { window.print(); }</script>
+                    </body>
+                  </html>
+                `;
+                printWindow.document.write(html);
+                printWindow.document.close();
+              }}
+              className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition"
             >
               <Printer className="w-4 h-4" />
-              <span>Print Name Badge / Lanyard Sheets</span>
+              <span>Print Compliance Audit Ledger</span>
             </button>
           </div>
         </div>

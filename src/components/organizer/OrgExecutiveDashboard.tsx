@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ORG_TEMPLATES } from '../../data/templates';
 import { VolunteerCrm } from './VolunteerCrm';
+import { LegalComplianceStudio } from './LegalComplianceStudio';
 import { 
   Building2, Users, Shield, Award, DollarSign, 
   History, Plus, Check, Settings, Sparkles, Image, Palette, 
-  Upload, FileText, CheckCircle2 
+  Upload, FileText, CheckCircle2, ShieldCheck 
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
 export const OrgExecutiveDashboard: React.FC = () => {
   const { currentOrg, users, auditLogs, events, volunteerCrm, updateOrganizationBranding } = useApp();
-  const [activeAdminTab, setActiveAdminTab] = useState<'crm' | 'branding' | 'team' | 'templates' | 'audit'>('crm');
+  const [activeAdminTab, setActiveAdminTab] = useState<'crm' | 'branding' | 'legal' | 'team' | 'templates' | 'audit'>('crm');
 
   const totalOrgFunds = events.filter(e => e.orgId === currentOrg.id).reduce((sum, e) => sum + e.totalRaised, 0);
 
@@ -120,6 +121,16 @@ export const OrgExecutiveDashboard: React.FC = () => {
         >
           <Palette className="w-3.5 h-3.5" />
           <span>🎨 Branding, Logos & Signatory</span>
+        </button>
+
+        <button
+          onClick={() => setActiveAdminTab('legal')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            activeAdminTab === 'legal' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>⚖️ Legal Waivers & E-Sign Studio</span>
         </button>
 
         <button
@@ -531,6 +542,11 @@ export const OrgExecutiveDashboard: React.FC = () => {
             </table>
           </div>
         </div>
+      )}
+
+      {/* TAB 3: LEGAL WAIVERS & COMPLIANCE */}
+      {activeAdminTab === 'legal' && (
+        <LegalComplianceStudio />
       )}
 
     </div>

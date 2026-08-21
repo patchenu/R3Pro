@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   Organization, User, Event, SubPart, Shift, ItemSlot, TicketTier, 
   Registration, Donation, VendorApplication, ApprovalRequest, 
-  VolunteerCrmRecord, Announcement, AuditLog, UserRole 
+  VolunteerCrmRecord, Announcement, AuditLog, UserRole, WaiverTemplate 
 } from '../types';
 import { 
   SEED_ORGANIZATIONS, SEED_USERS, SEED_EVENTS, SEED_SUBPARTS, 
@@ -10,7 +10,7 @@ import {
   SEED_DONATIONS, SEED_VENDOR_APPLICATIONS, SEED_APPROVAL_REQUESTS, 
   SEED_VOLUNTEER_CRM, SEED_ANNOUNCEMENTS, SEED_AUDIT_LOGS 
 } from '../data/seedData';
-import { EVENT_TEMPLATES, ORG_TEMPLATES } from '../data/templates';
+import { EVENT_TEMPLATES, ORG_TEMPLATES, WAIVER_TEMPLATES_DATA } from '../data/templates';
 import { generateManageToken, generateReceiptNumber } from '../utils/formatters';
 
 interface ToastNotification {
@@ -43,6 +43,7 @@ interface AppContextType {
   volunteerCrm: VolunteerCrmRecord[];
   announcements: Announcement[];
   auditLogs: AuditLog[];
+  waiverTemplates: WaiverTemplate[];
   toasts: ToastNotification[];
 
   // Switchers
@@ -92,6 +93,11 @@ interface AppContextType {
   submitVendorApplication: (app: Omit<VendorApplication, 'id' | 'status' | 'submittedAt'>) => void;
   approveVendor: (appId: string, assignedBooth: string) => void;
   rejectVendor: (appId: string) => void;
+
+  // Legal Waivers & Compliance
+  addWaiverTemplate: (data: Omit<WaiverTemplate, 'id'>) => WaiverTemplate;
+  updateWaiverTemplate: (id: string, updates: Partial<WaiverTemplate>) => void;
+  deleteWaiverTemplate: (id: string) => void;
 
   // Communications & Donations
   postAnnouncement: (ann: Omit<Announcement, 'id' | 'sentAt'>) => void;
@@ -145,6 +151,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       volunteerCrm: SEED_VOLUNTEER_CRM,
       announcements: SEED_ANNOUNCEMENTS,
       auditLogs: SEED_AUDIT_LOGS,
+      waiverTemplates: WAIVER_TEMPLATES_DATA,
       currentOrgId: 'org_lincoln_pta',
       currentUserId: 'user_elena',
       currentEventId: 'evt_fall_carnival_2026',
@@ -992,6 +999,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('info', 'Vendor Application Declined', 'Vendor was notified.');
   };
 
+  const addWaiverTemplate = (data: Omit<WaiverTemplate, 'id'>): WaiverTemplate => {
+    const id = 'waiver_' + Date.now();
+    const newWaiver: WaiverTemplate = {
+      ...data,
+      id
+    };
+    setData((prev: any) => ({
+      ...prev,
+      waiverTemplates: [...(prev.waiverTemplates || WAIVER_TEMPLATES_DATA), newWaiver]
+    }));
+    showToast('success', 'Legal Document Saved', `"${data.title}" is now active and enforced.`);
+    return newWaiver;
+  };
+
+  const updateWaiverTemplate = (id: string, updates: Partial<WaiverTemplate>) => {
+    setData((prev: any) => ({
+      ...prev,
+      waiverTemplates: (prev.waiverTemplates || WAIVER_TEMPLATES_DATA).map((w: WaiverTemplate) => w.id === id ? { ...w, ...updates } : w)
+    }));
+    showToast('success', 'Legal Document Updated', 'Waiver terms and e-sign settings saved.');
+  };
+
+  const deleteWaiverTemplate = (id: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      waiverTemplates: (prev.waiverTemplates || WAIVER_TEMPLATES_DATA).filter((w: WaiverTemplate) => w.id !== id)
+    }));
+    showToast('info', 'Legal Document Removed', 'Waiver template deleted.');
+  };
+
   const postAnnouncement = (ann: Omit<Announcement, 'id' | 'sentAt'>) => {
     const newAnn: Announcement = {
       ...ann,
@@ -1170,6 +1207,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       volunteerCrm: data.volunteerCrm.filter((c: VolunteerCrmRecord) => c.orgId === currentOrg.id),
       announcements: data.announcements.filter((a: Announcement) => a.eventId === currentEvent.id),
       auditLogs: data.auditLogs,
+      waiverTemplates: data.waiverTemplates || WAIVER_TEMPLATES_DATA,
       toasts,
       switchRole,
       switchOrganization,
@@ -1192,6 +1230,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       submitVendorApplication,
       approveVendor,
       rejectVendor,
+      addWaiverTemplate,
+      updateWaiverTemplate,
+      deleteWaiverTemplate,
       postAnnouncement,
       recordDirectDonation,
       login,
