@@ -91,7 +91,11 @@ To eliminate fragmentation and provide executive oversight across all historical
   * **Variable Threshold Rules Engine**: Lead modifications within threshold (e.g. $< \$250$ budget or $< 5$ shift spots) auto-approve; larger changes queue for 1-click Event Chair review.
   * **Supply & Wishlist Fulfillment**: Item slot pledge tracking with designated drop-off locations and deadlines.
   * **Vendor & Sponsor Marketplace**: Tiered packages with intake questionnaires (Certificate of Insurance upload, EIN, power needs, booth dimensions).
-  * **On-Site Tablet Check-In Kiosk**: Express door check-in with phone lookup and emergency touch waiver signatures.
+  * **On-Site Tablet Check-In & Day-Of Registration Kiosk**: Express door station featuring dual-mode operations:
+    - **`🔍 Mode 1: Check-In (I Already Signed Up Online)`**: Phone/name keypad lookup, 1-tap check-in, on-site emergency touch waiver signing, and reporting gate directions.
+    - **`🙋 Mode 2: Day-Of Walk-Up Volunteer Sign-Up ("I Want to Volunteer Day-Of")`**:
+      - **Option A (Scan on Phone / Skip The Line)**: Large high-contrast QR code allowing volunteers to self-register on their smartphone in 30 seconds without waiting in line.
+      - **Option B (Express Touchscreen Sign-Up)**: 1-minute on-tablet registration allowing walk-up volunteers to choose an open urgent shift, sign the digital safety waiver on screen, and immediately check in.
 
 ### 2.4 Modern 2-Tier Navigation Hierarchy & Command Center Architecture
 To eliminate cognitive overload and make the role mental model unmistakable, R3Pro utilizes a **2-Tier Header Architecture**:
@@ -109,8 +113,8 @@ To eliminate cognitive overload and make the role mental model unmistakable, R3P
 | **Event Showcase & Shifts** | `?tab=public_landing` | *All (Public / Authenticated)* | Marketing showcase, 60s volunteer shift registration, item slot drop-offs, ticket checkout, digital waivers. |
 | **📊 PLANNER HUB** | `?tab=planner_dashboard` | `org_admin`, `event_planner` | **Unified Campaign Command Center**: Contains sub-tabs for *Committees & Budgets*, *Volunteer Manifest & Check-In*, *Marketing & Flyers*, *Gap Analysis & Health*, *Vendor Marketplace*, and *Reports & Badges*. |
 | **Committee Leads Portal** | `?tab=lead_portal` | `org_admin`, `event_planner`, `committee_lead` | Department-scoped lead workspace: shift capacity management, wishlist item tracking, station check-in. |
-| **Org Super Admin CRM** | `?tab=org_admin_view` | `org_admin` | Multi-event volunteer CRM, lifetime service hour tracking, committee lead invitations, audit log. |
-| **Door Kiosk Station** | `?tab=kiosk_mode` | `kiosk`, `org_admin`, `event_planner` | Fullscreen door check-in station with camera QR scanning, phone lookup, and on-site touch waiver signing. |
+| **Org Super Admin CRM** | `?tab=org_admin_view` | `org_admin` | Master Events Portfolio & Outcomes, multi-event volunteer CRM, committee lead invitations, audit log. |
+| **Door Kiosk Station** | `?tab=kiosk_mode` | `kiosk`, `org_admin`, `event_planner` | Fullscreen tablet kiosk: Dual-mode check-in (Phone/Name lookup) and Day-Of volunteer registration (Scan QR code on phone + on-tablet express sign-up). |
 
 
 
