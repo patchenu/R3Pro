@@ -79,6 +79,9 @@ interface AppContextType {
   updateOrganizationBranding: (orgId: string, updates: Partial<Organization>) => void;
   
   // Committee Lead & Threshold Actions
+  addSubPart: (subPartData: Omit<SubPart, 'id' | 'budgetSpent' | 'shiftIds' | 'itemSlotIds'>) => SubPart;
+  updateSubPart: (subPartId: string, updates: Partial<SubPart>) => void;
+  deleteSubPart: (subPartId: string) => void;
   addShift: (shiftData: Omit<Shift, 'id' | 'claimedCount' | 'isApproved'>) => { autoApproved: boolean; shiftId: string };
   addItemSlot: (itemData: Omit<ItemSlot, 'id' | 'quantityPledged'>) => ItemSlot;
   requestBudgetIncrease: (subPartId: string, amount: number, reason: string) => void;
@@ -780,6 +783,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('success', 'Branding Saved', 'Organization logo, primary color, and signatory updated successfully.');
   };
 
+  const addSubPart = (subPartData: Omit<SubPart, 'id' | 'budgetSpent' | 'shiftIds' | 'itemSlotIds'>): SubPart => {
+    const id = 'subpart_' + Date.now();
+    const newSubPart: SubPart = {
+      ...subPartData,
+      id,
+      budgetSpent: 0,
+      shiftIds: [],
+      itemSlotIds: []
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      subParts: [...prev.subParts, newSubPart],
+      events: prev.events.map((e: Event) => e.id === currentEvent.id ? {
+        ...e,
+        subPartIds: [...(e.subPartIds || []), id]
+      } : e)
+    }));
+
+    showToast('success', 'Committee Added', `"${subPartData.name}" has been created with a $${subPartData.budgetAllocated} budget.`);
+    return newSubPart;
+  };
+
+  const updateSubPart = (subPartId: string, updates: Partial<SubPart>) => {
+    setData((prev: any) => ({
+      ...prev,
+      subParts: prev.subParts.map((sp: SubPart) => sp.id === subPartId ? { ...sp, ...updates } : sp)
+    }));
+
+    showToast('success', 'Committee Updated', 'Department settings and budget saved.');
+  };
+
+  const deleteSubPart = (subPartId: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      subParts: prev.subParts.filter((sp: SubPart) => sp.id !== subPartId),
+      shifts: prev.shifts.filter((s: Shift) => s.subPartId !== subPartId),
+      itemSlots: prev.itemSlots.filter((i: ItemSlot) => i.subPartId !== subPartId)
+    }));
+
+    showToast('info', 'Committee Removed', 'Department and its shifts have been deleted.');
+  };
+
   const addShift = (shiftData: Omit<Shift, 'id' | 'claimedCount' | 'isApproved'>) => {
     const id = 'shift_' + Date.now();
     const exceedsThreshold = shiftData.capacity > currentEvent.approvalThresholdSlots;
@@ -1135,6 +1181,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       toggleCheckIn,
       toggleItemPledgeReceived,
       updateOrganizationBranding,
+      addSubPart,
+      updateSubPart,
+      deleteSubPart,
       addShift,
       addItemSlot,
       requestBudgetIncrease,
