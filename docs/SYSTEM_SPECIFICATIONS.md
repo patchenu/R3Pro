@@ -59,7 +59,21 @@ graph TD
   * **Vendor & Sponsor Marketplace**: Tiered packages with intake questionnaires (Certificate of Insurance upload, EIN, power needs, booth dimensions).
   * **On-Site Tablet Check-In Kiosk**: Express door check-in with phone lookup and emergency touch waiver signatures.
 
----
+### 2.4 Navigation Hierarchy & Application Hub Locations
+R3Pro structures its navigation based on role-based access control (RBAC):
+
+| Navigation Tab / Hub | URL Route | Permitted Roles | Description & Key Capabilities |
+| :--- | :--- | :--- | :--- |
+| **Community Events (Discovery Hub)** | `?tab=discovery_hub` | *All (Public / Authenticated)* | Interactive 7-column month calendar, event cards, progressive CTAs driving volunteer registration. |
+| **Event Sign-Up (Public Showcase)** | `?tab=public_landing` | *All (Public / Authenticated)* | Marketing showcase, 60s volunteer shift registration, item slot drop-offs, ticket checkout, digital waivers. |
+| **Planner Hub (Event Chair Hub)** | `?tab=planner_dashboard` | `org_admin`, `event_planner` | **Central Campaign Hub**: Fundraising thermometer, Committee breakdown, **Live Volunteer Manifest & Check-In**, Vendor Marketplace, Variable Approval Queue. |
+| **Marketing & Flyers Hub** | `?tab=marketing_hub` | `org_admin`, `event_planner` | 1-Click printable event flyers, social media image generator, volunteer email broadcast dispatcher. |
+| **Gap Analysis & Health** | `?tab=gap_analysis` | `org_admin`, `event_planner` | Shift shortage scanner, understaffed critical alerts, automated volunteer broadcast re-engagement. |
+| **Committee Leads Portal** | `?tab=lead_portal` | `org_admin`, `event_planner`, `committee_lead` | Department-scoped lead workspace: shift capacity management, wishlist item tracking, station check-in. |
+| **Org CRM & Team Management** | `?tab=org_admin_view` | `org_admin` | Multi-event volunteer CRM, lifetime service hour tracking, committee lead invitations, audit log. |
+| **Exports & IRS Receipts** | `?tab=reports_center` | *All Leadership* | 501(c)(3) statutory donation letters, printable lanyard badge sheets, student service hour certificates, CSV ledgers. |
+| **On-Site Tablet Kiosk** | `?tab=kiosk_mode` | `kiosk`, `org_admin`, `event_planner` | Fullscreen door check-in station with camera QR scanning, phone lookup, and on-site touch waiver signing. |
+
 
 ## 3. Account Lifecycle, Auth Gates & Multi-Role Architecture
 
