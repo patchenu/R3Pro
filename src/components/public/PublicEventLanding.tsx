@@ -16,6 +16,7 @@ import { ConfirmationCard } from './ConfirmationCard';
 import { QrCodeModal } from '../common/QrCodeModal';
 import { ManageRegistration } from './ManageRegistration';
 import { TicketTier } from '../../types';
+import { VisualScheduleTimelineBar } from './VisualScheduleTimelineBar';
 
 export const PublicEventLanding: React.FC = () => {
   const { currentEvent, currentOrg, subParts, shifts, itemSlots, ticketTiers, donations, announcements, registrations, proBonoPledges } = useApp();
@@ -869,45 +870,23 @@ export const PublicEventLanding: React.FC = () => {
 
       </div>
 
-      {/* STICKY FLOATING ACTION BAR WHEN SELECTIONS ARE MADE */}
-      {totalSelectionsCount > 0 && (
-        <div className="fixed bottom-0 inset-x-0 bg-slate-900/95 backdrop-blur-md text-white p-4 z-40 border-t border-slate-800 shadow-2xl animate-in slide-in-from-bottom duration-300">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="font-extrabold text-sm sm:text-base">
-                  {selectedShiftIds.length} Shift{selectedShiftIds.length !== 1 ? 's' : ''} + {selectedItemPledges.length} Item{selectedItemPledges.length !== 1 ? 's' : ''} + {selectedTicketTiers.length} Ticket{selectedTicketTiers.length !== 1 ? 's' : ''} Selected
-                </span>
-              </div>
-              <span className="text-xs text-slate-400">
-                1-click unified sign-up & digital waiver confirmation
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <button
-                onClick={() => {
-                  setSelectedShiftIds([]);
-                  setSelectedItemPledges([]);
-                  setSelectedTicketTiers([]);
-                }}
-                className="text-xs text-slate-400 hover:text-white px-3 py-2"
-              >
-                Clear Selections
-              </button>
-
-              <button
-                onClick={() => setIsRegModalOpen(true)}
-                className="flex-1 sm:flex-initial bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-black py-3 px-8 rounded-xl text-sm shadow-lg shadow-indigo-900/40 transition transform hover:scale-105 active:scale-100 flex items-center justify-center gap-2"
-              >
-                <span>Proceed to Sign Up</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Interactive Floating Visual Schedule Timeline Bar & Mini Cart */}
+      <VisualScheduleTimelineBar
+        selectedShifts={shifts.filter(s => selectedShiftIds.includes(s.id))}
+        subParts={subParts}
+        itemPledgesCount={selectedItemPledges.length}
+        ticketsCount={selectedTicketTiers.reduce((sum, t) => sum + t.quantity, 0)}
+        directDonationAmount={directDonationAmount}
+        onRemoveShift={toggleShiftSelection}
+        onClearAll={() => {
+          setSelectedShiftIds([]);
+          setSelectedItemPledges([]);
+          setSelectedTicketTiers([]);
+          setDirectDonationAmount(0);
+        }}
+        onOpenRegistration={() => setIsRegModalOpen(true)}
+        primaryColor={currentEvent.theme?.primaryColor || '#4f46e5'}
+      />
 
       {/* Unified Registration Modal */}
       {isRegModalOpen && (

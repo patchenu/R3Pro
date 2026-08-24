@@ -525,3 +525,36 @@ This document provides system knowledge, core architectural rules, and coding st
 
 ### 30.2 1-to-1 Public Output Rendering
 - Every field captured in `EventBuilderWizard.tsx`, `MasterPlannerDashboard.tsx`, `OrgExecutiveDashboard.tsx`, and `LeadPortal.tsx` is rendered across public landing pages (`PublicEventLanding.tsx`), registration passes (`ConfirmationCard.tsx`), Door Kiosks (`DoorKioskView.tsx`), and CRM dossiers (`VolunteerCrm.tsx`).
+
+---
+
+## 31. Volunteer Visual Schedule Timeline & 1-Click Promotional Launch Kit Standard
+
+### 31.1 Volunteer "Build Your Day" Visual Schedule Timeline Bar (`VisualScheduleTimelineBar.tsx`)
+- **Docked Floating Intelligence**: Renders a floating, responsive schedule timeline at the bottom of `PublicEventLanding.tsx` whenever $\ge 1$ volunteer shift, wishlist supply item, admission ticket, or donation is selected.
+- **Chronological Shift Sorting**: Automatically sorts selected shifts by `startTime` and calculates cumulative community service impact hours (e.g. `5.0 hrs of community impact`).
+- **Zero-Conflict Overlap Engine**: Real-time validation checks for temporal overlap across all selected shifts (`startA < endB && endA > startB`).
+  - Flags conflicting pairs with detailed minutes overlap warnings (e.g. `⚠️ Time Overlap Conflict: Setup Crew and Face Painting overlap by 30 minutes`).
+  - Displays `✓ Zero Conflicts` when all shift timeframes are disjoint.
+- **Transit & Rest Buffer Intelligence**: Dynamically computes break intervals between adjacent consecutive shifts (e.g. `⏱️ 30m break`, `⚡ Back-to-back shift`).
+- **Quick Removal & 1-Click Checkout**: Direct `✕` removal buttons on individual shift pills and 1-click `Complete Sign-Up & Claim Passes` CTA launching the pre-loaded `UnifiedRegistrationModal`.
+
+### 31.2 1-Click Multi-Channel Campaign Launch Kit & Recruitment Suite (`EventMarketingHub.tsx`)
+- Accessible directly under the **"🚀 Campaign Launch Kit & Outreach"** tab in `MasterPlannerDashboard.tsx`.
+- **5 Integrated Promotional Modules**:
+  1. **🖨️ Printable 8.5x11 PDF Gate Posters & Tear-Off Flyers**:
+     - Standard 8.5x11 letter page layout with organization branding, verified 501(c)(3) badge, event schedule, venue address, and urgent open volunteer shift needs.
+     - Center high-contrast QR vector.
+     - **8 Detachable Bottom Tear-Off Tabs**: Perforated-style tabs with mini QR codes and shortlinks for bulletin board posting.
+     - 1-click `🖨️ Print / Save 8.5x11 PDF Flyer` triggering browser print stylesheet.
+  2. **✉️ Pre-Written Email & Newsletter Recruitment Blasts**:
+     - *Template A: Official Campaign Launch & Volunteer Callout*.
+     - *Template B: T-7 Days Critical Shift Shortage Drive* (with student service hours emphasis).
+     - *Template C: Sponsor & Commercial Artisan Outreach Pitch* (with 501(c)(3) tax deduction details).
+     - 1-click `📋 Copy Subject & Body` with automatic live variable merge tags.
+  3. **📱 Social Media & Messaging Share Pack**:
+     - Formatted copy, emojis, and hashtags for Instagram, Facebook, Nextdoor, LinkedIn, and WhatsApp / SMS Broadcasts.
+  4. **💻 Website Embed & High-Res QR Pack**:
+     - Responsive HTML iframe embed snippet + high-resolution downloadable QR code in organization brand colors.
+  5. **👥 Volunteer CRM Pool Re-Engagement Blast**:
+     - 1-click targeted broadcast to past volunteer database.

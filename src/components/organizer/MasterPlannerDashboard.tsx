@@ -1361,7 +1361,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
               }`}
             >
               <Share2 className="w-3.5 h-3.5 text-indigo-400" />
-              <span>📢 Marketing & Broadcasts</span>
+              <span>🚀 Campaign Launch Kit & Outreach</span>
             </button>
 
             <button
