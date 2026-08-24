@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { EVENT_TEMPLATES, EventTemplatePreset } from '../../data/templates';
+import { EventTheme } from '../../types';
 import { Modal } from '../common/Modal';
 import { 
   Sparkles, Calendar, MapPin, DollarSign, Users, 
   Gift, Check, ChevronRight, ChevronLeft, Layers, LayoutTemplate,
   Tag, Plus, X, Copy, History, HelpCircle, Briefcase, Award,
   ShieldCheck, Clock, Package, CheckCircle2, Edit3, Trash2, Radio,
-  ArrowUp, ArrowDown, Shirt
+  ArrowUp, ArrowDown, Shirt, Video, Globe, Palette, AlertCircle
 } from 'lucide-react';
 import { formatCurrency, formatTimeRange } from '../../utils/formatters';
 
@@ -30,9 +31,18 @@ const PRESET_EVENT_TAGS = [
   'Free Admission'
 ];
 
+export const THEME_PRESETS: EventTheme[] = [
+  { id: 'sunset_coral', name: 'Sunset Festive Coral', primaryColor: '#f97316', accentColor: '#fb923c', bgGradient: 'from-amber-500 to-orange-600' },
+  { id: 'cyber_cyan', name: 'Electric Tech Cyan', primaryColor: '#0284c7', accentColor: '#38bdf8', bgGradient: 'from-blue-600 to-cyan-800' },
+  { id: 'emerald_forest', name: 'Emerald Forest Green', primaryColor: '#059669', accentColor: '#34d399', bgGradient: 'from-emerald-600 to-teal-800' },
+  { id: 'royal_indigo', name: 'Royal Indigo Purple', primaryColor: '#4f46e5', accentColor: '#818cf8', bgGradient: 'from-indigo-600 to-purple-800' },
+  { id: 'golden_amber', name: 'Golden Autumn Amber', primaryColor: '#d97706', accentColor: '#f59e0b', bgGradient: 'from-amber-500 to-yellow-600' },
+  { id: 'crimson_rose', name: 'Crimson Charity Rose', primaryColor: '#e11d48', accentColor: '#fb7185', bgGradient: 'from-rose-600 to-pink-700' }
+];
+
 interface WizardDepartment {
   name: string;
-  category: 'labor_setup' | 'hospitality_food' | 'vendors_sponsors' | 'auction_fundraising' | 'registration_greeters';
+  category: 'labor_setup' | 'hospitality_food' | 'vendors_sponsors' | 'auction_fundraising' | 'registration_greeters' | 'other';
   leadUserId?: string;
   leadName: string;
   leadPhone?: string;
@@ -52,6 +62,9 @@ interface WizardShift {
   endTime: string;
   capacity: number;
   requiresWaiver: boolean;
+  minAge?: number;
+  skillsRequired?: string[];
+  reportingLocationOverride?: string;
 }
 
 interface WizardItem {
@@ -89,15 +102,20 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const [selectedTemplate, setSelectedTemplate] = useState<EventTemplatePreset | null>(EVENT_TEMPLATES[0]);
   const [selectedPastEventId, setSelectedPastEventId] = useState<string>('');
 
-  // Step 2: Campaign Essentials & Global Attire
+  // Step 2: Campaign Essentials, Story & Global Attire
   const [title, setTitle] = useState(EVENT_TEMPLATES[0]?.title || 'Annual Community Carnival');
   const [tagline, setTagline] = useState(EVENT_TEMPLATES[0]?.tagline || 'Family fun, food, and games supporting our local programs.');
+  const [description, setDescription] = useState(EVENT_TEMPLATES[0]?.description || 'Join students, families, and community supporters for our annual celebration and fundraiser.');
   const [goal, setGoal] = useState(EVENT_TEMPLATES[0]?.defaultGoal || 15000);
   const [venueName, setVenueName] = useState('Lincoln Community High School Grounds');
   const [venueAddress, setVenueAddress] = useState('1420 Lincoln Blvd, Springfield, IL');
+  const [mapUrl, setMapUrl] = useState('https://maps.google.com/?q=Springfield+IL');
+  const [isVirtual, setIsVirtual] = useState(false);
+  const [virtualLink, setVirtualLink] = useState('');
   const [startDate, setStartDate] = useState('2026-10-15T09:00:00');
   const [endDate, setEndDate] = useState('2026-10-15T17:00:00');
   const [coverImageUrl, setCoverImageUrl] = useState('https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&auto=format&fit=crop&q=80');
+  const [selectedTheme, setSelectedTheme] = useState<EventTheme>(THEME_PRESETS[0]);
   const [eventDressCode, setEventDressCode] = useState('Comfortable casual attire or volunteer shirt (provided)');
 
   // Step 3: Committee Departments & Leadership
@@ -112,16 +130,19 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   // Step 6: Sponsor Packages & Commercial Tiers
   const [tiers, setTiers] = useState<WizardTier[]>([]);
 
-  // Step 7: Discovery Tags & Approval Thresholds
+  // Step 7: Discovery Tags & Approval Thresholds & Policies
   const [selectedTags, setSelectedTags] = useState<string[]>(['Family Friendly', 'Carnival & Games', 'Student Service Hours']);
   const [customTagInput, setCustomTagInput] = useState('');
   const [thresholdBudget, setThresholdBudget] = useState(250);
   const [thresholdSlots, setThresholdSlots] = useState(5);
+  const [reminderCadence, setReminderCadence] = useState<'standard' | 'intensive' | 'same_day' | 'custom'>('standard');
+  const [allowFeeCoverage, setAllowFeeCoverage] = useState<boolean>(true);
 
   // Modals for editing during wizard
   const [isAddDeptModalOpen, setIsAddDeptModalOpen] = useState(false);
   const [editingDeptIdx, setEditingDeptIdx] = useState<number | null>(null);
   const [deptName, setDeptName] = useState('');
+  const [deptCategory, setDeptCategory] = useState<WizardDepartment['category']>('labor_setup');
   const [deptLeadUserId, setDeptLeadUserId] = useState(currentUser.id);
   const [deptLeadName, setDeptLeadName] = useState(currentUser.name);
   const [deptLeadEmail, setDeptLeadEmail] = useState(currentUser.email);
@@ -130,6 +151,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const [deptGate, setDeptGate] = useState('Gate 1 Main Desk');
   const [deptBudget, setDeptBudget] = useState(400);
   const [deptDressCode, setDeptDressCode] = useState('Comfortable attire');
+  const [deptSuppliesNotes, setDeptSuppliesNotes] = useState('');
 
   const [isAddShiftModalOpen, setIsAddShiftModalOpen] = useState(false);
   const [editingShiftIdx, setEditingShiftIdx] = useState<number | null>(null);
@@ -140,6 +162,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const [shiftEnd, setShiftEnd] = useState('2026-10-15T12:00:00');
   const [shiftCap, setShiftCap] = useState(4);
   const [shiftWaiver, setShiftWaiver] = useState(true);
+  const [shiftMinAge, setShiftMinAge] = useState<number | ''>('');
+  const [shiftSkillsInput, setShiftSkillsInput] = useState('');
+  const [shiftLocationOverride, setShiftLocationOverride] = useState('');
 
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [editingItemIdx, setEditingItemIdx] = useState<number | null>(null);
@@ -159,10 +184,11 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const [tierPrice, setTierPrice] = useState(1000);
   const [tierFmv, setTierFmv] = useState(150);
   const [tierCap, setTierCap] = useState(5);
-  const [tierDesc, setTierDesc] = useState('');
+  const [tierDesc, setTierDesc] = useState('Corporate underwriting package with main stage banners and VIP perks.');
   const [tierPerksInput, setTierPerksInput] = useState('Logo on Main Stage, 4 VIP Passes, Social Media Mention');
   const [tierBoothDim, setTierBoothDim] = useState('10x10');
   const [tierPower, setTierPower] = useState(false);
+  const [tierInstantCheckout, setTierInstantCheckout] = useState(true);
 
   const orgPastEvents = events.filter(e => e.orgId === currentOrg.id);
 
@@ -176,7 +202,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const applyTemplateData = (preset: EventTemplatePreset) => {
     setTitle(preset.title);
     setTagline(preset.tagline);
+    setDescription(preset.description || `Join us for ${preset.title}! All proceeds support local community and student initiatives.`);
     setGoal(preset.defaultGoal);
+    setEventDressCode(preset.defaultDressCode || 'Comfortable casual attire or volunteer shirt (provided)');
     
     // Departments
     const newDepts: WizardDepartment[] = preset.departments.map((d, dIdx) => ({
@@ -189,6 +217,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
       leadRadioChannel: `Channel ${dIdx + 1}`,
       reportingGate: d.reportingGate || `${d.name} Station`,
       dressCodeNotes: d.dressCode || 'Comfortable attire',
+      suppliesNotes: 'Check in with lead at station for materials',
       budgetAllocated: d.suggestedBudget || Math.round(preset.defaultGoal * 0.06)
     }));
     setDepartments(newDepts);
@@ -218,7 +247,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
           startTime: sStart,
           endTime: sEnd,
           capacity: s.capacity,
-          requiresWaiver: s.requiresWaiver
+          requiresWaiver: s.requiresWaiver,
+          minAge: 14,
+          skillsRequired: []
         });
       });
     });
@@ -250,7 +281,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
       fairMarketValue: t.fairMarketValue,
       capacity: t.capacity,
       instantCheckout: t.instantCheckout,
-      description: t.description,
+      description: t.description || 'Underwriting package with community recognition perks.',
       perks: t.perks || ['Logo Placement', 'Event Passes']
     }));
     setTiers(newTiers);
@@ -258,8 +289,10 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     // Tags
     if (preset.id === 'gala_auction') {
       setSelectedTags(['Charity Gala', 'Silent Auction', 'Dinner & Symphony', 'Student Service Hours']);
+      setSelectedTheme(THEME_PRESETS[3]); // Royal Indigo
     } else {
       setSelectedTags(['Family Friendly', 'Carnival & Games', 'Student Service Hours', 'Food & Bake Sale']);
+      setSelectedTheme(THEME_PRESETS[0]); // Sunset Coral
     }
   };
 
@@ -269,10 +302,18 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     if (past) {
       setTitle(`${past.title.replace(/\d{4}/, '')} ${new Date().getFullYear() + 1}`.trim());
       setTagline(past.tagline);
+      setDescription(past.description || past.tagline);
       setGoal(past.fundraisingGoal);
       setVenueName(past.venueName);
       setVenueAddress(past.venueAddress);
+      setMapUrl(past.mapUrl || '');
+      setIsVirtual(!!past.isVirtual);
+      setVirtualLink(past.virtualLink || '');
+      setEventDressCode(past.dressCode || 'Comfortable casual attire');
       setSelectedTags(past.tags || ['Family Friendly']);
+      if (past.theme) setSelectedTheme(past.theme);
+      if (past.reminderCadence) setReminderCadence(past.reminderCadence);
+      if (past.allowFeeCoverage !== undefined) setAllowFeeCoverage(past.allowFeeCoverage);
     }
   };
 
@@ -280,6 +321,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const handleOpenAddDept = () => {
     setEditingDeptIdx(null);
     setDeptName('');
+    setDeptCategory('labor_setup');
     setDeptLeadUserId(currentUser.id);
     setDeptLeadName(currentUser.name);
     setDeptLeadEmail(currentUser.email);
@@ -288,6 +330,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setDeptGate(`Gate ${departments.length + 1} Station`);
     setDeptBudget(400);
     setDeptDressCode(eventDressCode || 'Comfortable casual attire');
+    setDeptSuppliesNotes('');
     setIsAddDeptModalOpen(true);
   };
 
@@ -295,6 +338,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setEditingDeptIdx(idx);
     const d = departments[idx];
     setDeptName(d.name);
+    setDeptCategory(d.category || 'labor_setup');
     setDeptLeadUserId(d.leadUserId || currentUser.id);
     setDeptLeadName(d.leadName);
     setDeptLeadEmail(d.leadEmail || '');
@@ -303,6 +347,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setDeptGate(d.reportingGate);
     setDeptBudget(d.budgetAllocated);
     setDeptDressCode(d.dressCodeNotes || eventDressCode || 'Comfortable casual attire');
+    setDeptSuppliesNotes(d.suppliesNotes || '');
     setIsAddDeptModalOpen(true);
   };
 
@@ -317,7 +362,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
 
     const deptPayload: WizardDepartment = {
       name: deptName.trim(),
-      category: 'labor_setup',
+      category: deptCategory,
       leadUserId: deptLeadUserId,
       leadName: finalLeadName,
       leadEmail: finalLeadEmail,
@@ -325,6 +370,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
       leadRadioChannel: deptRadio,
       reportingGate: deptGate,
       dressCodeNotes: deptDressCode.trim() || eventDressCode,
+      suppliesNotes: deptSuppliesNotes.trim() || 'Check in with lead at station',
       budgetAllocated: Number(deptBudget) || 0
     };
 
@@ -358,6 +404,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setShiftEnd(`${day}T12:00:00`);
     setShiftCap(4);
     setShiftWaiver(true);
+    setShiftMinAge('');
+    setShiftSkillsInput('');
+    setShiftLocationOverride('');
     setIsAddShiftModalOpen(true);
   };
 
@@ -371,6 +420,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setShiftEnd(s.endTime || endDate);
     setShiftCap(s.capacity);
     setShiftWaiver(s.requiresWaiver);
+    setShiftMinAge(s.minAge !== undefined ? s.minAge : '');
+    setShiftSkillsInput((s.skillsRequired || []).join(', '));
+    setShiftLocationOverride(s.reportingLocationOverride || '');
     setIsAddShiftModalOpen(true);
   };
 
@@ -385,7 +437,10 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
       startTime: shiftStart,
       endTime: shiftEnd,
       capacity: Number(shiftCap) || 1,
-      requiresWaiver: shiftWaiver
+      requiresWaiver: shiftWaiver,
+      minAge: shiftMinAge === '' ? undefined : Number(shiftMinAge),
+      skillsRequired: shiftSkillsInput.split(',').map(s => s.trim()).filter(Boolean),
+      reportingLocationOverride: shiftLocationOverride.trim() || undefined
     };
 
     if (editingShiftIdx !== null) {
@@ -399,7 +454,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setIsAddShiftModalOpen(false);
   };
 
-  const handleGenerateTimeSlots = (baseTitle: string, deptIdx: number, desc: string, cap: number, waiver: boolean) => {
+  const handleGenerateTimeSlots = (baseTitle: string, deptIdx: number, desc: string, cap: number, waiver: boolean, minAgeVal?: number, skillsArr?: string[], locOverride?: string) => {
     if (!baseTitle.trim()) return;
     const eventDay = startDate ? startDate.slice(0, 10) : '2026-10-15';
     const slots = [
@@ -416,7 +471,10 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
       startTime: s.start,
       endTime: s.end,
       capacity: cap,
-      requiresWaiver: waiver
+      requiresWaiver: waiver,
+      minAge: minAgeVal,
+      skillsRequired: skillsArr,
+      reportingLocationOverride: locOverride
     }));
 
     setShifts(prev => [...prev, ...generatedShifts]);
@@ -498,6 +556,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setTierPerksInput('Main Stage Banner, 4 VIP Passes, Social Media Announcement');
     setTierBoothDim('10x10');
     setTierPower(false);
+    setTierInstantCheckout(true);
     setIsAddTierModalOpen(true);
   };
 
@@ -509,10 +568,11 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setTierPrice(t.price);
     setTierFmv(t.fairMarketValue);
     setTierCap(t.capacity);
-    setTierDesc(t.description);
+    setTierDesc(t.description || '');
     setTierPerksInput(t.perks.join(', '));
     setTierBoothDim(t.boothDimensions || '10x10');
     setTierPower(t.powerProvided || false);
+    setTierInstantCheckout(t.instantCheckout !== undefined ? t.instantCheckout : true);
     setIsAddTierModalOpen(true);
   };
 
@@ -526,8 +586,8 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
       price: Number(tierPrice) || 0,
       fairMarketValue: Number(tierFmv) || 0,
       capacity: Number(tierCap) || 1,
-      instantCheckout: true,
-      description: tierDesc.trim(),
+      instantCheckout: tierInstantCheckout,
+      description: tierDesc.trim() || 'Underwriting package with community recognition perks.',
       perks: tierPerksInput.split(',').map(p => p.trim()).filter(Boolean),
       boothDimensions: tierType === 'vendor_booth' ? tierBoothDim : undefined,
       powerProvided: tierPower
@@ -628,6 +688,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
         endTime: s.endTime,
         capacity: s.capacity,
         requiresWaiver: s.requiresWaiver,
+        minAge: s.minAge,
+        skillsRequired: s.skillsRequired,
+        reportingLocationOverride: s.reportingLocationOverride,
         waiverTemplateId: 'waiver_general_liability'
       })),
       itemSlots: items.map(i => ({
@@ -660,15 +723,21 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     createEvent({
       title,
       tagline,
-      description: tagline || `Community fundraiser and volunteer event for ${currentOrg.name}`,
+      description: description.trim() || tagline || `Community fundraiser and volunteer event for ${currentOrg.name}`,
       fundraisingGoal: goal,
       venueName,
       venueAddress,
+      mapUrl: mapUrl.trim() || undefined,
+      isVirtual,
+      virtualLink: isVirtual ? virtualLink.trim() : undefined,
+      theme: selectedTheme,
       startDate,
       endDate,
       tags: selectedTags,
       coverImageUrl,
       dressCode: eventDressCode,
+      reminderCadence,
+      allowFeeCoverage,
       approvalThresholdBudget: thresholdBudget,
       approvalThresholdSlots: thresholdSlots
     }, undefined, customPayload);
@@ -866,7 +935,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
           <div className="space-y-4 animate-in fade-in text-xs">
             <div>
               <h3 className="text-sm font-bold text-slate-900">Step 2: Campaign Essentials & Venue Details</h3>
-              <p className="text-slate-500 text-xs">Define campaign title, fundraising goals, schedule window, and venue location</p>
+              <p className="text-slate-500 text-xs">Define campaign title, marketing story, fundraising goals, schedule window, theme, and venue</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -887,8 +956,24 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                   type="text"
                   value={tagline}
                   onChange={(e) => setTagline(e.target.value)}
+                  placeholder="e.g. Family fun, food, and games supporting our local programs."
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
                 />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">
+                  Campaign Story & Marketing Pitch (Detailed Public Overview) *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Detail what the campaign funds, exciting attractions, community impact, and why families and volunteers should participate..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl leading-relaxed"
+                />
+                <span className="text-[10px] text-slate-400">Featured prominently on the public landing page hero and share flyers</span>
               </div>
 
               <div>
@@ -955,6 +1040,70 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                   onChange={(e) => setVenueAddress(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
                 />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Google Maps / Directions Link</label>
+                <input
+                  type="url"
+                  value={mapUrl}
+                  onChange={(e) => setMapUrl(e.target.value)}
+                  placeholder="https://maps.google.com/?q=..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[11px]"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-bold text-slate-700">Virtual / Live Streaming</label>
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isVirtual}
+                      onChange={(e) => setIsVirtual(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded text-indigo-600"
+                    />
+                    <span className="text-[11px] font-bold text-indigo-700">Hybrid / Virtual</span>
+                  </label>
+                </div>
+                <input
+                  type="url"
+                  disabled={!isVirtual}
+                  value={virtualLink}
+                  onChange={(e) => setVirtualLink(e.target.value)}
+                  placeholder={isVirtual ? "https://zoom.us/j/... or YouTube stream" : "Disabled (In-person only)"}
+                  className={`w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-[11px] ${
+                    isVirtual ? 'bg-slate-50 text-slate-900' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  }`}
+                />
+              </div>
+
+              {/* Theme Color Palette Selector */}
+              <div className="sm:col-span-2 pt-2 border-t border-slate-200">
+                <label className="block font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Campaign Theme & Color Palette</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {THEME_PRESETS.map((th) => (
+                    <button
+                      key={th.id}
+                      type="button"
+                      onClick={() => setSelectedTheme(th)}
+                      className={`p-2 rounded-xl border text-left flex items-center gap-2.5 transition ${
+                        selectedTheme.id === th.id
+                          ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-500/20 shadow-xs'
+                          : 'border-slate-200 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      <span
+                        className="w-5 h-5 rounded-full shrink-0 border border-black/10 shadow-xs"
+                        style={{ backgroundColor: th.primaryColor }}
+                      />
+                      <span className="font-semibold text-[11px] text-slate-800 truncate">{th.name}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Global Event Volunteer Dress Code / Attire */}
@@ -1385,8 +1534,8 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               </div>
             </div>
 
-            {/* Variable Approval Rules */}
-            <div className="grid grid-cols-2 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            {/* Variable Approval Rules & Automated Notification Cadence */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Budget Auto-Approval Limit ($)</label>
                 <input
@@ -1409,6 +1558,34 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                   className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-bold"
                 />
                 <span className="text-[10px] text-slate-400">Shift spot additions exceeding this require Planner review</span>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Automated Reminder Cadence</label>
+                <select
+                  value={reminderCadence}
+                  onChange={(e) => setReminderCadence(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-semibold text-xs"
+                >
+                  <option value="standard">Standard Cadence (72h, 24h, 2h before shift)</option>
+                  <option value="intensive">Intensive Cadence (7d, 72h, 24h, 2h)</option>
+                  <option value="same_day">Same-Day Urgent Only (2h before shift)</option>
+                  <option value="custom">Custom Schedule</option>
+                </select>
+                <span className="text-[10px] text-slate-400">Automated multi-channel SMS & email reminder dispatches</span>
+              </div>
+
+              <div className="flex items-center gap-2 pt-6">
+                <input
+                  type="checkbox"
+                  id="wizardFeeCoverage"
+                  checked={allowFeeCoverage}
+                  onChange={(e) => setAllowFeeCoverage(e.target.checked)}
+                  className="w-4 h-4 rounded text-indigo-600"
+                />
+                <label htmlFor="wizardFeeCoverage" className="font-semibold text-slate-700 cursor-pointer text-xs">
+                  Enable Supporter Fee Coverage Option (2.9% + 30¢ processing offset)
+                </label>
               </div>
             </div>
 
@@ -1488,7 +1665,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
           isOpen={isAddDeptModalOpen}
           onClose={() => setIsAddDeptModalOpen(false)}
           title={editingDeptIdx !== null ? `Edit Department: ${deptName}` : 'Add Committee Department'}
-          subtitle="Assign leadership lead, allocated budget, and reporting gate"
+          subtitle="Assign leadership lead, department category, allocated budget, and reporting gate"
         >
           <form onSubmit={handleSaveDept} className="space-y-4 text-xs">
             <div>
@@ -1503,25 +1680,43 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               />
             </div>
 
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">Assigned Department Lead</label>
-              <select
-                value={deptLeadUserId}
-                onChange={(e) => {
-                  setDeptLeadUserId(e.target.value);
-                  const u = users.find(user => user.id === e.target.value);
-                  if (u) {
-                    setDeptLeadName(u.name);
-                    setDeptLeadEmail(u.email);
-                    setDeptLeadPhone(u.phone || '');
-                  }
-                }}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
-              >
-                {users.map(u => (
-                  <option key={u.id} value={u.id}>{u.name} ({u.role.replace('_', ' ')})</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Department Category</label>
+                <select
+                  value={deptCategory}
+                  onChange={(e) => setDeptCategory(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                >
+                  <option value="labor_setup">Labor & Setup</option>
+                  <option value="hospitality_food">Food & Hospitality</option>
+                  <option value="vendors_sponsors">Vendor Marketplace & Sponsors</option>
+                  <option value="auction_fundraising">Silent Auction & Raffles</option>
+                  <option value="registration_greeters">Registration & Greeters</option>
+                  <option value="other">Other Operations</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Assigned Department Lead</label>
+                <select
+                  value={deptLeadUserId}
+                  onChange={(e) => {
+                    setDeptLeadUserId(e.target.value);
+                    const u = users.find(user => user.id === e.target.value);
+                    if (u) {
+                      setDeptLeadName(u.name);
+                      setDeptLeadEmail(u.email);
+                      setDeptLeadPhone(u.phone || '');
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                >
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>{u.name} ({u.role.replace('_', ' ')})</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -1555,6 +1750,17 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                 value={deptGate}
                 onChange={(e) => setDeptGate(e.target.value)}
                 placeholder="e.g. Gate 2 Hospitality Tent"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Department Supplies & Equipment Notes</label>
+              <input
+                type="text"
+                value={deptSuppliesNotes}
+                onChange={(e) => setDeptSuppliesNotes(e.target.value)}
+                placeholder="e.g. Clipboards, walkie talkies, 2 folding tables, first aid kit"
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
               />
             </div>
@@ -1623,7 +1829,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
           isOpen={isAddShiftModalOpen}
           onClose={() => setIsAddShiftModalOpen(false)}
           title={editingShiftIdx !== null ? `Edit Shift: ${shiftTitle}` : 'Add Volunteer Shift Role'}
-          subtitle="Define role requirements, exact time slot windows, and safety waiver rules"
+          subtitle="Define role requirements, minimum age, exact time slot windows, and safety waiver rules"
           maxWidth="lg"
         >
           <form onSubmit={handleSaveShift} className="space-y-4 text-xs">
@@ -1639,17 +1845,30 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               />
             </div>
 
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">Committee Department</label>
-              <select
-                value={shiftDeptIdx}
-                onChange={(e) => setShiftDeptIdx(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
-              >
-                {departments.map((d, i) => (
-                  <option key={i} value={i}>{d.name}</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Committee Department</label>
+                <select
+                  value={shiftDeptIdx}
+                  onChange={(e) => setShiftDeptIdx(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                >
+                  {departments.map((d, i) => (
+                    <option key={i} value={i}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Specific Check-in Location Override</label>
+                <input
+                  type="text"
+                  value={shiftLocationOverride}
+                  onChange={(e) => setShiftLocationOverride(e.target.value)}
+                  placeholder="Defaults to Department Gate if blank"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                />
+              </div>
             </div>
 
             {/* Quick Shift Time Slot Presets */}
@@ -1729,9 +1948,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Capacity (Volunteers Needed)</label>
+                <label className="block font-bold text-slate-700 mb-1">Volunteers Needed</label>
                 <input
                   type="number"
                   min="1"
@@ -1739,6 +1958,19 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                   value={shiftCap}
                   onChange={(e) => setShiftCap(Number(e.target.value))}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Min. Age Requirement</label>
+                <input
+                  type="number"
+                  min="5"
+                  max="21"
+                  placeholder="e.g. 14 (Optional)"
+                  value={shiftMinAge}
+                  onChange={(e) => setShiftMinAge(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
                 />
               </div>
 
@@ -1755,6 +1987,17 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               </div>
             </div>
 
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Required Skills / Certifications (Comma-separated)</label>
+              <input
+                type="text"
+                value={shiftSkillsInput}
+                onChange={(e) => setShiftSkillsInput(e.target.value)}
+                placeholder="e.g. First Aid, Food Safety, Heavy Lifting, Cash Handling"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+              />
+            </div>
+
             {/* Multi-slot generator action for new roles */}
             {editingShiftIdx === null && (
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
@@ -1764,7 +2007,16 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleGenerateTimeSlots(shiftTitle || 'Volunteer Assistant', shiftDeptIdx, shiftDesc, shiftCap, shiftWaiver)}
+                  onClick={() => handleGenerateTimeSlots(
+                    shiftTitle || 'Volunteer Assistant',
+                    shiftDeptIdx,
+                    shiftDesc,
+                    shiftCap,
+                    shiftWaiver,
+                    shiftMinAge === '' ? undefined : Number(shiftMinAge),
+                    shiftSkillsInput.split(',').map(s => s.trim()).filter(Boolean),
+                    shiftLocationOverride.trim() || undefined
+                  )}
                   className="px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold rounded-lg text-xs transition"
                 >
                   ⚡ Generate 4 Slots
@@ -1909,6 +2161,17 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               />
             </div>
 
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Marketing Description</label>
+              <textarea
+                rows={2}
+                value={tierDesc}
+                onChange={(e) => setTierDesc(e.target.value)}
+                placeholder="Describe package visibility, audience reach, and benefits..."
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl leading-relaxed"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Package Type</label>
@@ -1970,6 +2233,19 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                 placeholder="e.g. Stage Banner, 4 VIP Passes, Social Media Shoutout"
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
               />
+            </div>
+
+            <div className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              <input
+                type="checkbox"
+                id="wizardTierInstantCheckout"
+                checked={tierInstantCheckout}
+                onChange={(e) => setTierInstantCheckout(e.target.checked)}
+                className="w-4 h-4 rounded text-indigo-600"
+              />
+              <label htmlFor="wizardTierInstantCheckout" className="font-semibold text-slate-700 cursor-pointer text-xs">
+                Allow Instant Checkout (Disable if application review and COI approval required first)
+              </label>
             </div>
 
             {tierType === 'vendor_booth' && (

@@ -90,6 +90,9 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   const [newShiftEnd, setNewShiftEnd] = useState('2026-09-19T12:00:00');
   const [newShiftCapacity, setNewShiftCapacity] = useState<number>(4);
   const [newShiftWaiver, setNewShiftWaiver] = useState<boolean>(true);
+  const [newShiftMinAge, setNewShiftMinAge] = useState<number | ''>('');
+  const [newShiftSkillsInput, setNewShiftSkillsInput] = useState('');
+  const [newShiftLocationOverride, setNewShiftLocationOverride] = useState('');
 
   // Add / Edit Item Form State
   const [targetSubPartForItem, setTargetSubPartForItem] = useState<string>(subParts[0]?.id || '');
@@ -246,6 +249,9 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
     setNewShiftEnd('2026-09-19T12:00:00');
     setNewShiftCapacity(4);
     setNewShiftWaiver(true);
+    setNewShiftMinAge('');
+    setNewShiftSkillsInput('');
+    setNewShiftLocationOverride('');
     setIsAddShiftModalOpen(true);
   };
 
@@ -258,6 +264,9 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
     setNewShiftEnd(shift.endTime);
     setNewShiftCapacity(shift.capacity);
     setNewShiftWaiver(shift.requiresWaiver);
+    setNewShiftMinAge(shift.minAge !== undefined ? shift.minAge : '');
+    setNewShiftSkillsInput((shift.skillsRequired || []).join(', '));
+    setNewShiftLocationOverride(shift.reportingLocationOverride || '');
     setIsAddShiftModalOpen(true);
   };
 
@@ -273,7 +282,10 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
         startTime: newShiftStart,
         endTime: newShiftEnd,
         capacity: Number(newShiftCapacity) || 1,
-        requiresWaiver: newShiftWaiver
+        requiresWaiver: newShiftWaiver,
+        minAge: newShiftMinAge === '' ? undefined : Number(newShiftMinAge),
+        skillsRequired: newShiftSkillsInput.split(',').map(s => s.trim()).filter(Boolean),
+        reportingLocationOverride: newShiftLocationOverride.trim() || undefined
       });
     } else {
       addShift({
@@ -284,7 +296,10 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
         startTime: newShiftStart,
         endTime: newShiftEnd,
         capacity: Number(newShiftCapacity) || 1,
-        requiresWaiver: newShiftWaiver
+        requiresWaiver: newShiftWaiver,
+        minAge: newShiftMinAge === '' ? undefined : Number(newShiftMinAge),
+        skillsRequired: newShiftSkillsInput.split(',').map(s => s.trim()).filter(Boolean),
+        reportingLocationOverride: newShiftLocationOverride.trim() || undefined
       });
     }
 
@@ -1666,7 +1681,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
                   <Clock className="w-3 h-3 text-slate-500" />
@@ -1694,9 +1709,20 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Specific Check-in Location / Gate Override</label>
+              <input
+                type="text"
+                value={newShiftLocationOverride}
+                onChange={(e) => setNewShiftLocationOverride(e.target.value)}
+                placeholder="Defaults to Department Gate if blank"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Volunteers Needed (Capacity)</label>
+                <label className="block font-bold text-slate-700 mb-1">Volunteers Needed</label>
                 <input
                   type="number"
                   min={1}
@@ -1704,6 +1730,19 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
                   value={newShiftCapacity}
                   onChange={(e) => setNewShiftCapacity(Number(e.target.value))}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Min. Age Requirement</label>
+                <input
+                  type="number"
+                  min={5}
+                  max={21}
+                  placeholder="e.g. 14 (Optional)"
+                  value={newShiftMinAge}
+                  onChange={(e) => setNewShiftMinAge(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
                 />
               </div>
 
@@ -1715,9 +1754,20 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
                     onChange={(e) => setNewShiftWaiver(e.target.checked)}
                     className="w-4 h-4 rounded text-indigo-600"
                   />
-                  <span>Require Digital Legal Waiver</span>
+                  <span>Require Waiver</span>
                 </label>
               </div>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Required Skills / Certifications (Comma-separated)</label>
+              <input
+                type="text"
+                value={newShiftSkillsInput}
+                onChange={(e) => setNewShiftSkillsInput(e.target.value)}
+                placeholder="e.g. First Aid, Food Safety, Heavy Lifting, Cash Handling"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+              />
             </div>
 
             <div className="pt-3 border-t border-slate-200 flex justify-between items-center">

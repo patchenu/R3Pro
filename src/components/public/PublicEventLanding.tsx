@@ -4,7 +4,7 @@ import {
   Calendar, MapPin, Share2, Clock, Users, HeartHandshake, 
   Store, Gift, Check, ShieldCheck, AlertTriangle, Sparkles, 
   ExternalLink, ChevronRight, Info, Bell, Tag, ArrowRight,
-  Shirt, ArrowUpDown, Award, Briefcase
+  Shirt, ArrowUpDown, Award, Briefcase, Video, BookOpen
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatTimeRange, formatPercentage } from '../../utils/formatters';
 import { Thermometer } from '../common/Thermometer';
@@ -179,6 +179,18 @@ export const PublicEventLanding: React.FC = () => {
                 )}
               </div>
 
+              {currentEvent.isVirtual && (
+                <div className="flex items-center gap-2 bg-indigo-600/60 backdrop-blur-md px-3.5 py-2 rounded-xl border border-indigo-400/30">
+                  <Video className="w-4 h-4 text-cyan-300" />
+                  <span>Hybrid / Virtual Event</span>
+                  {currentEvent.virtualLink && (
+                    <a href={currentEvent.virtualLink} target="_blank" rel="noreferrer" className="text-cyan-200 hover:text-white underline text-xs ml-1">
+                      Join Stream
+                    </a>
+                  )}
+                </div>
+              )}
+
               {currentEvent.dressCode && (
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/15">
                   <Shirt className="w-4 h-4 text-amber-300 shrink-0" />
@@ -202,6 +214,19 @@ export const PublicEventLanding: React.FC = () => {
           currency={currentEvent.currency}
           themeColor={currentEvent.theme.primaryColor}
         />
+
+        {/* Campaign Marketing Story & Overview Section */}
+        {currentEvent.description && (
+          <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-2.5">
+            <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-indigo-700">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <span>About this Campaign & Cause</span>
+            </div>
+            <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-normal">
+              {currentEvent.description}
+            </p>
+          </div>
+        )}
 
         {/* Urgent Needs & Volunteer Drive Callout */}
         <div id="volunteer-drive-banner" className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white p-5 rounded-2xl border border-indigo-500/40 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">

@@ -46,6 +46,9 @@ export const LeadPortal: React.FC = () => {
   const [newShiftEnd, setNewShiftEnd] = useState('2026-09-19T13:00:00');
   const [newShiftCap, setNewShiftCap] = useState(4);
   const [newShiftWaiver, setNewShiftWaiver] = useState(true);
+  const [newShiftMinAge, setNewShiftMinAge] = useState<number | ''>('');
+  const [newShiftSkills, setNewShiftSkills] = useState('');
+  const [newShiftLocationOverride, setNewShiftLocationOverride] = useState('');
 
   // Item Form State
   const [editingItem, setEditingItem] = useState<ItemSlot | null>(null);
@@ -83,6 +86,9 @@ export const LeadPortal: React.FC = () => {
     setNewShiftEnd(currentEvent.endDate);
     setNewShiftCap(4);
     setNewShiftWaiver(true);
+    setNewShiftMinAge('');
+    setNewShiftSkills('');
+    setNewShiftLocationOverride('');
     setIsAddShiftOpen(true);
   };
 
@@ -94,6 +100,9 @@ export const LeadPortal: React.FC = () => {
     setNewShiftEnd(shift.endTime);
     setNewShiftCap(shift.capacity);
     setNewShiftWaiver(shift.requiresWaiver);
+    setNewShiftMinAge(shift.minAge !== undefined ? shift.minAge : '');
+    setNewShiftSkills((shift.skillsRequired || []).join(', '));
+    setNewShiftLocationOverride(shift.reportingLocationOverride || '');
     setIsAddShiftOpen(true);
   };
 
@@ -108,7 +117,10 @@ export const LeadPortal: React.FC = () => {
         startTime: newShiftStart,
         endTime: newShiftEnd,
         capacity: Number(newShiftCap) || 1,
-        requiresWaiver: newShiftWaiver
+        requiresWaiver: newShiftWaiver,
+        minAge: newShiftMinAge === '' ? undefined : Number(newShiftMinAge),
+        skillsRequired: newShiftSkills.split(',').map(s => s.trim()).filter(Boolean),
+        reportingLocationOverride: newShiftLocationOverride.trim() || undefined
       });
     } else {
       addShift({
@@ -120,6 +132,9 @@ export const LeadPortal: React.FC = () => {
         endTime: newShiftEnd,
         capacity: Number(newShiftCap) || 1,
         requiresWaiver: newShiftWaiver,
+        minAge: newShiftMinAge === '' ? undefined : Number(newShiftMinAge),
+        skillsRequired: newShiftSkills.split(',').map(s => s.trim()).filter(Boolean),
+        reportingLocationOverride: newShiftLocationOverride.trim() || undefined,
         waiverTemplateId: 'waiver_general_liability'
       });
     }
@@ -840,7 +855,7 @@ export const LeadPortal: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-slate-400" />
@@ -868,9 +883,20 @@ export const LeadPortal: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Specific Check-in Location / Station Override</label>
+              <input
+                type="text"
+                value={newShiftLocationOverride}
+                onChange={(e) => setNewShiftLocationOverride(e.target.value)}
+                placeholder={`Defaults to ${currentSubPart.reportingGate} if blank`}
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Capacity (Volunteers Needed)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Volunteers Needed</label>
                 <input
                   type="number"
                   min={1}
@@ -882,7 +908,20 @@ export const LeadPortal: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Liability Waiver Required?</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Min. Age Requirement</label>
+                <input
+                  type="number"
+                  min={5}
+                  max={21}
+                  placeholder="e.g. 14 (Optional)"
+                  value={newShiftMinAge}
+                  onChange={(e) => setNewShiftMinAge(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Waiver Required?</label>
                 <select
                   value={newShiftWaiver ? 'yes' : 'no'}
                   onChange={(e) => setNewShiftWaiver(e.target.value === 'yes')}
@@ -892,6 +931,17 @@ export const LeadPortal: React.FC = () => {
                   <option value="no">No Waiver Needed</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Required Skills / Certifications (Comma-separated)</label>
+              <input
+                type="text"
+                value={newShiftSkills}
+                onChange={(e) => setNewShiftSkills(e.target.value)}
+                placeholder="e.g. First Aid, Food Safety, Heavy Lifting, Cash Handling"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs"
+              />
             </div>
 
             <div className="flex justify-between items-center pt-2">

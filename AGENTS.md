@@ -494,3 +494,34 @@ This document provides system knowledge, core architectural rules, and coding st
 | **Commercial Vendors & Sponsors** | `VendorApplication`, `VendorInquiry`, `VendorLead`, `VendorAddOn`, `CorporateSeasonPass`, `EventImpactMetrics` | `vendorApplications`, `vendorInquiries`, `vendorLeads`, `vendorAddOns`, `corporateSeasonPasses`, `eventImpactMetrics`, `saveVendorCoi`, `processVendorPayment`, `addVendorLead`, `purchaseVendorAddOn`, `createCorporateSeasonPass` | `VendorSponsorDashboard.tsx`, `VendorMarketplaceManager.tsx`, `CommercialMarketplaceModal.tsx` | Real COI verification, multi-rail checkout, lead scanner CRM, 15% season pass discount, ROI dossier |
 | **Door Kiosk & Gate Access** | `Registration`, `TicketTier` | `checkInVolunteer`, `registerWalkUpVolunteer` | `DoorKioskView.tsx`, `MobileKioskPassModal.tsx` | Role-gated access (`org_admin`, `event_planner`, `committee_lead` only), dual-mode express check-in |
 | **IRS Tax Substantiation** | `TaxReceipt`, `DonationRecord` | `taxReceipts`, `donations`, `recordOfflineDonation`, `voidDonation` | `ReportsExportCenter.tsx`, `VendorSponsorDashboard.tsx` | Executive signatory vector rendering, IRS Pub 526/561 compliance, FMV offsets |
+
+---
+
+## 30. Comprehensive Setup Wizard & Entity Data Parity Standard
+
+### 30.1 Full Field Parity Across Setup Wizards & Edit Modals
+- All entity attributes supported in mock representations, public views, and reporting exports MUST have 100% authoring and editing parity across all administrative builders:
+  1. **Event Campaigns (`Event`)**:
+     - **Marketing Description & Story (`description`)**: Detailed multi-line pitch for fundraising, attractions, and community impact. Rendered in the "About this Campaign & Cause" card on `PublicEventLanding.tsx`.
+     - **Virtual & Hybrid Streaming (`isVirtual`, `virtualLink`)**: Toggleable streaming URL with live stream badge and join links in the public header.
+     - **Interactive Map / Directions Link (`mapUrl`)**: Direct Google Maps routing for attendees and volunteers.
+     - **Theme Color Presets (`theme`)**: Sunset Coral, Electric Tech Cyan, Emerald Forest Green, Royal Indigo, Golden Amber, Crimson Rose with custom hex overrides.
+     - **Automated Reminder Cadence (`reminderCadence`)**: Configurable notification intervals (*Standard: 72h/24h/2h*, *Intensive: 7d/72h/24h/2h*, *Same-Day Urgent: 2h*, *Custom*).
+     - **Donor Processing Fee Coverage (`allowFeeCoverage`)**: Option to allow supporters to cover 2.9% + 30¢ credit card processing fees.
+     - **Global Baseline Attire (`dressCode`)**: Organization-wide volunteer attire with 1-tap quick presets.
+  2. **Committee Departments (`SubPart`)**:
+     - **Operational Category (`category`)**: `labor_setup`, `hospitality_food`, `vendors_sponsors`, `auction_fundraising`, `registration_greeters`, `other`.
+     - **Department Attire & Gear Instructions (`dressCodeNotes`)**: Inherits global attire with + Quick Add Gear tags.
+     - **Department Tooling & Supplies Notes (`suppliesNotes`)**: Operational binders, clipboards, radios, and gear provided.
+  3. **Volunteer Shifts (`Shift`)**:
+     - **Minimum Age Requirement (`minAge`)**: Granular age limit validation (e.g. 14+, 18+) per shift.
+     - **Required Skills & Certifications (`skillsRequired`)**: Specific qualifications (e.g. *First Aid, Food Safety, Heavy Lifting, Cash Handling*).
+     - **Check-in Location / Gate Override (`reportingLocationOverride`)**: Overrides department gate for granular station assignments.
+  4. **Commercial Packages & Ticket Tiers (`TicketTier`)**:
+     - **Marketing Description (`description`)**: Detailed pitch for underwriters and booth operators.
+     - **Instant Checkout vs Approval (`instantCheckout`)**: Toggleable self-service booking vs mandatory application review.
+     - **Footprint Dimensions & Electricity (`boothDimensions`, `powerProvided`)**: Required space (e.g. 10x10) and 110V/220V power drops.
+     - **IRS Fair Market Value Offset (`fairMarketValue`)**: Automatically computes tax-deductible contribution on 501(c)(3) receipts.
+
+### 30.2 1-to-1 Public Output Rendering
+- Every field captured in `EventBuilderWizard.tsx`, `MasterPlannerDashboard.tsx`, `OrgExecutiveDashboard.tsx`, and `LeadPortal.tsx` is rendered across public landing pages (`PublicEventLanding.tsx`), registration passes (`ConfirmationCard.tsx`), Door Kiosks (`DoorKioskView.tsx`), and CRM dossiers (`VolunteerCrm.tsx`).
