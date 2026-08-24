@@ -208,10 +208,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const parsed = JSON.parse(saved);
         // Normalize loaded data to ensure full compatibility with current schema
         if (parsed.events && Array.isArray(parsed.events)) {
-          parsed.events = parsed.events.map((e: any) => ({
-            ...e,
-            dressCode: e.dressCode || 'Casual spirit wear / Comfortable attire & sneakers'
-          }));
+          parsed.events = parsed.events.map((e: any) => {
+            const seedEvent = SEED_EVENTS.find(se => se.id === e.id);
+            return {
+              ...e,
+              description: e.description || seedEvent?.description || 'Join our community fundraiser and volunteer drive to support local programs.',
+              mapUrl: e.mapUrl || seedEvent?.mapUrl || 'https://maps.google.com',
+              dressCode: e.dressCode || seedEvent?.dressCode || 'Casual spirit wear / Comfortable attire & sneakers'
+            };
+          });
         }
         if (parsed.users && Array.isArray(parsed.users)) {
           parsed.users = parsed.users.map((u: any) => ({
