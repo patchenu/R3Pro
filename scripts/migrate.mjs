@@ -1,5 +1,5 @@
 /**
- * GatherRaise (R3Pro) Database Migration Runner
+ * REACH (R3Pro) Database Migration Runner
  * Executes api/_lib/schema.sql against Vercel Postgres / Neon
  * Handles multi-statement parsing and executes each statement sequentially
  */

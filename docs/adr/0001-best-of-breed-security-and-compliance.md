@@ -9,13 +9,13 @@
 
 ## 1. Context & Problem Statement
 
-GatherRaise (R3Pro) is a multi-tenant operating system for School PTAs, 501(c)(3) Non-Profit Charities, Youth Sports Leagues, and Community Foundations. The platform processes:
+REACH (R3Pro) is a multi-tenant operating system for School PTAs, 501(c)(3) Non-Profit Charities, Youth Sports Leagues, and Community Foundations. The platform processes:
 1. **Multi-Tenant Operations**: Thousands of organizations operating on a shared PostgreSQL infrastructure without cross-tenant data leaks.
 2. **Minor Personal Identifiable Information (PII) & Safety**: Registration of minors (under 18) for volunteer activities requiring explicit parental consent and liability waivers.
 3. **Statutory Non-Profit Tax Deductions**: Issuance of official IRS 501(c)(3) donation receipts, FMV offsets, and in-kind contribution letters subject to CPA and IRS audits.
 4. **Public Frictionless Self-Service**: Unauthenticated volunteers accessing their passes via magic tokens without credential fatigue.
 
-To guarantee platform safety against automated bot attacks, injection vulnerabilities, privilege escalations, and regulatory non-compliance, GatherRaise mandates a **defense-in-depth security architecture**.
+To guarantee platform safety against automated bot attacks, injection vulnerabilities, privilege escalations, and regulatory non-compliance, REACH mandates a **defense-in-depth security architecture**.
 
 ---
 
@@ -56,7 +56,7 @@ To guarantee platform safety against automated bot attacks, injection vulnerabil
 
 ## 3. Compliance Matrix
 
-| Regulation / Standard | Requirement | GatherRaise Implementation |
+| Regulation / Standard | Requirement | REACH Implementation |
 | :--- | :--- | :--- |
 | **SOC 2 Type II** | Logical Tenant Separation | PostgreSQL Row-Level Security (RLS) + `org_id` composite unique keys. |
 | **SOC 2 Type II** | Authentication & Session Security | `HttpOnly`, `SameSite=Strict` JWT cookies + timing-safe OTP verification. |

@@ -1,6 +1,6 @@
-# GatherRaise Interactive Demo & Persona Testing Guide
+# REACH Interactive Demo & Persona Testing Guide
 
-GatherRaise includes a top **Role Switcher Bar** in testing mode, allowing you to instantly switch personas and explore the complete workflow from every stakeholder's perspective.
+REACH includes a top **Role Switcher Bar** in testing mode, allowing you to instantly switch personas and explore the complete workflow from every stakeholder's perspective.
 
 ---
 

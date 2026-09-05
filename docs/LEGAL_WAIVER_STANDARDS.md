@@ -1,7 +1,7 @@
 # Legal Waiver & Parental Consent Standards
 
 ## 1. Statutory & Compliance Context
-Event volunteerism involves potential physical labor, interactions with minors, food preparation, and public gatherings. To minimize liability for non-profit organizations, PTAs, and athletic leagues, GatherRaise implements strict digital waiver workflows.
+Event volunteerism involves potential physical labor, interactions with minors, food preparation, and public gatherings. To minimize liability for non-profit organizations, PTAs, and athletic leagues, REACH implements strict digital waiver workflows.
 
 ---
 

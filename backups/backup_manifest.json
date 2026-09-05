@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-09-05T15:53:58.283Z",
-  "filename": "gatherraise_db_backup_2026-09-05T15-53-58-282Z.sql.gz",
+  "timestamp": "2026-09-05T17:35:14.552Z",
+  "filename": "reach_db_backup_2026-09-05T17-35-14-550Z.sql.gz",
   "sizeBytes": 365,
-  "uncompressedBytes": 983,
-  "sha256Checksum": "ca8967462de7a9c451043d77cc2a8af6c2324896be94ee743c00517ba5553535",
+  "uncompressedBytes": 977,
+  "sha256Checksum": "fb58fd4c679265ee0b8b9932c26d8704d90c8411b747e03de697fd2276d06cb1",
   "tableCount": 20,
   "totalRowsExported": 0,
   "tableStats": {

@@ -96,7 +96,7 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
         <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
           <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-sm shrink-0">
             <QRCodeSVG 
-              value={`https://gatherraise.org/checkin/${registration.manageToken}`} 
+              value={`${typeof window !== 'undefined' ? window.location.origin : 'https://reachplatform.com'}/checkin/${registration.manageToken}`} 
               size={110} 
               level="M" 
             />

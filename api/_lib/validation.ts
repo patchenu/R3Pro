@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * GatherRaise (R3Pro) Server-Side Request Validation Schemas
+ * REACH (R3Pro) Server-Side Request Validation Schemas
  * Standard: Strict Type Coercion, Format Validation, and XSS Sanitization
  */
 

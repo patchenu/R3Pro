@@ -1,5 +1,5 @@
 /**
- * GatherRaise (R3Pro) Database Verification Script
+ * REACH (R3Pro) Database Verification Script
  * Inspects Vercel Postgres (Neon) to verify all tables, columns, indexes, and functions
  */
 

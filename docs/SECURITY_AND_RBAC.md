@@ -1,6 +1,6 @@
 # Security Architecture, Tenant Isolation, RBAC & Compliance Standards
 
-GatherRaise (`R3Pro`) enforces a defense-in-depth security model engineered to satisfy **SOC 2 Type II**, **COPPA (Children's Online Privacy Protection Act)**, and **IRS 501(c)(3) Statutory Tax Substantiation** standards.
+REACH (`R3Pro`) enforces a defense-in-depth security model engineered to satisfy **SOC 2 Type II**, **COPPA (Children's Online Privacy Protection Act)**, and **IRS 501(c)(3) Statutory Tax Substantiation** standards.
 
 ---
 
@@ -68,7 +68,7 @@ All serverless API routes (`/api/registrations`, `/api/events`, `/api/shifts`, `
 
 ## 4. Enterprise HTTP Security Headers (`vercel.json`)
 
-All responses from GatherRaise edge servers include hardened security headers:
+All responses from REACH edge servers include hardened security headers:
 - `Strict-Transport-Security`: `max-age=63072000; includeSubDomains; preload`
 - `X-Frame-Options`: `DENY` (Anti-Clickjacking)
 - `X-Content-Type-Options`: `nosniff`

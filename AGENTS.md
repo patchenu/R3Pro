@@ -1,6 +1,6 @@
-# GatherRaise Project Knowledge, Architecture & Developer Guidelines
+# REACH Project Knowledge, Architecture & Developer Guidelines
 
-This document provides system knowledge, core architectural rules, and coding standards for all developers and AI agents working on the GatherRaise codebase.
+This document provides system knowledge, core architectural rules, and coding standards for all developers and AI agents working on the REACH codebase.
 
 ---
 
@@ -179,7 +179,7 @@ This document provides system knowledge, core architectural rules, and coding st
   - Normalizes touch and mouse pointer coordinates 1:1 with CSS pixels, eliminating pointer misalignment and drawing offsets.
 - **Frictionless Magic-Token vs Password Creation Mental Model**:
   - **Frictionless Shift Sign-Up**: Public volunteers register without mandatory upfront password creation, eliminating 40%+ conversion drop-off. Instant pass access is secured via 256-bit `manageToken`.
-  - **Optional Account Claiming**: Volunteers can set an optional password during registration (Step 3) or directly on their post-signup confirmation screen (`ConfirmationCard.tsx`) to claim their volunteer profile, link household family dependents, and access their personal GatherRaise dashboard to track verified service hours and certificates.
+  - **Optional Account Claiming**: Volunteers can set an optional password during registration (Step 3) or directly on their post-signup confirmation screen (`ConfirmationCard.tsx`) to claim their volunteer profile, link household family dependents, and access their personal REACH dashboard to track verified service hours and certificates.
 
 ---
 
@@ -190,7 +190,7 @@ This document provides system knowledge, core architectural rules, and coding st
   3. **Embedded Calendar Appointment (.ics)**: Self-service management URL is embedded inside calendar invite notes so volunteers can access their pass directly from Google Calendar or Apple iCal.
 - **Token Storage & Persistence Model**:
   - High-entropy 256-bit `manage_token` values are stored in the backend database (`registrations.manage_token`).
-  - Saved in browser `localStorage` (`gatherraise_active_tokens`) for instantaneous pass recovery on returning desktop/mobile visits.
+  - Saved in browser `localStorage` (`reach_active_tokens`) for instantaneous pass recovery on returning desktop/mobile visits.
 - **Cross-Device Login Strategy (Desktop to Mobile / Lost Link)**:
   - When shifting devices or logging in without saved links, volunteers do not need passwords.
   - The login modal (`AuthModal.tsx`) defaults to **6-Digit Verification Passcode (Email/SMS OTP)**.
@@ -218,7 +218,7 @@ This document provides system knowledge, core architectural rules, and coding st
 
 ### 20.1 Tenant-Isolated Sender Identity & Deliverability
 - **Managed Platform Delivery (Default)**:
-  - Header structure: `From: "[Org Name] via GatherRaise" <notifications@mail.gatherraise.com>`
+  - Header structure: `From: "[Org Name] via REACH" <notifications@mail.reachplatform.com>`
   - `Reply-To: [Lead Email / Org Admin Email]` routes volunteer replies directly to the local coordinator's inbox.
   - Injected metadata: `X-Entity-Ref-ID: org_{org_id}_evt_{event_id}` for webhook routing.
 - **Custom Domain Authentication (Enterprise / Dedicated DKIM/SPF)**:
@@ -240,9 +240,9 @@ This document provides system knowledge, core architectural rules, and coding st
   - Security OTPs, confirmed shift arrival instructions, and IRS tax receipts bypass promotional suppressions in compliance with CAN-SPAM / CASL regulations.
 
 ### 20.4 A2P 10DLC SMS Multi-Tenancy & TCPA Compliance
-- **Campaign Registry ISV Registration**: GatherRaise operates as a registered Campaign Registry ISV, registering tenant sub-use cases (*Standard Nonprofit*, *Education*, *Customer Service*).
+- **Campaign Registry ISV Registration**: REACH operates as a registered Campaign Registry ISV, registering tenant sub-use cases (*Standard Nonprofit*, *Education*, *Customer Service*).
 - **Mandatory Brand Identifier Prefix**: All SMS messages are prepended with the Organization identifier:
-  `[Lincoln High PTA] Your shift starts at 8:00 AM at Gate 2. Pass: https://gatherraise.com/p/x94827 Reply STOP to opt out.`
+  `[Lincoln High PTA] Your shift starts at 8:00 AM at Gate 2. Pass: https://reachplatform.com/p/x94827 Reply STOP to opt out.`
 - **Carrier Keyword Handling**: Inbound `STOP` / `UNSUBSCRIBE` webhooks write to the tenant-scoped suppression table `(phone_e164, org_id, is_opted_out = true)`. Re-subscribing is handled via `START`.
 
 ---
@@ -315,7 +315,7 @@ This document provides system knowledge, core architectural rules, and coding st
 ## 24. Participant Persona & Role Detection Intelligence
 
 ### 24.1 Dynamic 3-Vector Detection (Zero Upfront Role Dropdowns)
-- Rather than forcing users through an artificial *"Select Your User Type"* select box, GatherRaise detects roles dynamically through 3 distinct operational vectors:
+- Rather than forcing users through an artificial *"Select Your User Type"* select box, REACH detects roles dynamically through 3 distinct operational vectors:
   1. **Vector 1: Transaction & Cart Intent (What They Click)**:
      - Selecting a volunteer shift $\rightarrow$ **Volunteer**.
      - Registering a dependent with `relationship: 'Child'` or `isMinor: true` $\rightarrow$ **Parent / Household Guardian** (triggers Minor Safety Consent Parental Co-signature waiver and auto-enables the `Parent Volunteer` CRM tag).
@@ -609,7 +609,7 @@ This document provides system knowledge, core architectural rules, and coding st
 
 ## 33. Best-of-Breed Production Security, Compliance Standards & Live Database Hardening
 
-GatherRaise enforces an enterprise-grade defense-in-depth security architecture designed to meet **SOC 2 Type II**, **COPPA (Children's Online Privacy Protection Act)**, and **IRS 501(c)(3) Statutory Tax Substantiation** standards.
+REACH enforces an enterprise-grade defense-in-depth security architecture designed to meet **SOC 2 Type II**, **COPPA (Children's Online Privacy Protection Act)**, and **IRS 501(c)(3) Statutory Tax Substantiation** standards.
 
 ### 33.1 SOC 2 Type II Security & Cryptographic Authentication
 - **Timing-Safe OTP Verification (`crypto.timingSafeEqual`)**:
@@ -669,7 +669,7 @@ GatherRaise enforces an enterprise-grade defense-in-depth security architecture 
   - **RTO (Recovery Time Objective)**: <15 minutes via automated restore script (`npm run db:restore`).
 ### 33.9 Admin Observability Hub, User Impersonation & Full Account Lifecycle Management
 
-GatherRaise includes an enterprise-grade **Admin Observability, Accounts & Diagnostics Hub** (`AdminObservabilityHub.tsx`) and **User Impersonation Engine** (`StickyImpersonationBanner.tsx`) accessible to Org Super Admins.
+REACH includes an enterprise-grade **Admin Observability, Accounts & Diagnostics Hub** (`AdminObservabilityHub.tsx`) and **User Impersonation Engine** (`StickyImpersonationBanner.tsx`) accessible to Org Super Admins.
 
 #### 1. Full User Account Lifecycle Management (`AdminObservabilityHub.tsx` - Tab 1)
 - **Comprehensive Account Directory**: Displays all organization and platform users with active roles, scoped committee departments, account status (`active` vs `suspended`), last login timestamp, last seen IP address, total login counts, and 2FA status.

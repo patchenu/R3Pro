@@ -33,7 +33,7 @@ export const SmsOptInConsentBlock: React.FC<SmsOptInConsentBlockProps> = ({
       {/* Required A2P 10DLC Carrier & TCPA Disclosures */}
       <div className="text-[11px] text-slate-500 leading-relaxed pl-6 space-y-1.5 border-t border-slate-200/60 pt-2">
         <p>
-          By checking this box and providing your mobile number, you expressly consent to receive automated transactional text messages from <strong>{organizationName}</strong> and GatherRaise. Consent is not a condition of registration, donation, or volunteering.
+          By checking this box and providing your mobile number, you expressly consent to receive automated transactional text messages from <strong>{organizationName}</strong> and REACH. Consent is not a condition of registration, donation, or volunteering.
         </p>
         <p>
           • <strong>Message Frequency</strong>: Approx. 3–5 messages per event (Confirmation, T-72h gate details, T-24h shift reminder, T-2h check-in pass).<br/>

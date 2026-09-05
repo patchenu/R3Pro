@@ -147,7 +147,7 @@ ${currentOrg.name} Sponsorship & Commercial Committee`
               <div class="tear-tab">
                 <div class="tab-title">${currentEvent.title.slice(0, 18)}</div>
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${encodeURIComponent(eventUrl)}" alt="QR" width="55" height="55" />
-                <div class="tab-url">gatherraise.org</div>
+                <div class="tab-url">reachplatform.com</div>
                 <div class="tab-action">Scan to Join</div>
               </div>
             `).join('')}

@@ -929,7 +929,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
               </div>
 
               <p className="text-[11px] text-slate-500 pl-6 leading-relaxed">
-                Save your contact & family info for future events and track all verified service hours and certificates in your personal GatherRaise dashboard.
+                Save your contact & family info for future events and track all verified service hours and certificates in your personal REACH dashboard.
               </p>
 
               {createAccount && (

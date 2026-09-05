@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const DEFAULT_JWT_SECRET = process.env.JWT_SECRET || 'gatherraise_super_secret_jwt_signing_key_2026_soc2';
+const DEFAULT_JWT_SECRET = process.env.JWT_SECRET || 'reach_super_secret_jwt_signing_key_2026_soc2';
 
 export interface UserSessionPayload {
   userId: string;

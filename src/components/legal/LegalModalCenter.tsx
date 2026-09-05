@@ -93,7 +93,7 @@ export const LegalModalCenter: React.FC<LegalModalCenterProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-extrabold text-white tracking-tight">GatherRaise Legal & Compliance Studio</h2>
+                <h2 className="text-lg font-extrabold text-white tracking-tight">REACH Legal & Compliance Studio</h2>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/30">
                   v{currentDoc.version} Live
                 </span>
@@ -241,7 +241,7 @@ export const LegalModalCenter: React.FC<LegalModalCenterProps> = ({
 
           {/* Footer Notice */}
           <div className="mt-8 pt-4 border-t border-slate-200 text-center text-[11px] text-slate-400">
-            <p>© {new Date().getFullYear()} GatherRaise (R3Pro). All rights reserved. Platform security compliant with SOC 2 Type II, COPPA, and IRS 501(c)(3) standards.</p>
+            <p>© {new Date().getFullYear()} REACH (R3Pro). All rights reserved. Platform security compliant with SOC 2 Type II, COPPA, and IRS 501(c)(3) standards.</p>
           </div>
 
         </div>

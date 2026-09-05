@@ -57,7 +57,7 @@ export const StickyImpersonationBanner: React.FC<StickyImpersonationBannerProps>
             </div>
             
             <p className="text-[11px] text-amber-100/90 hidden md:block">
-              You are experiencing GatherRaise with {currentUser.name}&apos;s exact permissions, scoped committee departments, and registrations.
+              You are experiencing REACH with {currentUser.name}&apos;s exact permissions, scoped committee departments, and registrations.
               {impersonatedOriginalUser && (
                 <span className="text-white/80 ml-1">
                   (Original Admin: <strong>{impersonatedOriginalUser.name}</strong>)

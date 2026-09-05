@@ -1,4 +1,4 @@
-# GatherRaise Disaster Recovery (DR) & Database Backup Schedule
+# REACH Disaster Recovery (DR) & Database Backup Schedule
 
 **Document Version**: 2.0.0  
 **Effective Date**: September 5, 2026  
@@ -36,7 +36,7 @@ graph TD
 
 ### 2.2 Tier 2: Automated Daily Gzipped Snapshots (`npm run db:backup`)
 - **Execution Schedule**: Executed every 24 hours at `02:00 UTC` via serverless cron.
-- **Format**: Gzip-compressed SQL payload (`gatherraise_db_backup_YYYY-MM-DD_HHMMSS.sql.gz`).
+- **Format**: Gzip-compressed SQL payload (`reach_db_backup_YYYY-MM-DD_HHMMSS.sql.gz`).
 - **Integrity**: SHA-256 cryptographic checksum generated and recorded in `backups/backup_manifest.json`.
 - **Retention**: Retained in hot encrypted cloud storage for **30 days**.
 

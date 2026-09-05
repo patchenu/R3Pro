@@ -1,15 +1,15 @@
 export const PRIVACY_POLICY_CONTENT = {
-  title: 'GatherRaise Privacy Policy',
+  title: 'REACH Privacy Policy',
   lastUpdated: 'September 5, 2026',
   version: '2.4.0',
-  summary: 'This Privacy Policy explains how GatherRaise collects, uses, protects, and discloses personal information when you use our volunteer scheduling, fundraising, and event coordination platform.',
+  summary: 'This Privacy Policy explains how REACH collects, uses, protects, and discloses personal information when you use our volunteer scheduling, fundraising, and event coordination platform.',
   sections: [
     {
       id: 'commitment',
       title: '1. Our Privacy Commitment & Zero-Sale Guarantee',
-      content: `At GatherRaise, we believe community engagement thrives on trust. We adhere to a strict, legally binding principle:
+      content: `At REACH, we believe community engagement thrives on trust. We adhere to a strict, legally binding principle:
 
-GATHERRAISE DOES NOT SELL, RENT, TRADE, OR MONETIZE YOUR PERSONAL INFORMATION, VOLUNTEER ROSTERS, DONOR HISTORIES, OR MOBILE PHONE NUMBERS TO ANY THIRD-PARTY ADVERTISERS, DATA BROKERS, OR AFFILIATES.
+REACH DOES NOT SELL, RENT, TRADE, OR MONETIZE YOUR PERSONAL INFORMATION, VOLUNTEER ROSTERS, DONOR HISTORIES, OR MOBILE PHONE NUMBERS TO ANY THIRD-PARTY ADVERTISERS, DATA BROKERS, OR AFFILIATES.
 
 We collect personal data solely to fulfill event logistics, volunteer shift coordination, tax receipt substantiation, and safety compliance.`
     },
@@ -27,7 +27,7 @@ A. Information You Provide Directly:
 • Commercial Vendor Data: Business name, Tax EIN, booth dimensions, Certificate of Insurance (COI) documents, and power requirements.
 
 B. Financial & Transaction Data:
-• Payment tokens, transaction amounts, voluntary fee coverage choices, and receipt identifiers. All payment cards are processed directly by Stripe (PCI-DSS Level 1); GatherRaise never receives or stores raw card PANs or CVVs.
+• Payment tokens, transaction amounts, voluntary fee coverage choices, and receipt identifiers. All payment cards are processed directly by Stripe (PCI-DSS Level 1); REACH never receives or stores raw card PANs or CVVs.
 
 C. Automatically Collected Technical Data:
 • IP address, browser type, device information, operating system, and request timestamps used strictly for rate limiting, anti-DDoS protection, audit logging, and legal e-sign validity under the E-SIGN Act.`
@@ -70,8 +70,8 @@ Text messaging originator opt-in data and consent will not be shared with any th
       title: '6. Privacy Inquiries & Data Subject Requests',
       content: `To exercise your rights to access, review, correct, or delete your personal data (or your child's data), contact our Data Protection Officer:
 
-GatherRaise Privacy & Compliance Office
-Email: privacy@gatherraise.com
+REACH Privacy & Compliance Office
+Email: privacy@reachplatform.com
 Phone: (800) 555-0199
 Address: 100 Innovation Way, Suite 400, Wilmington, DE 19801`
     }

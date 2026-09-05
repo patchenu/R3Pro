@@ -29,7 +29,7 @@ if (!fs.existsSync(BACKUP_DIR)) {
 }
 
 console.log('💾 ==========================================================');
-console.log('💾 GATHERRAISE AUTOMATED DATABASE BACKUP ENGINE');
+console.log('💾 REACH AUTOMATED DATABASE BACKUP ENGINE');
 console.log('💾 Standard: SOC 2 Type II DR, 7-Year IRS 501(c)(3) Archive');
 console.log('💾 ==========================================================\n');
 
@@ -38,10 +38,10 @@ if (!connectionString) {
   console.log('   Generating mock snapshot verification for offline preview mode...');
   
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const backupFileName = `gatherraise_db_backup_${timestamp}.sql.gz`;
+  const backupFileName = `reach_db_backup_${timestamp}.sql.gz`;
   const backupFilePath = path.join(BACKUP_DIR, backupFileName);
   
-  const mockSql = `-- GatherRaise PostgreSQL Database Export (Offline Mock)
+  const mockSql = `-- REACH PostgreSQL Database Export (Offline Mock)
 -- Timestamp: ${new Date().toISOString()}
 -- Tables: 20 Relational Tables (100% RLS Activated)
 -- Triggers: check_volunteer_shift_overlap, prevent_immutable_tax_receipt_tampering
@@ -101,7 +101,7 @@ async function runBackup() {
     ];
 
     let fullDumpSql = `-- =====================================================================\n`;
-    fullDumpSql += `-- GatherRaise (R3Pro) PostgreSQL Snapshot Export\n`;
+    fullDumpSql += `-- REACH (R3Pro) PostgreSQL Snapshot Export\n`;
     fullDumpSql += `-- Generated: ${new Date().toISOString()}\n`;
     fullDumpSql += `-- Compliance: SOC 2 Type II, COPPA, IRS 501(c)(3) Statutory Archive\n`;
     fullDumpSql += `-- =====================================================================\n\n`;
@@ -137,7 +137,7 @@ async function runBackup() {
 
     // Compress with Gzip
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupFileName = `gatherraise_db_backup_${timestamp}.sql.gz`;
+    const backupFileName = `reach_db_backup_${timestamp}.sql.gz`;
     const backupFilePath = path.join(BACKUP_DIR, backupFileName);
 
     const gzipped = zlib.gzipSync(Buffer.from(fullDumpSql));

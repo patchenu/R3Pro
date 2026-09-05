@@ -25,7 +25,7 @@ if (!connectionString) {
 const BACKUP_DIR = path.resolve(process.cwd(), 'backups');
 
 console.log('🔄 ==========================================================');
-console.log('🔄 GATHERRAISE DISASTER RECOVERY RESTORATION ENGINE');
+console.log('🔄 REACH DISASTER RECOVERY RESTORATION ENGINE');
 console.log('🔄 Standard: SHA-256 Checksum Validation, RLS Re-Verification');
 console.log('🔄 ==========================================================\n');
 

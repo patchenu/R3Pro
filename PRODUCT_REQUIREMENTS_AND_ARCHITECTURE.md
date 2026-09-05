@@ -1,4 +1,4 @@
-# GatherRaise: Master Product Requirements Document (PRD), Architecture Specification & Technical Blueprint
+# REACH: Master Product Requirements Document (PRD), Architecture Specification & Technical Blueprint
 
 **Document Version**: 1.2.0  
 **Status**: Approved Living Master Architecture & System Specification  
@@ -15,8 +15,8 @@ Fundraising and volunteer coordination for community organizations (schools, PTA
 - **Fundraising Platforms** (e.g., GoFundMe, DonorsChoose): Focus strictly on monetary donations, detached from day-of-event labor, volunteer shift scheduling, and supply donations.
 - **Ticketing & Vendor Apps** (e.g., Eventbrite): Geared toward commercial events, lacks volunteer time tracking, supply pledges, and committee-level delegation.
 
-### 1.2 The GatherRaise Solution
-GatherRaise unifies **Volunteer Scheduling**, **Supply Item Pledging**, **Multi-Stream Fundraising** (Donations, Ticket Sales, Silent Auctions, Vendor Booth Fees, and Corporate Sponsorships), **Legal Compliance / Digital Waivers**, **Automated Logistics Communications**, and **Day-of-Event Check-In Operations** into a single, cohesive, enterprise-ready platform.
+### 1.2 The REACH Solution
+REACH unifies **Volunteer Scheduling**, **Supply Item Pledging**, **Multi-Stream Fundraising** (Donations, Ticket Sales, Silent Auctions, Vendor Booth Fees, and Corporate Sponsorships), **Legal Compliance / Digital Waivers**, **Automated Logistics Communications**, and **Day-of-Event Check-In Operations** into a single, cohesive, enterprise-ready platform.
 
 ---
 
@@ -316,7 +316,7 @@ Technology Matrix:
 
 ## 6. Best-of-Breed Production Security, Compliance & Immutability Architecture
 
-GatherRaise enforces an enterprise-grade, defense-in-depth security and compliance posture designed to satisfy **SOC 2 Type II**, **COPPA (Children's Online Privacy Protection Act)**, **HIPAA/FERPA privacy guidelines**, and **IRS 501(c)(3) Statutory Tax Substantiation** standards.
+REACH enforces an enterprise-grade, defense-in-depth security and compliance posture designed to satisfy **SOC 2 Type II**, **COPPA (Children's Online Privacy Protection Act)**, **HIPAA/FERPA privacy guidelines**, and **IRS 501(c)(3) Statutory Tax Substantiation** standards.
 
 ### 6.1 SOC 2 Type II Security & Cryptographic Authentication Controls
 * **Timing-Safe OTP Verification (`crypto.timingSafeEqual`)**:
@@ -368,7 +368,7 @@ GatherRaise enforces an enterprise-grade, defense-in-depth security and complian
   - Verbatim carrier disclosures specifying sender brand, message cadence (~3–5 msgs/event), standard rate warnings, and HELP/STOP instructions.
   - Zero Third-Party Sharing Guarantee: Mobile originator opt-in data is quarantined within tenant boundaries and is never sold or shared for marketing purposes.
 * **Automated Keyword Handling**:
-  - `HELP`: Dispatches immediate support guidance (`support@gatherraise.com`).
+  - `HELP`: Dispatches immediate support guidance (`support@reachplatform.com`).
   - `STOP` / `UNSUBSCRIBE`: Automatically writes to tenant-scoped suppression ledgers and ceases all further SMS dispatch.
 
 ### 6.8 Automated Database Backup, Disaster Recovery & 7-Year Retention Engine

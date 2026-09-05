@@ -944,7 +944,7 @@ export const PublicEventLanding: React.FC = () => {
         onClose={() => setIsQrModalOpen(false)}
         title={currentEvent.title}
         subTitle={currentEvent.tagline}
-        url={`https://gatherraise.org/events/${currentEvent.slug}`}
+        url={`${typeof window !== 'undefined' ? window.location.origin : 'https://reachplatform.com'}/events/${currentEvent.slug}`}
       />
 
       {/* Self-Service Manage Registration Modal */}

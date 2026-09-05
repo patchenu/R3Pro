@@ -7,7 +7,7 @@
 ## 1. System Mission, Vision & Tenancy Model
 
 ### 1.1 Mission & Target Market
-**R3Pro** (*GatherRaise*) is an enterprise-grade multi-tenant community event, volunteer coordination, and campaign fundraising operating system engineered for:
+**R3Pro** (*REACH*) is an enterprise-grade multi-tenant community event, volunteer coordination, and campaign fundraising operating system engineered for:
 1. **501(c)(3) Non-Profit Foundations & Charities**
 2. **School PTAs, Booster Clubs & Educational Foundations**
 3. **Youth Sports Leagues, Faith Communities & Civic Organizations**
@@ -438,7 +438,7 @@ Organizations and Event Chairs maintain a centralized **Legal Compliance & E-Sig
    * **Embedded Calendar Appointment (.ics)**: Self-service management URL is embedded inside calendar invite notes so volunteers can access their pass directly from Google Calendar or Apple iCal.
 2. **Token Storage & Persistence Model**:
    * High-entropy 256-bit `manage_token` values are stored in the backend database (`registrations.manage_token`).
-   * Saved in browser `localStorage` (`gatherraise_active_tokens`) for instantaneous pass recovery on returning desktop/mobile visits.
+   * Saved in browser `localStorage` (`reach_active_tokens`) for instantaneous pass recovery on returning desktop/mobile visits.
 3. **Cross-Device Login Strategy (Desktop to Mobile / Lost Link)**:
    * When shifting devices or logging in without saved links, volunteers do not need passwords.
    * The login modal (`AuthModal.tsx`) defaults to **6-Digit Verification Passcode (Email/SMS OTP)**.
@@ -461,7 +461,7 @@ Organizations and Event Chairs maintain a centralized **Legal Compliance & E-Sig
 ### 6.12 Multi-Tenant Email & SMS Dispatch Architecture
 1. **Tenant-Isolated Sender Identity & Deliverability**:
    * **Default Platform Delivery**:
-     - `From: "[Org Name] via GatherRaise" <notifications@mail.gatherraise.com>`
+     - `From: "[Org Name] via REACH" <notifications@mail.reachplatform.com>`
      - `Reply-To: [Coordinator Email / Org Admin Email]` routes recipient replies directly to the local organization, preventing unmonitored system blackholes.
      - Injected metadata: `X-Entity-Ref-ID: org_{org_id}_evt_{event_id}` for delivery status attribution.
    * **Custom Dedicated Domain Sending (DKIM / SPF / DMARC)**:
@@ -473,18 +473,18 @@ Organizations and Event Chairs maintain a centralized **Legal Compliance & E-Sig
    * **`Queue P2 (Transactional Receipts)`**: IRS 501(c)(3) tax acknowledgement letters, registration confirmations, and supply drop-off vouchers.
    * **`Queue P3 (Broadcast & Bulk Notifications)`**: Lead announcements, volunteer recruitment blasts, and annual birthday greetings. Throttled at 50/sec per tenant to protect shared IP pool reputation.
 3. **Tenant-Scoped Suppression & Opt-Out Isolation**:
-   * Unsubscribe links generate cryptographic tenant-scoped tokens: `https://app.gatherraise.com/preferences?u=...&org_id=...`.
+   * Unsubscribe links generate cryptographic tenant-scoped tokens: `https://app.reachplatform.com/preferences?u=...&org_id=...`.
    * Unsubscribing from School PTA broadcasts strictly suppresses marketing messages for `(email, org_id)` and does NOT impact the recipient's notifications from other community organizations (e.g., Westside Soccer League).
    * Transactional exemptions: Security OTPs, confirmed shift arrival details, and statutory IRS donation receipts bypass marketing suppressions in compliance with CAN-SPAM / CASL regulations.
 4. **A2P 10DLC SMS Compliance in Multi-Tenancy**:
-   * GatherRaise acts as a registered Campaign Registry ISV (Independent Software Vendor), onboarding tenant organizations under standardized nonprofit and education A2P use cases.
+   * REACH acts as a registered Campaign Registry ISV (Independent Software Vendor), onboarding tenant organizations under standardized nonprofit and education A2P use cases.
    * Automated Organization identifier prefixing: All SMS dispatches are strictly prepended with the tenant identifier:
-     `[Lincoln High PTA] Your shift starts at 8:00 AM at Gate 2. Pass: https://gatherraise.com/p/x94827 Reply STOP to opt out.`
+     `[Lincoln High PTA] Your shift starts at 8:00 AM at Gate 2. Pass: https://reachplatform.com/p/x94827 Reply STOP to opt out.`
    * Inbound carrier `STOP` / `UNSUBSCRIBE` webhooks automatically update the tenant-scoped suppression table `(phone_e164, org_id, is_opted_out = true)`. Re-subscribing is supported via `START`.
 
 ### 6.13 Email Provider API Integration & SMS Roadmap Backlog Hub
 1. **Email Provider API & Credentials Hub (`OrgExecutiveDashboard.tsx` -> `📧 Email & SMS Dispatch Studio`)**:
-   * **Provider Switcher**: Supports **Resend API** *(Recommended for React Email & sub-second latency)*, **Postmark** *(Dedicated Transactional Engine)*, **Amazon SES** *(High-Volume Dedicated IP Pools)*, and **GatherRaise Managed Cloud**.
+   * **Provider Switcher**: Supports **Resend API** *(Recommended for React Email & sub-second latency)*, **Postmark** *(Dedicated Transactional Engine)*, **Amazon SES** *(High-Volume Dedicated IP Pools)*, and **REACH Managed Cloud**.
    * **API Key Vault**: Secure masked API key entry with validation states and tenant-isolated credential encryption.
    * **DNS DKIM / SPF Alignment Checker**: Automated CNAME/TXT record inspection (e.g. `resend._domainkey.mail.lincolnpta.org` $\rightarrow$ `dkim.resend.com`) ensuring 100% SPF/DKIM/DMARC compliance.
    * **Live Test Dispatch Sandbox**: Real-time simulation tool allowing coordinators to trigger test verification payloads and verify $<2\text{s}$ delivery latency.

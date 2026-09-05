@@ -1,5 +1,5 @@
 /**
- * GatherRaise (R3Pro) Production API Client
+ * REACH (R3Pro) Production API Client
  * Seamlessly interfaces with Vercel Serverless API Routes (/api/*)
  * Provides graceful fallback handling when running in static preview mode
  */

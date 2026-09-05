@@ -1,5 +1,5 @@
 -- ============================================================================
--- GatherRaise (R3Pro) Production PostgreSQL DDL Schema
+-- REACH (R3Pro) Production PostgreSQL DDL Schema
 -- Compatible with Vercel Postgres / Neon Serverless
 -- Multi-Tenant Isolation by org_id | Multi-Capacity Shifts | Anti-Collision Guard
 -- ============================================================================

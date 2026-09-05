@@ -88,7 +88,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     R3<span className="text-indigo-600">Pro</span>
                   </span>
                   <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                    GatherRaise
+                    REACH
                   </span>
                 </div>
               </div>

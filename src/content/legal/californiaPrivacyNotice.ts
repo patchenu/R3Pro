@@ -2,12 +2,12 @@ export const CALIFORNIA_PRIVACY_NOTICE_CONTENT = {
   title: 'California Privacy Notice & Notice at Collection',
   lastUpdated: 'September 5, 2026',
   version: '2.4.0',
-  summary: 'This California Privacy Notice supplements the GatherRaise Privacy Policy and applies solely to California residents pursuant to the California Consumer Privacy Act (CCPA) as amended by the California Privacy Rights Act (CPRA, Cal. Civ. Code § 1798.100 et seq.).',
+  summary: 'This California Privacy Notice supplements the REACH Privacy Policy and applies solely to California residents pursuant to the California Consumer Privacy Act (CCPA) as amended by the California Privacy Rights Act (CPRA, Cal. Civ. Code § 1798.100 et seq.).',
   sections: [
     {
       id: 'notice-at-collection',
       title: '1. California Notice at Collection',
-      content: `The following table details the categories of Personal Information GatherRaise has collected from California consumers within the preceding twelve (12) months, the business purposes for collection, and the applicable statutory retention schedule:
+      content: `The following table details the categories of Personal Information REACH has collected from California consumers within the preceding twelve (12) months, the business purposes for collection, and the applicable statutory retention schedule:
 
 • Category A: Identifiers (Legal Name, Alias, Email Address, Phone Number, Unique 256-bit Manage Token, IP Address).
   - Purpose: Account provisioning, shift assignment, security rate limiting, ticket delivery.
@@ -36,7 +36,7 @@ export const CALIFORNIA_PRIVACY_NOTICE_CONTENT = {
     {
       id: 'do-not-sell-share',
       title: '2. "Do Not Sell or Share My Personal Information"',
-      content: `GatherRaise DOES NOT SELL your Personal Information and DOES NOT SHARE your Personal Information for cross-context behavioral advertising.
+      content: `REACH DOES NOT SELL your Personal Information and DOES NOT SHARE your Personal Information for cross-context behavioral advertising.
 
 Because we do not sell or share personal information for monetary or other valuable consideration, we do not provide an opt-out mechanism for sales. We strictly preserve your data solely for event coordination and 501(c)(3) non-profit operations.`
     },
@@ -60,7 +60,7 @@ Because we do not sell or share personal information for monetary or other valua
       title: '5. Submitting a California Consumer Request',
       content: `To submit a verifiable consumer request:
 • Web Portal: Click "Do Not Sell / Manage Privacy" in the global footer.
-• Email: privacy@gatherraise.com (Subject: "CCPA Consumer Request")
+• Email: privacy@reachplatform.com (Subject: "CCPA Consumer Request")
 • Toll-Free Phone: 1-800-555-0199
 
 We verify your identity by matching provided email and phone records with verified 6-digit OTP confirmation before processing any data disclosure or deletion request.`

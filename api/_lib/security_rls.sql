@@ -1,5 +1,5 @@
 -- ============================================================================
--- GatherRaise (R3Pro) PostgreSQL Row-Level Security (RLS) & Immutability Policies
+-- REACH (R3Pro) PostgreSQL Row-Level Security (RLS) & Immutability Policies
 -- Standards: SOC 2 Multi-Tenant Isolation | COPPA Protection | IRS 501(c)(3) Integrity
 -- ============================================================================
 

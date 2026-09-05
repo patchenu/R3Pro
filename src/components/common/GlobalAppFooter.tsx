@@ -66,9 +66,9 @@ export const GlobalAppFooter: React.FC<GlobalAppFooterProps> = ({ onOpenLegalDoc
           <div className="space-y-3 md:col-span-1">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-extrabold text-sm shadow-md">
-                G
+                R
               </div>
-              <span className="text-base font-extrabold text-white tracking-tight">GatherRaise</span>
+              <span className="text-base font-extrabold text-white tracking-tight">REACH</span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
               The unified community operating system for volunteer scheduling, supply wishlists, and multi-stream fundraising.
@@ -181,8 +181,8 @@ export const GlobalAppFooter: React.FC<GlobalAppFooterProps> = ({ onOpenLegalDoc
               Questions regarding privacy, student records, or compliance?
             </p>
             <div className="space-y-1 text-xs text-slate-300">
-              <p>Email: <strong className="text-white">privacy@gatherraise.com</strong></p>
-              <p>Support: <strong className="text-white">support@gatherraise.com</strong></p>
+              <p>Email: <strong className="text-white">privacy@reachplatform.com</strong></p>
+              <p>Support: <strong className="text-white">support@reachplatform.com</strong></p>
               <p>Toll-Free: <strong className="text-white">1-800-555-0199</strong></p>
             </div>
           </div>
@@ -191,7 +191,7 @@ export const GlobalAppFooter: React.FC<GlobalAppFooterProps> = ({ onOpenLegalDoc
 
         {/* Bottom Legal Notice */}
         <div className="mt-10 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
-          <p>© {new Date().getFullYear()} GatherRaise Inc. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} REACH Inc. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <span>SOC 2 Type II Certified</span>
             <span>•</span>

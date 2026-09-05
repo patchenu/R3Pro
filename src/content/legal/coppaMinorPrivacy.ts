@@ -2,19 +2,19 @@ export const COPPA_MINOR_PRIVACY_CONTENT = {
   title: "Children's Privacy Statement (COPPA & Minor Safety)",
   lastUpdated: 'September 5, 2026',
   version: '2.4.0',
-  summary: "GatherRaise complies strictly with the Children's Online Privacy Protection Act (COPPA, 16 CFR Part 312), state student data privacy laws, and school volunteer safety guidelines.",
+  summary: "REACH complies strictly with the Children's Online Privacy Protection Act (COPPA, 16 CFR Part 312), state student data privacy laws, and school volunteer safety guidelines.",
   sections: [
     {
       id: 'coppa-overview',
       title: '1. Commitment to Child & Student Safety',
-      content: `GatherRaise is widely used by School PTAs, Booster Clubs, Youth Sports Leagues, Scouts, and Non-Profit Foundations where youth volunteers actively contribute to their communities. We place the highest priority on protecting children's privacy and ensuring verifiable parental oversight.
+      content: `REACH is widely used by School PTAs, Booster Clubs, Youth Sports Leagues, Scouts, and Non-Profit Foundations where youth volunteers actively contribute to their communities. We place the highest priority on protecting children's privacy and ensuring verifiable parental oversight.
 
-In compliance with COPPA and FERPA privacy principles, GatherRaise does NOT knowingly collect personal contact information directly from children under 13 years of age (or minors under 18) without verifiable parental consent.`
+In compliance with COPPA and FERPA privacy principles, REACH does NOT knowingly collect personal contact information directly from children under 13 years of age (or minors under 18) without verifiable parental consent.`
     },
     {
       id: 'household-mental-model',
       title: '2. The Household Dependent Mental Model',
-      content: `To completely insulate children from unauthorized online contact, GatherRaise uses a Household Dependent architecture:
+      content: `To completely insulate children from unauthorized online contact, REACH uses a Household Dependent architecture:
 
 • Primary Adult Account: Registrations are created exclusively by an adult parent, legal guardian, or authorized family member using the adult's email address and mobile phone number.
 • Minor Dependents: Children are registered as dependent members under the parent's primary account.
@@ -46,7 +46,7 @@ In compliance with COPPA and FERPA privacy principles, GatherRaise does NOT know
 • Right to Refuse Further Collection: Revoke consent at any time and prevent further participation.
 • Right to Delete: Request complete deletion of your child's name and service history from the organization's CRM.
 
-To exercise these rights, email coppa-privacy@gatherraise.com or use the self-service registration management portal at /manage-registration.`
+To exercise these rights, email coppa-privacy@reachplatform.com or use the self-service registration management portal at /manage-registration.`
     }
   ]
 };

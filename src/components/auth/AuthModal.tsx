@@ -139,7 +139,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={
-        mode === 'login' ? 'Sign In to GatherRaise' :
+        mode === 'login' ? 'Sign In to REACH' :
         mode === 'register' ? 'Create Your Account' :
         'Reset Account Password'
       }

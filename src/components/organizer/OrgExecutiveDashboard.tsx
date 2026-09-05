@@ -1888,7 +1888,7 @@ export const OrgExecutiveDashboard: React.FC = () => {
                     <option value="resend">Resend API (Modern React Email SDK — Recommended)</option>
                     <option value="postmark">Postmark (Dedicated High-Deliverability Transactional)</option>
                     <option value="ses">Amazon SES (High-Volume Dedicated IP Pool)</option>
-                    <option value="managed">GatherRaise Cloud Shared Pool (Default)</option>
+                    <option value="managed">REACH Cloud Shared Pool (Default)</option>
                   </select>
                 </div>
 
@@ -1915,7 +1915,7 @@ export const OrgExecutiveDashboard: React.FC = () => {
                 <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
                   <div className="font-bold text-slate-900 text-xs">Tenant Sender Identity Headers:</div>
                   <div className="font-mono text-[11px] text-slate-600 space-y-1">
-                    <div><strong>From:</strong> &quot;{currentOrg.name} via GatherRaise&quot; &lt;notifications@mail.gatherraise.com&gt;</div>
+                    <div><strong>From:</strong> &quot;{currentOrg.name} via REACH&quot; &lt;notifications@mail.reachplatform.com&gt;</div>
                     <div><strong>Reply-To:</strong> {orgEmail || currentOrg.contactEmail || 'coordinator@lincolnpta.org'}</div>
                     <div><strong>X-Entity-Ref-ID:</strong> org_{currentOrg.id}</div>
                   </div>
@@ -2022,7 +2022,7 @@ export const OrgExecutiveDashboard: React.FC = () => {
                 <div className="p-3.5 rounded-2xl bg-slate-900 text-white font-mono text-[11px] space-y-1">
                   <div className="text-[10px] text-slate-400 font-sans font-bold uppercase">Outbound SMS Preview:</div>
                   <div className="text-emerald-400">
-                    &quot;[{currentOrg.name}] Your Morning Setup shift starts at 8:00 AM at Gate 2. View Pass: https://gatherraise.com/p/x94827 Reply STOP to opt out.&quot;
+                    &quot;[{currentOrg.name}] Your Morning Setup shift starts at 8:00 AM at Gate 2. View Pass: https://reachplatform.com/p/x94827 Reply STOP to opt out.&quot;
                   </div>
                 </div>
               </div>
