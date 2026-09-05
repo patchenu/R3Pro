@@ -730,11 +730,126 @@ REACH includes an enterprise-grade **Admin Observability, Accounts & Diagnostics
 - **Smart Recents Queue**: Persists recently viewed/impersonated profiles in `sessionStorage`.
 - **6 Canonical Archetypes**: Instant 1-click persona switching (Super Admin, Event Chair, Food Lead, Vendor, Volunteer, Door Kiosk).
 
-### 34.2 Perspective Preview Dossier & Live Administration
+#### 34.2 Perspective Preview Dossier & Live Administration
 - **Live Identity Telemetry**: Real-time display of Account ID, Organization, Role, Email, Phone, Scoped Departments, Last Login, Total Logins, 2FA status, and granular permissions.
 - **On-the-Fly Role & Department Scope Modifier**: In-place editor allowing Super Admins to adjust user roles and multi-select committee department assignments with instant state persistence.
 - **1-Click Super Admin Promotion & Demotion**:
   - Promotes user to Super Admin (`adminPromoteToSuperAdmin`) or revokes admin privileges (`adminRevokeSuperAdmin`) with full SOC 2 Type II audit logging (`ADMIN_PRIVILEGES_GRANTED`, `ADMIN_PRIVILEGES_REVOKED`).
 
+---
 
+## 35. Live Production vs Demo Sandbox Architecture & Role-Based Navigation Scoping
 
+### 35.1 Strict Isolation Between Live Mode and Demo Simulator
+- **Demo Mode (`isDemoMode === true`)**:
+  - Enables the interactive persona switcher bar (`RoleSwitcher.tsx`), sample event campaigns, seeded CRM suppporters, and fast 1-click persona switching (Elena, Marcus, Sarah, Mike, Artisan Bakery, David Chen, Door Kiosk).
+  - Designed for investor demos, staff training, and feature evaluation without mutating production data.
+- **Live Mode (`isDemoMode === false`)**:
+  - Strips all demo switchers, reset buttons, and simulated banners.
+  - Enforces real authentication gates (`isAuthenticated === true`), tenant isolation by `org_id`, cryptographically secure 256-bit magic tokens, and real transactional processing.
+  - Logging out immediately clears authenticated state and routes the user to the unauthenticated public community landing page (`PublicEventLanding.tsx`).
+
+### 35.2 Role-Based Top Navigation Tab Filtering
+- Navigation tabs in the primary header (`App.tsx` and `Navbar.tsx`) are strictly filtered by current user access rights:
+  - **Public / Unauthenticated**: Only sees public tabs (*Community Calendar*, *Event Showcase & Shift Sign-Up*, *Vendor Applications*, *Door Kiosk*). Administrative tabs (*Org Super Admin*, *Planner Command Hub*, *Committee Leads Portal*) are hidden.
+  - **Committee Lead**: Sees *Community Calendar*, *Event Sign-Up*, and *Committee Leads Portal* (strictly scoped to their assigned department).
+  - **Event Planner / Chair**: Sees *Community Calendar*, *Event Sign-Up*, *Planner Command Hub* (with variable approval queue), and *Committee Leads*.
+  - **Org Super Admin**: Sees the full suite of governance tools (*Org Super Admin*, *Org Accounts & Team*, *Planner Hub*, *Committee Leads*, *Vendors & Sponsors*).
+- **Impersonation Scoping**:
+  - Impersonation controls and switcher triggers are contained strictly within the Super Admin **Admin Observability Hub** (`AdminObservabilityHub.tsx`) and the Spotlight Command Palette (`⌘K`). They are never displayed in standard volunteer, vendor, or public views.
+
+---
+
+## 36. Organization Email & SMS Communication Studio (`OrgExecutiveDashboard.tsx`)
+
+### 36.1 Multi-Tenant Communication Infrastructure
+- Located inside **Org Super Admin** (`OrgExecutiveDashboard.tsx` &rarr; `⚡ Email & SMS Dispatch` tab) and linked from `🛡️ Brand, Signatories & Waivers`.
+- Provides a centralized configuration workspace for:
+  - High-deliverability transactional email architecture.
+  - Dedicated custom domain DKIM, SPF, DMARC, and MX DNS verification.
+  - A2P 10DLC compliant SMS gateway configuration with brand prefix enforcement.
+  - Automated reminder schedule cadence toggles (T-72h, T-24h, T-2h QR gate passes, emergency rain delays, IRS tax receipts).
+  - Live interactive test dispatch sandboxes with real-time delivery logs.
+
+### 36.2 Dual Delivery Mode Architecture
+1. **⚡ R3Pro Hosted Cloud Pool (Turnkey Zero-Config — Default)**:
+   - Dispatches transactional emails via R3Pro's pre-authenticated AWS SES & Resend cloud infrastructure.
+   - Requires zero DNS configuration on the organization's domain.
+   - Customizes **Sender Display Name** (*e.g. "Lincoln High PTA Events"*) and **Reply-To Email** (*e.g. "treasurer@lincolnpta.org"*), ensuring replies route directly to coordinator inboxes.
+2. **🌐 Custom Branded Organization Domain (100% White-Labeled)**:
+   - Outbound emails send directly from the tenant's domain (*e.g. `events@mail.lincolnpta.org`*).
+   - Choice of dispatch provider API: **Resend API (React Email SDK — Recommended)**, **Postmark**, **Amazon SES**, or **Custom SMTP Gateway**.
+   - Masked API Key input with Show/Hide toggle and 256-bit encryption.
+   - Interactive DNS records table with 1-click copy buttons and **"Verify DNS Records"** live nameserver query.
+
+---
+
+## 37. 4-Lane Highway Priority Queue Architecture & SLA Guarantees
+
+To ensure critical security codes and gate check-in passes are never delayed behind mass recruitment emails, REACH implements a 4-priority queue architecture using an intuitive **4-Lane Highway Analogy**:
+
+```mermaid
+graph TD
+    subgraph Gateway["Multi-Tenant Communication Gateway"]
+        P0["🚨 Queue P0: The Emergency Siren Lane<br/><b>Auth & Security OTPs (&lt; 2.0s SLA)</b><br/><i>Never queued behind newsletters</i>"]
+        P1["📱 Queue P1: The Express Door Pass<br/><b>Gate QR Mobile Passes (&lt; 5s SLA)</b><br/><i>Instant gate arrival passes</i>"]
+        P2["🧾 Queue P2: The Official Accountant Lane<br/><b>IRS 501(c)(3) Receipts &amp; Drop-Off Vouchers</b><br/><i>Real-time statutory tax receipts</i>"]
+        P3["📢 Queue P3: The Steady Delivery Lane<br/><b>Volunteer Recruitment Broadcasts</b><br/><i>Throttled at 50/sec to protect domain reputation</i>"]
+    end
+```
+
+### 37.1 Queue Breakdown & SLAs
+1. **🚨 Queue P0: Emergency Siren Lane (Auth OTPs & Magic Links)**:
+   - **SLA**: `< 2.0s Delivery`
+   - **Payload**: 6-digit login verification codes and passwordless magic tokens.
+   - **Rationale**: When a volunteer or admin logs in, they are waiting on screen. Queue P0 has instant priority and completely bypasses bulk traffic.
+2. **📱 Queue P1: Express Door Pass (Gate Operations & Mobile Passes)**:
+   - **SLA**: `Instant Push (< 5s)`
+   - **Payload**: Live QR mobile check-in passes (dispatched at T-2h) and day-of emergency gate/weather reassignments.
+   - **Rationale**: Volunteers arriving at Gate 2 need immediate pass access without waiting in line.
+3. **🧾 Queue P2: Official Accountant Lane (IRS 501(c)(3) Receipts & Pledges)**:
+   - **SLA**: `Real-Time Transactional (< 15s)`
+   - **Payload**: IRS Publication 526/561 tax deductible donation receipts, in-kind equipment drop-off vouchers, and sponsor invoices.
+   - **Rationale**: Donors expect immediate contemporaneous tax substantiation after making a financial contribution or physical item drop-off.
+4. **📢 Queue P3: Steady Delivery Lane (Recruitment Broadcasts & Updates)**:
+   - **SLA**: `Throttled at 50 / second per Organization`
+   - **Payload**: Volunteer recruitment announcements, committee updates, and annual birthday milestone greetings.
+   - **Rationale**: Blasting thousands of emails in 1 second causes mailbox providers (Gmail, Yahoo) to flag spam. Queue P3 meters output volume to protect tenant IP and domain reputation.
+
+---
+
+## 38. Non-Technical DNS Setup Guides & Domain Configuration Standards
+
+### 38.1 Beginner DNS Setup Modal (`isDnsGuideModalOpen`)
+Provides tabbed, step-by-step instructions for non-technical PTA coordinators and charity chairs:
+- **GoDaddy**: Step-by-step guide explaining how GoDaddy automatically appends domain names to the Host field, instructing users to enter `mail` rather than `mail.yourorg.org`.
+- **Cloudflare (With Critical Alert)**: Highlights the mandatory rule: **Proxy Status must be changed from Proxied (Orange Cloud) to DNS Only (Gray Cloud)** for email DKIM/SPF CNAME records to validate.
+- **Namecheap**: Walkthrough of *Domain List &rarr; Manage &rarr; Advanced DNS &rarr; + Add New Record*.
+- **Google Domains / Squarespace / Other Registrars**: Standardized DNS zone editing instructions.
+
+### 38.2 Beginner DNS Glossary
+- **CNAME (Canonical Name)**: An alias pointer connecting a subdomain (`mail.yourorg.org`) to the mail delivery engine without exposing host servers.
+- **TXT (Text Record)**: A plain-text badge in DNS proving to mailbox providers that the organization authorized REACH to dispatch emails.
+- **SPF (Sender Policy Framework)**: A security rule declaring authorized dispatch IP addresses.
+- **DNS Propagation**: The brief period (5 to 30 mins) required for worldwide DNS caches to update.
+
+---
+
+## 39. Plain-English Field Tooltips, Troubleshooting Guides & 1-Click Fallback Protections
+
+### 39.1 Interactive Status & Troubleshooting Guide Modal (`isStatusGuideModalOpen`)
+- **🟢 Operational / 100% Verified**: Explains that all records are aligned and emails have maximum inbox deliverability. (Action: None).
+- **🟡 Pending DNS Verification (Waiting Period)**: Explains that 5–30 minutes of propagation is normal. (Action: Wait 15 minutes, then click "Verify DNS Records").
+- **🔴 Misconfigured / Needs Attention**: Identifies top causes (duplicate domain suffix, Cloudflare orange cloud proxy, typo in API key) and provides step-by-step fixes.
+- **🟣 A2P 10DLC Active**: Confirms carrier campaign approval for SMS delivery.
+
+### 39.2 1-Click Emergency Fallback Guarantee
+- If an event begins in 30 minutes and an organization's custom DNS has not propagated, the coordinator can toggle back to **R3Pro Hosted Cloud Pool** with 1 click to resume instant email delivery with zero downtime.
+
+### 39.3 Inline Field Helper Drawers (`activeFieldHelp`)
+- Expandable `(?)` advice cards next to every configuration input:
+  - **Sender Display Name**: Advises using recognizable names (*e.g. "Lincoln High PTA Events"*).
+  - **Reply-To Email**: Explains that volunteer replies route directly to this monitored inbox (*"chair@lincolnpta.org"*).
+  - **Custom Sending Domain**: Recommends using subdomains (`mail.yourorg.org`) to protect primary office Google Workspace / Office 365 email accounts.
+  - **API Key**: Directs users to provider dashboards and reassures 256-bit encryption.
+  - **SMS Brand Prefix**: Explains US carrier A2P 10DLC compliance rules requiring `[Your Org]` at the start of text messages.

@@ -27,6 +27,13 @@ REACH includes a top **Role Switcher Bar** in testing mode, allowing you to inst
      - Manage custom waiver templates, test the interactive live e-signature canvas, and inspect the immutable Executed E-Signatures Audit Ledger.
   6. **🏛️ Organization Setup Templates**:
      - Inspect turnkey industry blueprints (*School/PTA, Non-Profit Foundation, Youth Sports, Faith Community, Corporate Giving*).
+  7. **⚡ Email & SMS Communication Studio**:
+     - Click the **`⚡ Email & SMS Dispatch`** tab.
+     - Toggle between **R3Pro Hosted Cloud Pool** and **Custom Branded Domain**.
+     - Click **`Status & Troubleshooting Guide`** to review deliverability health and action checklists.
+     - Click **`Why 4 Queues? (Highway Emergency Analogy)`** on the SLA ribbon to review the 4-lane priority model.
+     - Click **`📖 Step-by-Step DNS Guide`** to review GoDaddy, Cloudflare (Gray Cloud), and Namecheap instructions.
+     - Test the **Live Transactional Email Dispatcher** and **Live A2P 10DLC SMS Dispatcher** sandboxes.
 
 ### 📋 Persona 2: Marcus Vance (Event Planner / Chair)
 * **Event**: Annual Fall Carnival & Bake Sale ($15,000 Goal)
