@@ -211,6 +211,85 @@ CREATE TABLE donations (
     deductible_amount NUMERIC(10,2) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Pro-Bono Professional Services
+CREATE TABLE pro_bono_pledges (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+    sub_part_id UUID REFERENCES sub_parts(id),
+    donor_name VARCHAR(255) NOT NULL,
+    company_name VARCHAR(255),
+    service_description TEXT NOT NULL,
+    estimated_fmv NUMERIC(10,2) NOT NULL,
+    status VARCHAR(50) DEFAULT 'pledged', -- pledged, verified_delivered
+    verified_at TIMESTAMPTZ,
+    verified_by VARCHAR(255),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Paid Contractors
+CREATE TABLE paid_contractors (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+    sub_part_id UUID REFERENCES sub_parts(id),
+    contractor_name VARCHAR(255) NOT NULL,
+    business_name VARCHAR(255),
+    service_description TEXT NOT NULL,
+    contract_amount NUMERIC(10,2) NOT NULL,
+    payment_status VARCHAR(50) DEFAULT 'pending', -- pending, partial, paid
+    invoice_number VARCHAR(100),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Broadcast Announcements
+CREATE TABLE announcements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+    sub_part_id UUID REFERENCES sub_parts(id),
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    channels TEXT[] DEFAULT '{"email"}', -- email, sms, push, kiosk
+    urgency VARCHAR(50) DEFAULT 'normal', -- normal, urgent, critical_alert
+    target_audience VARCHAR(50) DEFAULT 'all', -- all, leads_only, active_volunteers
+    sender_user_id UUID REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Volunteer CRM Profiles
+CREATE TABLE volunteer_crm_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    birth_date DATE,
+    tier VARCHAR(50) DEFAULT 'contributor', -- pillar, core, contributor, newcomer
+    tags TEXT[],
+    skills TEXT[],
+    lifetime_hours NUMERIC(10,2) DEFAULT 0,
+    lifetime_donations NUMERIC(10,2) DEFAULT 0,
+    events_participated INTEGER DEFAULT 0,
+    attendance_rate NUMERIC(5,2) DEFAULT 100.0,
+    notes TEXT,
+    last_active TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Volunteer CRM Historical Event Service Ledger
+CREATE TABLE volunteer_event_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    volunteer_id UUID REFERENCES volunteer_crm_profiles(id) ON DELETE CASCADE,
+    event_title VARCHAR(255) NOT NULL,
+    event_date DATE NOT NULL,
+    roles_served TEXT[] NOT NULL,
+    hours_contributed NUMERIC(6,2) NOT NULL,
+    items_donated TEXT,
+    amount_donated NUMERIC(10,2) DEFAULT 0,
+    event_outcome_raised NUMERIC(12,2) DEFAULT 0,
+    verified_by VARCHAR(255),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
 ```
 
 ---

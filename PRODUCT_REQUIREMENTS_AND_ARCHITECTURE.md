@@ -1,7 +1,7 @@
 # GatherRaise: Master Product Requirements Document (PRD), Architecture Specification & Technical Blueprint
 
-**Document Version**: 1.0.0  
-**Status**: Approved Specification & Architecture Baseline  
+**Document Version**: 1.2.0  
+**Status**: Approved Living Master Architecture & System Specification  
 **Target Platform**: Multi-Tenant Web Platform (Desktop, Tablet, Mobile)  
 **Hosting & Repository**: GitHub with Continuous Integration & Continuous Deployment (CI/CD)
 
@@ -247,19 +247,70 @@ Technology Matrix:
 * **Live Test Dispatch Sandbox**: Real-time test email dispatcher verifying $<2\text{s}$ SLA latency.
 * **SMS Gateway Roadmap Backlog**: Formalized A2P 10DLC ISV campaign registration, automated 72h/24h/2h mobile boarding pass SMS, emergency gate alerts, and 6-digit SMS OTP logins.
 
-### 5.3 Volunteer Shift Time Slot Setup, Preferred Schedule Windows & Overlap Guard
-* **Granular Time Window Specification**:
-  * Every shift is defined with explicit `startTime` and `endTime` datetimes instead of inheriting global event windows.
-  * Quick Time Slot Presets (*Morning 8-11am*, *Midday 11am-2pm*, *Afternoon 2-5pm*, *Evening 5-8pm*, *Full Event*) accelerate shift setup in `EventBuilderWizard.tsx`, `MasterPlannerDashboard.tsx`, and `LeadPortal.tsx`.
-* **⚡ 1-Click Multi-Slot Generator**:
-  * Organizers can split a single volunteer role into 4 distinct consecutive time slots across the event day.
-* **Public Discovery & Preferred Time Slot Selection (`PublicEventLanding.tsx`)**:
-  * Volunteers can filter opportunities across `All Times`, `🌅 Morning (<12 PM)`, `☀️ Midday (12 PM – 3 PM)`, and `🌙 Evening (3 PM+)`.
-  * Shifts highlight prominent time badges, reporting gates, and open spot counters.
-* **Multi-Participant Household Shift Assignment (`UnifiedRegistrationModal.tsx`)**:
-  * Parents and organizers can assign specific family members or dependents to distinct time slots.
-  * Zero double-booking overlap engine strictly validates that no participant is assigned concurrent or conflicting shift times (`start1 < end2 && end1 > start2`).
+### 5.4 Volunteer "Build Your Day" Visual Schedule Timeline Bar (`VisualScheduleTimelineBar.tsx`)
+* **Docked Interactive Intelligence**: Dynamically surfaces a responsive timeline bar when $\ge 1$ volunteer shift, wishlist supply item, admission ticket, or donation is selected.
+* **Chronological Sorting & Labor Economic Metrics**: Automatically sorts selected shifts by start time and computes cumulative volunteer hours (e.g. `5.0 hrs of community impact`).
+* **Zero-Conflict Overlap Engine**: Real-time validation checks for temporal overlap across all selected shifts (`startA < endB && endA > startB`).
+  * Flags conflicting pairs with detailed minutes overlap warnings (e.g. `⚠️ Time Overlap Conflict: Setup Crew and Face Painting overlap by 30 minutes`).
+  * Displays `✓ Zero Conflicts` when all shift timeframes are disjoint.
+* **Transit & Rest Buffer Intelligence**: Dynamically computes break intervals between adjacent consecutive shifts (e.g. `⏱️ 30m break`, `⚡ Back-to-back shift`).
+* **1-Click Modal Launch**: Direct `✕` removal buttons on individual shift pills and 1-click `Complete Sign-Up & Claim Passes` CTA launching the pre-loaded `UnifiedRegistrationModal`.
 
----
+### 5.5 1-Click Multi-Channel Campaign Launch Kit & Promotional Suite (`EventMarketingHub.tsx`)
+* **Printable 8.5x11 PDF Gate Posters & Tear-Off Flyers**:
+  * Letter layout with organization branding, verified 501(c)(3) badge, event schedule, venue address, and urgent open volunteer shift needs.
+  * 8 detachable bottom tear-off tabs with mini QR codes and shortlinks for bulletin board posting.
+  * 1-click `🖨️ Print / Save 8.5x11 PDF Flyer` triggering print stylesheet.
+* **Pre-Written Email & Newsletter Recruitment Blasts**:
+  * Ready-to-use launch callout, T-7 days shift shortage drive, and sponsor pitch with 1-click `📋 Copy Subject & Body`.
+* **Social Media & Messaging Share Pack**:
+  * Formatted copy, emojis, and hashtags for Instagram, Facebook, Nextdoor, LinkedIn, and WhatsApp / SMS Broadcasts.
+* **Website Embed & High-Res QR Pack**:
+  * Responsive HTML iframe embed snippet + high-resolution downloadable QR code in organization brand colors.
+* **Volunteer CRM Pool Re-Engagement Blast**:
+  * 1-click targeted broadcast to past volunteer database.
+
+### 5.6 Organization Legal Identity, Defaults & Governance Hub (`OrgExecutiveDashboard.tsx`, `AppContext.tsx`)
+* **Legal Entity & Tax Classification**:
+  * Full authoring and live synchronization of Legal Organization Name, Tax EIN (Tax ID), Organization Type (`school_pta`, `non_profit`, `youth_sports`, `church_faith`, `corporate_giving`, `other`), and Default Currency (USD, CAD, EUR, GBP).
+* **Default Campaign Governance & Variable Approvals**:
+  * Organization-wide default budget threshold limit (\$) and shift spots limit for Lead auto-approval vs Planner queue escalation.
+  * Default reminder notification cadence configuration (*Standard 72h/24h/2h, Intensive 7d/72h/24h/2h, Same-Day Urgent, Custom*).
+* **Team Leadership Contact Attributes**:
+  * Author and edit Full Legal Name, Direct Email, Mobile Phone, System Role, and Department Lead assignments with real-time state persistence.
+
+### 5.7 Pro-Bono In-Kind Professional Service Ledger (`MasterPlannerDashboard.tsx`, `LeadPortal.tsx`)
+* **Professional Services Tracking**:
+  * Dedicated ledger for pro-bono commercial services (*Graphic Design, Audio/Visual Engineering, Legal Counsel, Electrical Setup, Photography, Security*).
+  * Captures Donor / Company Name, Service Description, Estimated Fair Market Value (FMV), and Assigned Committee Department.
+* **1-Click Delivery Verification**:
+  * Planners and Department Leads can toggle status between `Pledged / Scheduled` and `✓ Verified Delivered`, automatically calculating in-kind financial contributions for annual 990/CPA reports.
+
+### 5.8 Master Broadcast Announcements Hub (`MasterPlannerDashboard.tsx`)
+* **Multi-Channel Dispatch Engine**:
+  * Real-time broadcast creation with multi-channel selection (*Email Blast*, *SMS Text*, *Mobile Push*, *Gate Kiosk Notice*).
+  * Urgency categorization (*Normal Update*, *Urgent Attention*, *Critical Alert*).
+  * Target audience scoping (*All Attendees & Volunteers*, *Lead Chairs & Staff Only*, *Active Shift Volunteers*).
+* **Immutable Notification Ledger**:
+  * Dispatched broadcasts are rendered in a chronological announcement ledger with status badges, audience tags, and 1-click removal.
+
+### 5.9 Volunteer CRM Historical Service Logging & Outcome Tie-Back (`VolunteerCrm.tsx`, `AppContext.tsx`)
+* **Manual Historical Service Entry Modal**:
+  * Coordinators can record past event service for volunteers outside active online campaigns:
+    * Event / Campaign Title and Historical Event Date.
+    * Contributed Service Hours, Roles / Shifts Served, Supplies Donated, and Direct Donations (\$).
+    * Event Campaign Outcome (\$ raised for cause) and Authorized Verifying Coordinator Name.
+  * Automatically updates the volunteer's lifetime statistics (`lifetimeHours`, `lifetimeDonations`, `eventsParticipated`, `lastActive`) and appends an immutable `VolunteerEventHistory` entry.
+
+### 5.10 Complete Self-Service Pass & Confirmation Card 4-in-1 Parity (`ManageRegistration.tsx`, `ConfirmationCard.tsx`)
+* **Full-Spectrum Registration Management**:
+  1. **Scheduled Volunteer Shifts**: Displays shift title, start/end timeframe, assigned household member, committee department, reporting gate, lead on duty contact, dress code notes, and real-time check-in status.
+  2. **Pledged Wishlist Supplies & Equipment**: Displays item name, promised quantity, drop-off location/gate, deadline, calculated FMV per unit, and received delivery status.
+  3. **Admission & Commercial Tickets / Sponsor Packages**: Displays package title, quantity, total price, and assigned booth footprint number.
+  4. **Direct Donations & Tax Receipts**: Displays monetary donation amount, 501(c)(3) tax receipt number, and tax deduction eligibility.
+* **Calendar & Mobile Check-In Integration**:
+  - 1-click `.ics` Apple iCal / Outlook file download and 1-click Google Calendar integration pre-populated with reporting gate and Lead contact info.
+  - Express Day-of-Event QR check-in pass and optional 1-tap password setting to claim account and link household family dependents.
+
 
 

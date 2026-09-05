@@ -18,6 +18,7 @@ GatherRaise includes a top **Role Switcher Bar** in testing mode, allowing you t
      - View their **Importance Tier** (`👑 Tier 1: Organization Pillar`), **Estimated Lifetime Economic Value ($)**, and **3-Layer Tagging Studio**.
      - Remove any active tag with 1-click `✕`, pick from the Recommended Tag Library, or create an ad-hoc custom tag (`+ Add`).
      - Edit coordinator internal notes and inspect the chronological **Historical Events Supported & Tied Campaign Outcomes Ledger**.
+     - Click **`+ Log Past Event Service`** to manually record past volunteer hours, item donations, direct contributions, campaign financial outcomes ($ raised), and verifying signatures.
   3. **👥 Leadership & Committee Leads Delegation**:
      - Click **`+ Invite Leader / Committee Lead`** to grant roles (`org_admin`, `event_planner`, `committee_lead`) and scope leads to specific operational departments (*Hospitality & Food*, *Labor & Setup*, *Vendor Marketplace*, etc.).
   4. **🎨 Branding, Logos & Signatory**:
@@ -32,6 +33,8 @@ GatherRaise includes a top **Role Switcher Bar** in testing mode, allowing you t
 * **What to Test**:
   1. Open the **📊 PLANNER HUB**:
      - **Committees & Budgets**: Click `+ Add Committee Department` to create a new committee, or click `+ Add Shift Need` / `+ Add Supply Need`.
+     - **🛠️ Pro-Bono In-Kind Services**: Click `+ Log Pro-Bono Donation` to record professional commercial services (*Graphic Design, Sound/Audio, Legal, Electrical*), calculate Fair Market Value (FMV), and verify delivered status.
+     - **📢 Master Broadcast Announcements Hub**: Click the header `📢 Broadcasts` button to dispatch real-time announcements (*Email, SMS, Push, Kiosk*) with urgency levels and manage the notification ledger.
      - **Volunteer Manifest & Check-In**: View all assigned volunteers with 1-click student service hour letters and express check-in.
      - **📦 Item Pledges & Receiving**: Track physical arrival of donated items, record receiving notes/timestamps, and generate official IRS In-Kind Non-Cash Acknowledgement Letters (IRS Pub 526/561).
      - **Marketing, Flyers & Broadcast**: Generate print flyers and social broadcast payloads.

@@ -497,6 +497,49 @@ Organizations and Event Chairs maintain a centralized **Legal Compliance & E-Sig
      - *Passwordless 6-Digit SMS OTP*: 6-digit login passcodes sent via SMS for cross-device authentication.
      - *Tenant-Scoped TCPA Opt-Out*: Strict carrier `STOP` / `START` keyword tracking isolated per organization.
 
+### 6.14 Organization Legal Identity & Policy Defaults Hub
+1. **Legal Organization Profile & Tax Status**:
+   * Multi-tenant authoring of Legal Name, Tax EIN (deduplication validated), Organization Classification (`school_pta`, `non_profit`, `youth_sports`, `church_faith`, `corporate_giving`, `other`), and Default Operating Currency (USD, CAD, EUR, GBP).
+2. **Organization-Wide Variable Approval & Cadence Defaults**:
+   * Organization-level threshold limits for budget additions (\$) and shift slot expansions.
+   * Default notification reminder schedule (*Standard 72h/24h/2h*, *Intensive 7d/72h/24h/2h*, *Same-Day Urgent*, *Custom*).
+3. **Executive Signatory Asset Hub**:
+   * Upload and preview of executive officer digital signature vectors for automatic rendering on IRS 501(c)(3) tax receipts and Student Community Service Certificates.
+
+### 6.15 Pro-Bono In-Kind Professional Service Ledger
+1. **Professional Services Tracking**:
+   * Dedicated ledger for commercial and in-kind services (*Graphic Design, Sound/Audio Engineering, Legal Counsel, Electrical Setup, Photography, Security*).
+   * Tracks Donor / Company Name, Description of Services Rendered, Estimated Fair Market Value (FMV), and Assigned Committee Department.
+2. **1-Click Delivery Verification**:
+   * Planners and Department Leads can toggle status between `Pledged / Scheduled` and `✓ Verified Delivered`, automatically calculating in-kind financial contributions for annual 990/CPA reports.
+
+### 6.16 Master Broadcast Announcements Hub
+1. **Multi-Channel Dispatch Engine**:
+   * Real-time broadcast creation with multi-channel selection (*Email Blast*, *SMS Text*, *Mobile Push*, *Gate Kiosk Notice*).
+   * Urgency categorization (*Normal Update*, *Urgent Attention*, *Critical Alert*).
+   * Target audience scoping (*All Attendees & Volunteers*, *Lead Chairs & Staff Only*, *Active Shift Volunteers*).
+2. **Chronological Announcement Ledger**:
+   * Dispatched broadcasts are rendered in a real-time ledger with status badges, audience tags, and 1-click removal.
+
+### 6.17 Volunteer CRM Historical Event Service Logging & Impact Outcome Tie-Back
+1. **Manual Historical Service Entry Modal**:
+   * Record past event service outside active online campaigns:
+     - Event Title and Historical Event Date.
+     - Contributed Service Hours, Roles / Shifts Served, Supplies Donated, and Direct Donations (\$).
+     - Event Campaign Outcome (\$ raised for cause) and Authorized Verifying Coordinator Name.
+2. **Automated Lifetime Metric Rollup**:
+   * Automatically updates volunteer cumulative statistics (`lifetimeHours`, `lifetimeDonations`, `eventsParticipated`, `lastActive`) and appends an immutable `VolunteerEventHistory` entry.
+
+### 6.18 4-in-1 Full-Spectrum Pass & Post-Signup Confirmation Card Parity
+1. **Full-Spectrum Registration Management**:
+   - **Scheduled Volunteer Shifts**: Shift title, start/end timeframe, assigned household member, committee department, reporting gate, lead on duty contact, dress code notes, and real-time check-in status.
+   - **Pledged Wishlist Supplies & Equipment**: Item name, promised quantity, drop-off location/gate, deadline, calculated FMV per unit, and received delivery status.
+   - **Admission & Commercial Tickets / Sponsor Packages**: Package title, quantity, total price, and assigned booth footprint number.
+   - **Direct Donations & Tax Receipts**: Monetary donation amount, 501(c)(3) tax receipt number, and tax deduction eligibility.
+2. **Calendar & Mobile Check-In Integration**:
+   - 1-click `.ics` Apple iCal / Outlook file download and 1-click Google Calendar integration pre-populated with reporting gate and Lead contact info.
+   - Express Day-of-Event QR check-in pass and optional 1-tap password setting to claim account and link household family dependents.
+
 ## 7. Turnkey Industry Presets Catalog
 
 ### 7.1 Organization Presets

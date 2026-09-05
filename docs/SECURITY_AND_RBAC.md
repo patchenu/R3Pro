@@ -10,11 +10,12 @@
 
 | Role | Scope | Allowed Actions |
 | :--- | :--- | :--- |
-| **Org Super Admin** | Entire Organization | Manage branding, team roles, billing/Stripe, view cross-event volunteer CRM & financial ledgers, download audit logs. |
-| **Event Planner** | Assigned Event(s) | Set dates, venue, fundraising goal, assign Committee Leads, configure approval thresholds, review approval queue, publish event. |
-| **Committee Lead** | Assigned Department (Sub-Part) | Create/edit shifts and wishlists within department, manage department expenses, station check-in, broadcast to department volunteers. |
+| **Org Super Admin** | Entire Organization | Manage branding, legal identity & governance defaults, team roles, billing, view cross-event volunteer CRM, log past event service, dispatch broadcasts, financial ledgers, audit logs. |
+| **Event Planner** | Assigned Event(s) | Set dates, venue, fundraising goal, assign Committee Leads, configure approval thresholds, review approval queue, manage pro-bono service ledger, dispatch multi-channel announcements, publish event. |
+| **Committee Lead** | Assigned Department (Sub-Part) | Create/edit shifts and wishlists within department, verify pro-bono service delivery, manage department expenses, station check-in, broadcast to department volunteers. |
 | **Vendor / Sponsor** | Business Tier | Submit intake info (EIN, COI, power), select booth, pay invoice/card, download tax receipts. |
-| **Volunteer / Donor** | Self-Service Public | Claim shifts, register family, pledge items, donate, sign waivers, view/edit via secure manage token. |
+| **Door Kiosk Attendant** | Gate Operations | Fast name/phone check-in lookup, on-site touchscreen waiver signing, day-of walk-up volunteer registration. |
+| **Volunteer / Donor** | Self-Service Public | Claim shifts, register family, pledge items, donate, sign waivers, view/edit via secure manage token or OTP login. |
 
 ---
 

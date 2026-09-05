@@ -69,6 +69,22 @@ R3Pro is an enterprise-grade web application combining the volunteer coordinatio
     - Transactional email API integration (**Resend API / Postmark / AWS SES**), custom domain DKIM/SPF DNS verification, and live test dispatch sandbox.
     - Formalized SMS 10DLC gateway roadmap backlog (Twilio / Telnyx, automated T-72h/24h/2h reminders, and SMS OTP logins).
 
+14. **Volunteer "Build Your Day" Visual Schedule Timeline Bar & Overlap Engine**:
+    - Floating interactive schedule timeline dynamically computing cumulative community service hours with zero-conflict temporal overlap collision detection and break interval analysis.
+
+15. **1-Click Multi-Channel Campaign Launch Kit & Outreach Suite**:
+    - Printable 8.5x11 PDF gate posters with detachable perforated tear-off QR tabs, pre-written email/newsletter blasts, social media share packs, responsive iframe embeds, and volunteer CRM pool re-engagement blasts.
+
+16. **Pro-Bono In-Kind Professional Service Ledger**:
+    - Dedicated tracking and delivery verification for commercial professional services (*Graphic Design, Sound/Audio, Legal, Electrical, Photography*) with automated Fair Market Value (FMV) offsets.
+
+17. **Master Broadcast Announcements Hub**:
+    - Real-time multi-channel broadcast creation (*Email, SMS, Mobile Push, Gate Kiosk*) with urgency tiering (*Normal, Urgent, Critical*) and immutable dispatch ledgers.
+
+18. **Volunteer CRM Historical Event Service Logging & Full-Spectrum Pass Parity**:
+    - Manual past event service entry recording hours, item pledges, donations, campaign outcomes (\$ raised), and verifying signatures.
+    - 4-in-1 self-service pass & post-signup confirmation cards for Shifts, Pledged Supplies, Tickets/Sponsor Packages, and Donations with 1-click `.ics` calendar sync.
+
 ---
 
 ## 🛠️ Local Development & Running
