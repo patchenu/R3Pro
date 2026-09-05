@@ -13,7 +13,7 @@ import {
   Calendar, BarChart3, TrendingUp, CheckCircle, ExternalLink, Printer, FileSpreadsheet, Eye, ChevronRight, Package, ArrowUpRight,
   Filter, Search, Hash, Layers, PieChart, ArrowDownRight, Edit3, X, MessageSquare, Key, Send, RefreshCw, Activity,
   Copy, HelpCircle, Smartphone, Radio, Zap, Lock, Unlock, Info, Sliders, Clock, Bell, AlertCircle, CheckSquare, Square,
-  Globe, Server
+  Globe, Server, BookOpen, Lightbulb, AlertTriangle, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { 
@@ -96,6 +96,13 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
 
   // Active Tooltip / Help Drawer State
   const [activeTooltipId, setActiveTooltipId] = useState<string | null>(null);
+
+  // Non-Technical Guidance & Modal States
+  const [isStatusGuideModalOpen, setIsStatusGuideModalOpen] = useState(false);
+  const [isQueuesGuideModalOpen, setIsQueuesGuideModalOpen] = useState(false);
+  const [isDnsGuideModalOpen, setIsDnsGuideModalOpen] = useState(false);
+  const [selectedDnsRegistrar, setSelectedDnsRegistrar] = useState<'godaddy' | 'cloudflare' | 'namecheap' | 'general'>('godaddy');
+  const [activeFieldHelp, setActiveFieldHelp] = useState<string | null>(null);
   
   // Outcome Report View Mode: By Event, By Quarter, By Calendar Year
   const [outcomeViewMode, setOutcomeViewMode] = useState<'by_event' | 'by_quarter' | 'by_year'>('by_event');
@@ -2018,63 +2025,95 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
             </div>
 
             {/* Current Active Mode & Health Chips */}
-            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-800">
-              <div className="px-3 py-1.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-indigo-400" />
-                <span>
-                  {emailDeliveryMode === 'custom_domain' 
-                    ? `Custom Sending Domain (${customSendingDomain})` 
-                    : 'R3Pro Cloud Hosted (Shared Pool)'}
-                </span>
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-slate-800">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="px-3 py-1.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>
+                    {emailDeliveryMode === 'custom_domain' 
+                      ? `Custom Sending Domain (${customSendingDomain})` 
+                      : 'R3Pro Cloud Hosted (Shared Pool)'}
+                  </span>
+                </div>
+
+                <div className={`px-3 py-1.5 border rounded-xl text-xs font-bold flex items-center gap-1.5 ${
+                  dnsVerified 
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
+                    : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                }`}>
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>{dnsVerified ? 'DKIM / SPF 100% Aligned' : 'Pending DNS Verification'}</span>
+                </div>
+
+                <div className="px-3 py-1.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                  <Smartphone className="w-3.5 h-3.5 text-purple-400" />
+                  <span>A2P 10DLC Registered ({smsBrandPrefix})</span>
+                </div>
               </div>
 
-              <div className="px-3 py-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{dnsVerified ? 'DKIM / SPF 100% Aligned' : 'Pending DNS Verification'}</span>
-              </div>
-
-              <div className="px-3 py-1.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                <Smartphone className="w-3.5 h-3.5 text-purple-400" />
-                <span>A2P 10DLC Registered ({smsBrandPrefix})</span>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsStatusGuideModalOpen(true)}
+                className="px-3 py-1.5 bg-slate-800/90 hover:bg-slate-700 text-indigo-300 hover:text-white border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Status &amp; Troubleshooting Guide</span>
+              </button>
             </div>
 
-            {/* SLA Ribbon */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-800 text-xs">
-              <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Queue P0 (Auth OTP)</span>
-                  <Zap className="w-3 h-3 text-emerald-400" />
+            {/* SLA Ribbon with Highway Analogy Trigger */}
+            <div className="mt-4 pt-4 border-t border-slate-800">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Multi-Tenant Delivery Fast-Lanes (SLA Guaranteed)</span>
                 </div>
-                <div className="text-base font-extrabold text-white mt-0.5">&lt; 2.0s SLA</div>
-                <span className="text-[10px] text-emerald-400">Bypasses marketing queues</span>
+                <button
+                  type="button"
+                  onClick={() => setIsQueuesGuideModalOpen(true)}
+                  className="text-xs text-indigo-300 hover:text-indigo-100 font-bold flex items-center gap-1 underline underline-offset-2 transition cursor-pointer"
+                >
+                  <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Why 4 Queues? (Highway Emergency Analogy)</span>
+                </button>
               </div>
 
-              <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Queue P1 (Gate Passes)</span>
-                  <Smartphone className="w-3 h-3 text-indigo-400" />
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Queue P0 (Auth OTP)</span>
+                    <Zap className="w-3 h-3 text-emerald-400" />
+                  </div>
+                  <div className="text-base font-extrabold text-white mt-0.5">&lt; 2.0s SLA</div>
+                  <span className="text-[10px] text-emerald-400">Bypasses marketing queues</span>
                 </div>
-                <div className="text-base font-extrabold text-white mt-0.5">Instant Push</div>
-                <span className="text-[10px] text-indigo-300">Live QR Mobile Passes</span>
-              </div>
 
-              <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Queue P2 (501c3 Receipts)</span>
-                  <FileText className="w-3 h-3 text-purple-400" />
+                <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Queue P1 (Gate Passes)</span>
+                    <Smartphone className="w-3 h-3 text-indigo-400" />
+                  </div>
+                  <div className="text-base font-extrabold text-white mt-0.5">Instant Push</div>
+                  <span className="text-[10px] text-indigo-300">Live QR Mobile Passes</span>
                 </div>
-                <div className="text-base font-extrabold text-white mt-0.5">Real-Time</div>
-                <span className="text-[10px] text-purple-300">IRS Pub 526/561 Compliant</span>
-              </div>
 
-              <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Queue P3 (Broadcasts)</span>
-                  <Radio className="w-3 h-3 text-amber-400" />
+                <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Queue P2 (501c3 Receipts)</span>
+                    <FileText className="w-3 h-3 text-purple-400" />
+                  </div>
+                  <div className="text-base font-extrabold text-white mt-0.5">Real-Time</div>
+                  <span className="text-[10px] text-purple-300">IRS Pub 526/561 Compliant</span>
                 </div>
-                <div className="text-base font-extrabold text-white mt-0.5">50 / sec Limit</div>
-                <span className="text-[10px] text-amber-300">Tenant Reputation Guard</span>
+
+                <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Queue P3 (Broadcasts)</span>
+                    <Radio className="w-3 h-3 text-amber-400" />
+                  </div>
+                  <div className="text-base font-extrabold text-white mt-0.5">50 / sec Limit</div>
+                  <span className="text-[10px] text-amber-300">Tenant Reputation Guard</span>
+                </div>
               </div>
             </div>
           </div>
@@ -2282,7 +2321,20 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-slate-800 mb-1">Sender Display Name *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-slate-800 flex items-center gap-1">
+                      <span>Sender Display Name *</span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveFieldHelp(activeFieldHelp === 'sender_name' ? null : 'sender_name')}
+                        className="text-purple-600 hover:text-purple-800 transition cursor-pointer p-0.5 rounded"
+                        title="Click for non-technical guidance"
+                      >
+                        <HelpCircle className="w-3.5 h-3.5" />
+                      </button>
+                    </label>
+                    <span className="text-[10px] text-slate-500">Inbox Header</span>
+                  </div>
                   <input
                     type="text"
                     value={customFromName}
@@ -2290,11 +2342,39 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                     placeholder="e.g. Lincoln High PTA Events"
                     className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-900"
                   />
-                  <span className="text-[10px] text-slate-500 mt-0.5 block">Appears in supporter inboxes as the sender name</span>
+                  <span className="text-[10px] text-slate-500 mt-0.5 block">Appears in supporter inboxes as the friendly sender name</span>
+                  
+                  {activeFieldHelp === 'sender_name' && (
+                    <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-[11px] text-purple-950 leading-relaxed space-y-1">
+                      <div className="font-bold flex items-center gap-1 text-purple-800">
+                        <Lightbulb className="w-3.5 h-3.5 text-purple-600" />
+                        <span>Sender Display Name Advice</span>
+                      </div>
+                      <p>
+                        This is the human name volunteers see before the email address (e.g. <em>&quot;Lincoln High PTA Events&quot;</em> or <em>&quot;Westside Youth Soccer&quot;</em>).
+                      </p>
+                      <p className="text-slate-600">
+                        <strong>Tip:</strong> Keep it clear and recognizable so parents instantly know it is from your school or non-profit rather than junk mail.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-800 mb-1">Reply-To Email Address *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-slate-800 flex items-center gap-1">
+                      <span>Reply-To Email Address *</span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveFieldHelp(activeFieldHelp === 'reply_to' ? null : 'reply_to')}
+                        className="text-purple-600 hover:text-purple-800 transition cursor-pointer p-0.5 rounded"
+                        title="Click for non-technical guidance"
+                      >
+                        <HelpCircle className="w-3.5 h-3.5" />
+                      </button>
+                    </label>
+                    <span className="text-[10px] text-slate-500">Staff Inbox</span>
+                  </div>
                   <input
                     type="email"
                     value={customReplyTo}
@@ -2302,7 +2382,22 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                     placeholder="e.g. treasurer@lincolnpta.org"
                     className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-900"
                   />
-                  <span className="text-[10px] text-slate-500 mt-0.5 block">Volunteer responses and inquiries route directly here</span>
+                  <span className="text-[10px] text-slate-500 mt-0.5 block">Volunteer responses and questions route directly to this address</span>
+
+                  {activeFieldHelp === 'reply_to' && (
+                    <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-[11px] text-purple-950 leading-relaxed space-y-1">
+                      <div className="font-bold flex items-center gap-1 text-purple-800">
+                        <Lightbulb className="w-3.5 h-3.5 text-purple-600" />
+                        <span>Reply-To Address Guidance</span>
+                      </div>
+                      <p>
+                        When parents or donors hit &quot;Reply&quot; on their shift confirmation or receipt, their message goes directly to this inbox (e.g. <em>chair@lincolnpta.org</em> or <em>info@yourcharity.org</em>).
+                      </p>
+                      <p className="text-slate-600">
+                        <strong>Tip:</strong> Always use an actively monitored team address so volunteer inquiries are never missed.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -2311,7 +2406,18 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                 <div className="pt-4 border-t border-slate-200 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block font-bold text-slate-800 mb-1">Dispatch Provider API *</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-800 flex items-center gap-1">
+                          <span>Dispatch Provider API *</span>
+                          <button
+                            type="button"
+                            onClick={() => setActiveFieldHelp(activeFieldHelp === 'provider' ? null : 'provider')}
+                            className="text-purple-600 hover:text-purple-800 transition cursor-pointer p-0.5 rounded"
+                          >
+                            <HelpCircle className="w-3.5 h-3.5" />
+                          </button>
+                        </label>
+                      </div>
                       <select
                         value={emailProvider}
                         onChange={(e) => setEmailProvider(e.target.value as any)}
@@ -2322,10 +2428,35 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                         <option value="ses">Amazon SES (High-Volume Dedicated IP)</option>
                         <option value="smtp">Custom SMTP Gateway</option>
                       </select>
+
+                      {activeFieldHelp === 'provider' && (
+                        <div className="mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-950 leading-relaxed space-y-1">
+                          <div className="font-bold text-indigo-900 flex items-center gap-1">
+                            <Lightbulb className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>Which Provider Should I Choose?</span>
+                          </div>
+                          <ul className="list-disc pl-4 space-y-1 text-slate-700">
+                            <li><strong>Resend (Recommended):</strong> Easiest setup for modern teams with instant DNS verification and great free tier.</li>
+                            <li><strong>Postmark:</strong> Gold standard for transactional email speed (&lt;1s delivery).</li>
+                            <li><strong>Amazon SES:</strong> Best for high-volume enterprise non-profits sending 50,000+ emails/mo.</li>
+                          </ul>
+                        </div>
+                      )}
                     </div>
 
                     <div>
-                      <label className="block font-bold text-slate-800 mb-1">Custom Sending Domain *</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-800 flex items-center gap-1">
+                          <span>Custom Sending Domain *</span>
+                          <button
+                            type="button"
+                            onClick={() => setActiveFieldHelp(activeFieldHelp === 'domain' ? null : 'domain')}
+                            className="text-purple-600 hover:text-purple-800 transition cursor-pointer p-0.5 rounded"
+                          >
+                            <HelpCircle className="w-3.5 h-3.5" />
+                          </button>
+                        </label>
+                      </div>
                       <input
                         type="text"
                         value={customSendingDomain}
@@ -2333,10 +2464,36 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                         placeholder="e.g. mail.lincolnpta.org"
                         className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-900 font-mono"
                       />
+
+                      {activeFieldHelp === 'domain' && (
+                        <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-[11px] text-purple-950 leading-relaxed space-y-1">
+                          <div className="font-bold text-purple-900 flex items-center gap-1">
+                            <Lightbulb className="w-3.5 h-3.5 text-purple-600" />
+                            <span>Domain Best Practice</span>
+                          </div>
+                          <p>
+                            <strong>We strongly recommend using a subdomain</strong> like <code>mail.yourorg.org</code> or <code>events.yourorg.org</code> rather than your root domain.
+                          </p>
+                          <p className="text-slate-600">
+                            <strong>Why?</strong> Using a subdomain isolates automated event traffic from your everyday school or office Google Workspace / Microsoft 365 email accounts.
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     <div>
-                      <label className="block font-bold text-slate-800 mb-1">Custom From Email Address *</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-800 flex items-center gap-1">
+                          <span>Custom From Email Address *</span>
+                          <button
+                            type="button"
+                            onClick={() => setActiveFieldHelp(activeFieldHelp === 'from_email' ? null : 'from_email')}
+                            className="text-purple-600 hover:text-purple-800 transition cursor-pointer p-0.5 rounded"
+                          >
+                            <HelpCircle className="w-3.5 h-3.5" />
+                          </button>
+                        </label>
+                      </div>
                       <input
                         type="email"
                         value={customFromEmail}
@@ -2344,13 +2501,35 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                         placeholder="e.g. events@mail.lincolnpta.org"
                         className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-900 font-mono"
                       />
+
+                      {activeFieldHelp === 'from_email' && (
+                        <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-[11px] text-purple-950 leading-relaxed space-y-1">
+                          <div className="font-bold text-purple-900 flex items-center gap-1">
+                            <Lightbulb className="w-3.5 h-3.5 text-purple-600" />
+                            <span>Custom From Address</span>
+                          </div>
+                          <p>
+                            Enter the full address on your sending domain (e.g. <code>events@{customSendingDomain}</code> or <code>notifications@{customSendingDomain}</code>).
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-800 mb-1">
-                      {emailProvider.toUpperCase()} API Key / Secret Token *
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold text-slate-800 flex items-center gap-1">
+                        <span>{emailProvider.toUpperCase()} API Key / Secret Token *</span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveFieldHelp(activeFieldHelp === 'api_key' ? null : 'api_key')}
+                          className="text-purple-600 hover:text-purple-800 transition cursor-pointer p-0.5 rounded"
+                        >
+                          <HelpCircle className="w-3.5 h-3.5" />
+                        </button>
+                      </label>
+                      <span className="text-[10px] text-slate-500">256-Bit Encrypted</span>
+                    </div>
                     <div className="relative">
                       <input
                         type={showApiKey ? 'text' : 'password'}
@@ -2362,11 +2541,26 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                       <button
                         type="button"
                         onClick={() => setShowApiKey(!showApiKey)}
-                        className="absolute right-2.5 top-2.5 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold rounded-lg transition"
+                        className="absolute right-2.5 top-2.5 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold rounded-lg transition cursor-pointer"
                       >
                         {showApiKey ? 'Hide' : 'Show'}
                       </button>
                     </div>
+
+                    {activeFieldHelp === 'api_key' && (
+                      <div className="mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-950 leading-relaxed space-y-1">
+                        <div className="font-bold text-indigo-900 flex items-center gap-1">
+                          <Lightbulb className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>Where to find your API Key?</span>
+                        </div>
+                        <p>
+                          Log into your provider portal (e.g. <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline font-bold text-indigo-700">resend.com/api-keys</a> or Postmark server tokens), generate a key with &quot;Sending Access&quot;, and paste it here.
+                        </p>
+                        <p className="text-slate-600">
+                          <strong>Privacy Guarantee:</strong> Keys are strictly scoped to <code>org_{currentOrg.id}</code> and never exposed to the public.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Interactive DNS Records Setup Table */}
@@ -2378,19 +2572,30 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                           <span>DNS Authentication Records for {customSendingDomain}</span>
                         </h5>
                         <p className="text-[11px] text-slate-500">
-                          Add these 4 records to your DNS manager (Cloudflare, GoDaddy, Namecheap, Route 53)
+                          Add these 4 records to your DNS registrar (GoDaddy, Cloudflare, Namecheap, Route 53)
                         </p>
                       </div>
 
-                      <button
-                        type="button"
-                        disabled={isVerifyingDns}
-                        onClick={handleVerifyDns}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs flex items-center gap-1.5 disabled:opacity-50 transition"
-                      >
-                        {isVerifyingDns ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                        <span>{isVerifyingDns ? 'Querying DNS...' : 'Verify DNS Records'}</span>
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsDnsGuideModalOpen(true)}
+                          className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                        >
+                          <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>📖 Step-by-Step DNS Guide</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isVerifyingDns}
+                          onClick={handleVerifyDns}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs flex items-center gap-1.5 disabled:opacity-50 transition cursor-pointer"
+                        >
+                          {isVerifyingDns ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                          <span>{isVerifyingDns ? 'Querying DNS...' : 'Verify DNS Records'}</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="overflow-x-auto">
@@ -2428,7 +2633,7 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                                 <button
                                   type="button"
                                   onClick={() => handleCopyDnsRecord(`rec_${idx}`, rec.value)}
-                                  className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-bold flex items-center gap-1 ml-auto"
+                                  className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-bold flex items-center gap-1 ml-auto cursor-pointer"
                                 >
                                   {copiedRecordKey === `rec_${idx}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
                                   <span>{copiedRecordKey === `rec_${idx}` ? 'Copied' : 'Copy'}</span>
@@ -2471,8 +2676,15 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                 {/* 1. SMS Brand Identifier Prefix */}
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="font-bold text-slate-800">
-                      SMS Brand Identifier Prefix *
+                    <label className="font-bold text-slate-800 flex items-center gap-1">
+                      <span>SMS Brand Identifier Prefix *</span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveFieldHelp(activeFieldHelp === 'sms_prefix' ? null : 'sms_prefix')}
+                        className="text-indigo-600 hover:text-indigo-800 transition cursor-pointer p-0.5 rounded"
+                      >
+                        <HelpCircle className="w-3.5 h-3.5" />
+                      </button>
                     </label>
                     <span className="text-[10px] text-indigo-600 font-bold">Carrier Compliance Required</span>
                   </div>
@@ -2486,6 +2698,21 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                   <p className="text-[11px] text-slate-500">
                     A2P 10DLC regulations mandate identifying your organization at the start of every message to ensure delivery through carrier anti-spam filters.
                   </p>
+
+                  {activeFieldHelp === 'sms_prefix' && (
+                    <div className="mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-950 leading-relaxed space-y-1">
+                      <div className="font-bold text-indigo-900 flex items-center gap-1">
+                        <Lightbulb className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Why is the SMS Brand Prefix required?</span>
+                      </div>
+                      <p>
+                        US cellular carriers (Verizon, AT&amp;T, T-Mobile) require all automated text messages from non-profits and schools to clearly identify the sender at the very beginning (e.g. <code>[Lincoln High PTA]</code> or <code>[St. Jude Festival]</code>).
+                      </p>
+                      <p className="text-slate-600">
+                        Messages without a clear brand prefix are filtered by carrier firewalls and will not reach volunteers.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* 2. Automated Delivery Cadence & Event Triggers */}
@@ -3180,6 +3407,383 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
               </button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* MODAL 1: STATUS MEANING & TROUBLESHOOTING GUIDE */}
+      {isStatusGuideModalOpen && (
+        <Modal
+          isOpen={isStatusGuideModalOpen}
+          onClose={() => setIsStatusGuideModalOpen(false)}
+          title="📊 Communication Status & Troubleshooting Guide"
+          subtitle="A plain-English guide to understanding your delivery status, what is normal, and when to take action."
+          maxWidth="2xl"
+        >
+          <div className="space-y-4 text-xs">
+            {/* Status Cards */}
+            <div className="space-y-3">
+              {/* Operational / Verified */}
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-1.5">
+                <div className="flex items-center justify-between font-bold text-emerald-900">
+                  <span className="flex items-center gap-1.5 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Operational / 100% Verified</span>
+                  </span>
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] rounded-full">All Systems Normal</span>
+                </div>
+                <p className="text-slate-700 leading-relaxed">
+                  <strong>What it means:</strong> Your DNS records (DKIM, SPF, DMARC) are fully aligned. Transactional emails and receipts are signed with your organization&apos;s cryptographic key and delivered directly to supporter inboxes without spam flags.
+                </p>
+                <div className="text-[11px] text-emerald-800 bg-white/70 p-2 rounded-xl border border-emerald-100">
+                  <strong>Action Required:</strong> None! You are ready to dispatch event tickets, volunteer passes, and donation receipts.
+                </div>
+              </div>
+
+              {/* Pending Propagation */}
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl space-y-1.5">
+                <div className="flex items-center justify-between font-bold text-amber-900">
+                  <span className="flex items-center gap-1.5 text-sm">
+                    <Clock className="w-4 h-4 text-amber-600" />
+                    <span>Pending DNS Verification (Waiting Period)</span>
+                  </span>
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] rounded-full">Normal: 5–30 Mins</span>
+                </div>
+                <p className="text-slate-700 leading-relaxed">
+                  <strong>What it means:</strong> DNS records were recently added to your domain registrar (GoDaddy, Cloudflare, etc.). It takes a short period for internet routers worldwide to discover the new records (known as &quot;DNS Propagation&quot;).
+                </p>
+                <div className="text-[11px] text-amber-900 bg-white/70 p-2 rounded-xl border border-amber-100">
+                  <strong>What to do:</strong> Wait 10–15 minutes, then click <strong>&quot;Verify DNS Records&quot;</strong>. Do not delete or change records while waiting.
+                </div>
+              </div>
+
+              {/* Misconfigured / Needs Attention */}
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl space-y-1.5">
+                <div className="flex items-center justify-between font-bold text-rose-900">
+                  <span className="flex items-center gap-1.5 text-sm">
+                    <AlertTriangle className="w-4 h-4 text-rose-600" />
+                    <span>Misconfigured / Needs Attention</span>
+                  </span>
+                  <span className="px-2 py-0.5 bg-rose-100 text-rose-800 text-[10px] rounded-full">Requires Action</span>
+                </div>
+                <p className="text-slate-700 leading-relaxed">
+                  <strong>What it means:</strong> Our DNS check could not locate one or more required records after 24 hours. This usually happens if the hostname was entered incorrectly.
+                </p>
+                <div className="text-[11px] text-rose-950 bg-white/70 p-2.5 rounded-xl border border-rose-100 space-y-1">
+                  <strong>Top 3 Quick Fixes:</strong>
+                  <ul className="list-disc pl-4 space-y-0.5 text-slate-700">
+                    <li><strong>Duplicate Domain Suffix:</strong> Did you enter <code>mail.yourorg.org</code> into GoDaddy instead of just <code>mail</code>? (GoDaddy automatically appends your domain name).</li>
+                    <li><strong>Cloudflare Proxy (Orange Cloud):</strong> In Cloudflare, make sure the proxy status is set to <strong>&quot;DNS Only&quot; (Gray Cloud)</strong>. Orange cloud blocks email DKIM verification.</li>
+                    <li><strong>1-Click Emergency Fallback:</strong> If your event starts soon and DNS isn&apos;t resolving, switch back to <strong>&quot;R3Pro Hosted Cloud Pool&quot;</strong> for instant 0-second delivery.</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* A2P 10DLC Active */}
+              <div className="p-3.5 bg-purple-50 border border-purple-200 rounded-2xl space-y-1.5">
+                <div className="flex items-center justify-between font-bold text-purple-900">
+                  <span className="flex items-center gap-1.5 text-sm">
+                    <Smartphone className="w-4 h-4 text-purple-600" />
+                    <span>A2P 10DLC Active (Cellular SMS Registration)</span>
+                  </span>
+                  <span className="px-2 py-0.5 bg-purple-100 text-purple-800 text-[10px] rounded-full">Carrier Approved</span>
+                </div>
+                <p className="text-slate-700 leading-relaxed">
+                  <strong>What it means:</strong> REACH has registered your organization&apos;s EIN with The Campaign Registry (TCR). US mobile carriers (Verizon, AT&amp;T, T-Mobile) recognize your automated shift arrival and QR pass text messages and will not filter them as spam.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsStatusGuideModalOpen(false)}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition cursor-pointer"
+              >
+                Got It, Close Guide
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* MODAL 2: WHY 4 PRIORITY QUEUES? HIGHWAY EMERGENCY ANALOGY */}
+      {isQueuesGuideModalOpen && (
+        <Modal
+          isOpen={isQueuesGuideModalOpen}
+          onClose={() => setIsQueuesGuideModalOpen(false)}
+          title="🚀 Why 4 Priority Queues? The Fast-Lane Highway Analogy"
+          subtitle="How REACH protects critical volunteer check-ins and security codes from being slowed down by mass email blasts."
+          maxWidth="3xl"
+        >
+          <div className="space-y-4 text-xs">
+            {/* Analogy Intro Box */}
+            <div className="p-4 bg-gradient-to-r from-indigo-900 via-purple-900 to-slate-900 text-white rounded-2xl space-y-2">
+              <div className="flex items-center gap-2 font-extrabold text-sm text-amber-300">
+                <Sparkles className="w-4 h-4" />
+                <span>The 4-Lane Highway Real-World Analogy</span>
+              </div>
+              <p className="text-slate-200 leading-relaxed">
+                Imagine traffic on a major interstate highway. If emergency ambulances, gate passes, and delivery trucks all share a single lane, an accident or rush hour traffic jams everything up.
+              </p>
+              <p className="text-slate-300 leading-relaxed">
+                To solve this, REACH divides all communication into <strong>4 separate, isolated fast-lanes</strong> so urgent security codes arrive in &lt;2 seconds even if an organizer is emailing 5,000 parents at the exact same moment.
+              </p>
+            </div>
+
+            {/* The 4 Lanes Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* P0 */}
+              <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-emerald-900 flex items-center gap-1.5 text-sm">
+                    <Zap className="w-4 h-4 text-emerald-600" />
+                    <span>Queue P0: Emergency Siren Lane</span>
+                  </span>
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-mono font-bold text-[10px] rounded-full">&lt; 2.0s SLA</span>
+                </div>
+                <div className="text-[11px] font-bold text-slate-700">Security OTPs &amp; Passwordless Magic Links</div>
+                <p className="text-slate-600 leading-relaxed">
+                  <strong>Why it has its own queue:</strong> When a volunteer or admin enters their phone number to log in, they are staring at an OTP input box. If that 6-digit code took 2 minutes to arrive, they would abandon the app. Queue P0 has instant priority and is never queued behind marketing emails.
+                </p>
+              </div>
+
+              {/* P1 */}
+              <div className="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-indigo-900 flex items-center gap-1.5 text-sm">
+                    <Smartphone className="w-4 h-4 text-indigo-600" />
+                    <span>Queue P1: Express Door Pass</span>
+                  </span>
+                  <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 font-mono font-bold text-[10px] rounded-full">Instant Push</span>
+                </div>
+                <div className="text-[11px] font-bold text-slate-700">QR Mobile Passes &amp; Gate Reassignments</div>
+                <p className="text-slate-600 leading-relaxed">
+                  <strong>Why it has its own queue:</strong> Dispatched at T-2 hours before shift start and during day-of weather delays. When a volunteer arrives at Gate 2, their mobile barcode pass must load instantly on their smartphone.
+                </p>
+              </div>
+
+              {/* P2 */}
+              <div className="p-4 rounded-2xl bg-purple-50/80 border border-purple-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-purple-900 flex items-center gap-1.5 text-sm">
+                    <FileText className="w-4 h-4 text-purple-600" />
+                    <span>Queue P2: Official Accountant Lane</span>
+                  </span>
+                  <span className="px-2 py-0.5 bg-purple-100 text-purple-800 font-mono font-bold text-[10px] rounded-full">Real-Time</span>
+                </div>
+                <div className="text-[11px] font-bold text-slate-700">IRS 501(c)(3) Receipts &amp; Drop-Off Vouchers</div>
+                <p className="text-slate-600 leading-relaxed">
+                  <strong>Why it has its own queue:</strong> Donors expect their official IRS Pub 526/561 tax deductible receipt and supply drop-off voucher immediately after submitting a donation or in-kind drop-off.
+                </p>
+              </div>
+
+              {/* P3 */}
+              <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-amber-900 flex items-center gap-1.5 text-sm">
+                    <Radio className="w-4 h-4 text-amber-600" />
+                    <span>Queue P3: Steady Delivery Lane</span>
+                  </span>
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-800 font-mono font-bold text-[10px] rounded-full">50 / sec Limit</span>
+                </div>
+                <div className="text-[11px] font-bold text-slate-700">Volunteer Recruitment &amp; Birthday Greetings</div>
+                <p className="text-slate-600 leading-relaxed">
+                  <strong>Why it is rate-limited:</strong> If an organization blasts 2,000 emails in 1 second, Google Mail and Yahoo will suspect spam and throttle the domain. Queue P3 meters outbound volume at a steady 50/sec to protect and build your domain reputation.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsQueuesGuideModalOpen(false)}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition cursor-pointer"
+              >
+                Close Explanation
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* MODAL 3: STEP-BY-STEP DNS SETUP GUIDE FOR BEGINNERS */}
+      {isDnsGuideModalOpen && (
+        <Modal
+          isOpen={isDnsGuideModalOpen}
+          onClose={() => setIsDnsGuideModalOpen(false)}
+          title="📖 Step-by-Step DNS Setup Guide for Beginners"
+          subtitle="Non-technical instructions for adding email authentication records to GoDaddy, Cloudflare, Namecheap, and more."
+          maxWidth="3xl"
+        >
+          <div className="space-y-4 text-xs">
+            {/* Registrar Selector Tabs */}
+            <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
+              {[
+                { id: 'godaddy', label: 'GoDaddy' },
+                { id: 'cloudflare', label: 'Cloudflare (Important)' },
+                { id: 'namecheap', label: 'Namecheap' },
+                { id: 'general', label: 'Google Domains / Others' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setSelectedDnsRegistrar(tab.id as any)}
+                  className={`px-3.5 py-2 rounded-xl font-bold text-xs transition cursor-pointer ${
+                    selectedDnsRegistrar === tab.id
+                      ? 'bg-white text-purple-700 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Provider Walkthrough Content */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+              {selectedDnsRegistrar === 'godaddy' && (
+                <div className="space-y-2.5">
+                  <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-purple-600" />
+                    <span>GoDaddy DNS Configuration (4 Steps)</span>
+                  </div>
+                  <ol className="list-decimal pl-4 space-y-2 text-slate-700 leading-relaxed">
+                    <li>
+                      <strong>Log in to GoDaddy:</strong> Go to your <strong>My Products</strong> page and click <strong>DNS</strong> next to your domain name.
+                    </li>
+                    <li>
+                      <strong>Click Add New Record:</strong> Under the <em>DNS Records</em> table, click the <strong>&quot;Add New Record&quot;</strong> button.
+                    </li>
+                    <li>
+                      <strong>Enter the 4 Records:</strong> For each row in your REACH table:
+                      <ul className="list-disc pl-4 mt-1 space-y-1 text-slate-600">
+                        <li><strong>Type:</strong> Choose <code>CNAME</code> (or <code>TXT</code> for the DMARC/SPF record).</li>
+                        <li><strong>Name / Host:</strong> <span className="text-purple-700 font-bold">Important:</span> GoDaddy automatically appends your domain. If the table says <code>mail.yourorg.org</code>, only enter <code>mail</code>. If it says <code>resend._domainkey.mail.yourorg.org</code>, only enter <code>resend._domainkey.mail</code>.</li>
+                        <li><strong>Value:</strong> Copy and paste the exact value from the table.</li>
+                        <li><strong>TTL:</strong> Choose <code>1/2 Hour</code> (or Default) and click <strong>Save</strong>.</li>
+                      </ul>
+                    </li>
+                    <li>
+                      <strong>Verify in REACH:</strong> Return here and click <strong>&quot;Verify DNS Records&quot;</strong>. (GoDaddy DNS updates typically take 5 to 15 minutes).
+                    </li>
+                  </ol>
+                </div>
+              )}
+
+              {selectedDnsRegistrar === 'cloudflare' && (
+                <div className="space-y-2.5">
+                  <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-indigo-600" />
+                    <span>Cloudflare DNS Configuration (With Critical Proxy Warning)</span>
+                  </div>
+
+                  {/* Cloudflare Orange Cloud Alert */}
+                  <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl flex items-start gap-2.5 text-amber-950">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="text-[11px] leading-relaxed">
+                      <strong>CRITICAL CLOUDFLARE REQUIREMENT:</strong> When adding CNAME records for email delivery, look at the <strong>&quot;Proxy status&quot;</strong> toggle. You MUST change it from <strong>Proxied (Orange Cloud)</strong> to <strong>DNS Only (Gray Cloud)</strong>! If left Orange, email DKIM signatures will fail.
+                    </div>
+                  </div>
+
+                  <ol className="list-decimal pl-4 space-y-2 text-slate-700 leading-relaxed">
+                    <li>
+                      <strong>Open Cloudflare DNS:</strong> Log in to Cloudflare, select your domain, and click <strong>DNS &gt; Records</strong> in the left menu.
+                    </li>
+                    <li>
+                      <strong>Click &quot;+ Add record&quot;:</strong> Click the blue button to create a new DNS record.
+                    </li>
+                    <li>
+                      <strong>Enter Record Details:</strong> Select <code>CNAME</code>, enter the Name and Target Value from REACH.
+                    </li>
+                    <li>
+                      <strong>Set Proxy to Gray Cloud:</strong> Click the orange cloud icon so it switches to <strong>DNS Only (Gray Cloud)</strong>, then click <strong>Save</strong>.
+                    </li>
+                    <li>
+                      <strong>Repeat for All 4 Records:</strong> Cloudflare updates within 60 seconds! Click &quot;Verify DNS Records&quot; in REACH when finished.
+                    </li>
+                  </ol>
+                </div>
+              )}
+
+              {selectedDnsRegistrar === 'namecheap' && (
+                <div className="space-y-2.5">
+                  <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-purple-600" />
+                    <span>Namecheap DNS Configuration</span>
+                  </div>
+                  <ol className="list-decimal pl-4 space-y-2 text-slate-700 leading-relaxed">
+                    <li>
+                      <strong>Log in to Namecheap:</strong> Go to <strong>Domain List</strong> and click <strong>Manage</strong> next to your domain.
+                    </li>
+                    <li>
+                      <strong>Open Advanced DNS:</strong> Click the <strong>Advanced DNS</strong> tab at the top of the page.
+                    </li>
+                    <li>
+                      <strong>Add Host Records:</strong> Under <em>Host Records</em>, click <strong>&quot;+ Add New Record&quot;</strong>.
+                    </li>
+                    <li>
+                      <strong>Enter Values:</strong> Select <code>CNAME Record</code> or <code>TXT Record</code>, enter the Host (e.g. <code>mail</code> or <code>resend._domainkey.mail</code>) and Target Value. Set TTL to <code>Automatic</code> and click the green checkmark to save.
+                    </li>
+                  </ol>
+                </div>
+              )}
+
+              {selectedDnsRegistrar === 'general' && (
+                <div className="space-y-2.5">
+                  <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-slate-700" />
+                    <span>Google Domains / Squarespace / Route 53 / Other Registrars</span>
+                  </div>
+                  <ol className="list-decimal pl-4 space-y-2 text-slate-700 leading-relaxed">
+                    <li>
+                      <strong>Locate DNS Management:</strong> Log into your hosting or registrar dashboard and find <strong>DNS Settings</strong>, <strong>DNS Zone Editor</strong>, or <strong>Manage DNS</strong>.
+                    </li>
+                    <li>
+                      <strong>Add Custom Records:</strong> Click <strong>Add Record</strong> or <strong>Create Record Set</strong>.
+                    </li>
+                    <li>
+                      <strong>Fill Record Fields:</strong> Match Type (CNAME/TXT), Name/Host, and Target/Value from the REACH DNS table.
+                    </li>
+                    <li>
+                      <strong>Save and Wait for Propagation:</strong> Most registrars update within 5 to 30 minutes.
+                    </li>
+                  </ol>
+                </div>
+              )}
+            </div>
+
+            {/* Beginner Glossary Card */}
+            <div className="p-4 bg-purple-50/70 border border-purple-200 rounded-2xl space-y-2">
+              <div className="font-bold text-xs text-purple-900 flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-purple-600" />
+                <span>Beginner Glossary: What do these DNS terms mean?</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                <div className="bg-white p-2.5 rounded-xl border border-purple-100">
+                  <strong className="text-purple-800">CNAME (Canonical Name):</strong> An alias nickname that connects your subdomain to the mail delivery engine without exposing your web servers.
+                </div>
+                <div className="bg-white p-2.5 rounded-xl border border-purple-100">
+                  <strong className="text-purple-800">TXT (Text Record):</strong> A verification badge proving to Gmail and Yahoo that your organization authorized REACH to send emails.
+                </div>
+                <div className="bg-white p-2.5 rounded-xl border border-purple-100">
+                  <strong className="text-purple-800">SPF (Sender Policy Framework):</strong> A security rule that specifies which IP addresses are permitted to send emails for your domain.
+                </div>
+                <div className="bg-white p-2.5 rounded-xl border border-purple-100">
+                  <strong className="text-purple-800">DNS Propagation:</strong> The brief period (5 to 30 mins) it takes for internet routers worldwide to notice your new records.
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsDnsGuideModalOpen(false)}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition cursor-pointer"
+              >
+                Close DNS Guide
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
 
