@@ -1,13 +1,11 @@
-import React from 'react';
+import { useApp } from '../../context/AppContext';
 import { 
   ShieldCheck, 
   Lock, 
   Scale, 
   Smartphone, 
-  HeartHandshake, 
-  Award, 
-  FileText, 
-  ExternalLink 
+  Award,
+  Sparkles
 } from 'lucide-react';
 import { LegalDocType } from '../../content/legal';
 
@@ -16,44 +14,49 @@ interface GlobalAppFooterProps {
 }
 
 export const GlobalAppFooter: React.FC<GlobalAppFooterProps> = ({ onOpenLegalDoc }) => {
+  const { isDemoMode, toggleDemoMode } = useApp();
+
   return (
     <footer className="bg-slate-900 text-slate-400 text-xs border-t border-slate-800 mt-20 print:hidden">
       
-      {/* Top Compliance Trust Badges Ribbon */}
-      <div className="border-b border-slate-800/80 bg-slate-950/60 py-6">
+      {/* Sleek Trust & Compliance Bar */}
+      <div className="border-b border-slate-800/80 bg-slate-950/40 py-3.5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-            
-            <div className="flex flex-col items-center p-3 rounded-2xl bg-slate-900/60 border border-slate-800">
-              <ShieldCheck className="w-5 h-5 text-indigo-400 mb-1.5" />
-              <span className="font-extrabold text-white text-[11px]">SOC 2 Type II</span>
-              <span className="text-[10px] text-slate-400">Enterprise Security</span>
+          <div className="flex flex-wrap items-center justify-between gap-4 text-xs">
+            <div className="flex flex-wrap items-center gap-6 text-[11px] text-slate-400">
+              <span className="flex items-center gap-1.5 font-semibold text-slate-300">
+                <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+                SOC 2 Type II
+              </span>
+              <span className="flex items-center gap-1.5 font-semibold text-slate-300">
+                <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                COPPA Verified
+              </span>
+              <span className="flex items-center gap-1.5 font-semibold text-slate-300">
+                <Scale className="w-3.5 h-3.5 text-amber-400" />
+                IRS 501(c)(3) Compliant
+              </span>
+              <span className="flex items-center gap-1.5 font-semibold text-slate-300">
+                <Smartphone className="w-3.5 h-3.5 text-sky-400" />
+                A2P 10DLC Certified
+              </span>
+              <span className="flex items-center gap-1.5 font-semibold text-slate-300">
+                <Award className="w-3.5 h-3.5 text-purple-400" />
+                PostgreSQL RLS
+              </span>
             </div>
 
-            <div className="flex flex-col items-center p-3 rounded-2xl bg-slate-900/60 border border-slate-800">
-              <Lock className="w-5 h-5 text-emerald-400 mb-1.5" />
-              <span className="font-extrabold text-white text-[11px]">COPPA Verified</span>
-              <span className="text-[10px] text-slate-400">Child & Student Safety</span>
-            </div>
-
-            <div className="flex flex-col items-center p-3 rounded-2xl bg-slate-900/60 border border-slate-800">
-              <Scale className="w-5 h-5 text-amber-400 mb-1.5" />
-              <span className="font-extrabold text-white text-[11px]">IRS 501(c)(3)</span>
-              <span className="text-[10px] text-slate-400">Immutable Tax Receipts</span>
-            </div>
-
-            <div className="flex flex-col items-center p-3 rounded-2xl bg-slate-900/60 border border-slate-800">
-              <Smartphone className="w-5 h-5 text-sky-400 mb-1.5" />
-              <span className="font-extrabold text-white text-[11px]">A2P 10DLC Certified</span>
-              <span className="text-[10px] text-slate-400">CTIA / TCPA Compliant</span>
-            </div>
-
-            <div className="col-span-2 md:col-span-1 flex flex-col items-center p-3 rounded-2xl bg-slate-900/60 border border-slate-800">
-              <Award className="w-5 h-5 text-purple-400 mb-1.5" />
-              <span className="font-extrabold text-white text-[11px]">PostgreSQL RLS</span>
-              <span className="text-[10px] text-slate-400">100% Tenant Isolation</span>
-            </div>
-
+            {!isDemoMode && (
+              <button
+                type="button"
+                onClick={() => toggleDemoMode(true)}
+                className="text-slate-400 hover:text-indigo-400 transition text-[11px] flex items-center gap-1.5 cursor-pointer font-semibold"
+                title="Switch to Demo Simulator role sandbox"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Switch to Demo Simulator</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

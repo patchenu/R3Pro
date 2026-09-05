@@ -34,7 +34,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isSuperAdmin = isAppAdmin || isOrgAdmin;
   const isPlannerOrAdmin = isSuperAdmin || activeRole === 'event_planner' || currentUser.role === 'event_planner';
   const isLeadOrAdmin = isPlannerOrAdmin || activeRole === 'committee_lead' || currentUser.role === 'committee_lead';
-  const showContextSelectors = isDemoMode || (isAuthenticated && isLeadOrAdmin);
+  // Context selectors only appear in Demo Simulator sandbox, never in clean Live mode
+  const showContextSelectors = isDemoMode;
 
   const pendingApprovalsCount = approvalRequests.filter(r => r.status === 'pending').length;
 
@@ -68,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="bg-white border-b border-slate-200 sticky top-12 z-40 shadow-sm">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
         
         {/* ROW 1: Brand, Organization Context & User Actions */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-b border-slate-100">
@@ -77,24 +78,24 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Logo & Platform Name */}
             <div className="flex items-center gap-4">
               <div 
-                className="flex items-center gap-2 cursor-pointer group" 
+                className="flex items-center gap-2.5 cursor-pointer group" 
                 onClick={() => setActiveTab('discovery_hub')}
                 title="Go to Community Events Hub"
               >
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-indigo-100 group-hover:scale-105 transition">
-                  <Sparkles className="w-5 h-5" />
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition">
+                  <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="font-extrabold text-lg tracking-tight text-slate-900 flex items-center gap-0.5">
+                  <span className="font-extrabold text-base tracking-tight text-slate-900 flex items-center gap-0.5 leading-none">
                     R3<span className="text-indigo-600">Pro</span>
                   </span>
-                  <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                  <span className="block text-[8px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">
                     REACH
                   </span>
                 </div>
               </div>
 
-              {/* Org & Event Selectors - Only shown in Demo Mode or to Authenticated Staff/Admins */}
+              {/* Org & Event Selectors - Only shown in Demo Simulator Mode */}
               {showContextSelectors && (
                 <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-slate-200">
                   {/* Org Selector */}
@@ -150,28 +151,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleCopyShareableLink}
-                className="hidden md:flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition"
+                className="hidden md:flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
                 title="Copy shareable public link for this event"
               >
                 <Share2 className="w-3.5 h-3.5 text-indigo-600" />
                 <span>Share Link</span>
               </button>
 
-              {isSuperAdmin && (
-                <button
-                  onClick={openCommandPalette}
-                  className="hidden md:flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200/80 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-                  title="Open Persona Impersonation Studio & Command Palette (⌘K)"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                  <span>⌘K Switcher</span>
-                </button>
-              )}
-
               {isPlannerOrAdmin && (
                 <button
                   onClick={openEventBuilder}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs shadow-sm transition flex items-center gap-1 cursor-pointer"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs shadow-xs transition flex items-center gap-1 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">New Event</span>

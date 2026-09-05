@@ -30,7 +30,7 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
     showToast 
   } = useApp();
 
-  const [activeHubTab, setActiveHubTab] = useState<'accounts' | 'sentry' | 'web_vitals' | 'uptime' | 'audit'>('accounts');
+  const [activeHubTab, setActiveHubTab] = useState<'accounts' | 'impersonation' | 'sentry' | 'web_vitals' | 'uptime' | 'audit'>('accounts');
 
   // Accounts & Users State
   const [selectedOrgFilter, setSelectedOrgFilter] = useState<string>('all');
@@ -44,6 +44,7 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
   const [suspendingUser, setSuspendingUser] = useState<User | null>(null);
   const [suspensionReasonInput, setSuspensionReasonInput] = useState('');
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [selectedImpersonateTargetId, setSelectedImpersonateTargetId] = useState<string>('');
 
   // New User Form State
   const [newUserName, setNewUserName] = useState('');
@@ -248,56 +249,38 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fadeIn">
       
       {/* 1. TOP HEADER & TELEMETRY SUMMARY */}
-      <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-indigo-500/30 relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-12 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-md border border-slate-800 relative overflow-hidden">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              {isAppAdmin ? (
-                <span className="px-3 py-1 bg-purple-500/20 border border-purple-400/30 text-purple-300 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
-                  <Crown className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Platform Superuser Mode · All Orgs Visible</span>
-                </span>
-              ) : (
-                <span className="px-3 py-1 bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
-                  <Shield className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Org Admin Mode · {currentOrg.name}</span>
-                </span>
-              )}
-              <span className="px-3 py-1 bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 rounded-full text-xs font-bold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>Production Health: 100% SLA</span>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                isAppAdmin 
+                  ? 'bg-purple-500/20 text-purple-300 border border-purple-400/30' 
+                  : 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/30'
+              }`}>
+                {isAppAdmin ? <Crown className="w-3 h-3 text-amber-300" /> : <Shield className="w-3 h-3 text-indigo-400" />}
+                <span>{isAppAdmin ? 'Platform Superuser Mode · All Orgs' : `Org Admin · ${currentOrg.name}`}</span>
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
-              <span>{isAppAdmin ? 'Platform Observability, Accounts & Diagnostics Hub' : `${currentOrg.name} — Accounts & Team Hub`}</span>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+              {isAppAdmin ? 'Platform Observability & Diagnostics Hub' : `${currentOrg.name} — Accounts & Team Hub`}
             </h1>
-            <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
+            <p className="text-slate-400 text-xs mt-1 max-w-2xl leading-relaxed">
               {isAppAdmin
-                ? 'Full-spectrum administrative command across all organizations: User account lifecycle control, App Admin permissions, read-only impersonation in new windows, Sentry exception diagnostics, and heartbeat monitors.'
-                : `Administrative command for ${currentOrg.name}: Manage staff, planners, committee leads, and supporters scoped strictly to your organization.`}
+                ? 'Centralized administration across all organizations: User account directory, App Admin permissions, read-only impersonation sandbox, and platform diagnostics.'
+                : `User account directory and team member administration scoped strictly to ${currentOrg.name}.`}
             </p>
           </div>
 
-          {/* Quick Action CTAs */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              onClick={openCommandPalette}
-              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black rounded-xl shadow-lg shadow-purple-600/30 transition flex items-center gap-2 cursor-pointer hover:scale-105"
-              title="Open Persona Impersonation Studio & Command Palette (⌘K)"
-            >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>⌘K Impersonation Studio</span>
-            </button>
+          {/* Clean Quick Actions */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button
               onClick={() => setIsCreateUserModalOpen(true)}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center gap-2 cursor-pointer hover:scale-105"
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
               <span>+ Create Account</span>
@@ -305,8 +288,8 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
             <button
               onClick={handleRunDiagnosticsPing}
               disabled={isProbingHealth}
-              className="px-4 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer"
-              title="Run instant latency and health check probe across all 6 dependencies"
+              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+              title="Run instant latency and health check probe across dependencies"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-indigo-400 ${isProbingHealth ? 'animate-spin' : ''}`} />
               <span>{isProbingHealth ? 'Probing...' : 'Ping Diagnostics'}</span>
@@ -314,83 +297,95 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
           </div>
         </div>
 
-        {/* Real-Time Telemetry Metric Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mt-6 pt-6 border-t border-slate-800/80">
-          <div className="bg-white/5 backdrop-blur-xs p-3.5 rounded-2xl border border-white/10">
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+        {/* Clean Summary Metric Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mt-5 pt-5 border-t border-slate-800">
+          <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
               <span>{isAppAdmin ? 'Total Accounts' : 'Org Accounts'}</span>
               <Users className="w-3.5 h-3.5 text-indigo-400" />
             </div>
-            <div className="text-xl font-black text-white mt-1">{totalUsersCount}</div>
-            <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">{activeUsersCount} Active · {suspendedUsersCount} Suspended</div>
+            <div className="text-lg font-black text-white mt-0.5">{totalUsersCount}</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">{activeUsersCount} Active · {suspendedUsersCount} Suspended</div>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-xs p-3.5 rounded-2xl border border-white/10">
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+          <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
               <span>{isAppAdmin ? 'Platform App Admins' : '2FA Protection'}</span>
               {isAppAdmin ? <Crown className="w-3.5 h-3.5 text-amber-400" /> : <Shield className="w-3.5 h-3.5 text-emerald-400" />}
             </div>
-            <div className="text-xl font-black text-amber-300 mt-1">{isAppAdmin ? appAdminUsersCount : `${twoFaUsersCount}/${totalUsersCount}`}</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">{isAppAdmin ? 'Cross-Tenant Superusers' : 'Multi-Factor Enforced'}</div>
+            <div className="text-lg font-black text-amber-300 mt-0.5">{isAppAdmin ? appAdminUsersCount : `${twoFaUsersCount}/${totalUsersCount}`}</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">{isAppAdmin ? 'Superuser Access' : 'Multi-Factor Active'}</div>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-xs p-3.5 rounded-2xl border border-white/10">
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span>Uptime SLA</span>
+          <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <span>Production SLA</span>
               <Activity className="w-3.5 h-3.5 text-emerald-400" />
             </div>
-            <div className="text-xl font-black text-emerald-300 mt-1">99.99%</div>
+            <div className="text-lg font-black text-emerald-300 mt-0.5">99.99%</div>
             <div className="text-[10px] text-slate-400 mt-0.5">6/6 Systems Operational</div>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-xs p-3.5 rounded-2xl border border-white/10">
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span>Sentry Errors</span>
+          <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <span>Unresolved Errors</span>
               <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
             </div>
-            <div className="text-xl font-black text-amber-300 mt-1">
+            <div className="text-lg font-black text-amber-300 mt-0.5">
               {errorLogs.filter(e => e.status !== 'resolved').length}
             </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">{errorLogs.length} Total Logged</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">{errorLogs.length} Total Captured</div>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-xs p-3.5 rounded-2xl border border-white/10 col-span-2 sm:col-span-1">
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+          <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60 col-span-2 sm:col-span-1">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
               <span>PostgreSQL RLS</span>
               <Database className="w-3.5 h-3.5 text-purple-400" />
             </div>
-            <div className="text-xl font-black text-purple-300 mt-1">20/20</div>
-            <div className="text-[10px] text-slate-400 mt-0.5">Row-Level Security Active</div>
+            <div className="text-lg font-black text-purple-300 mt-0.5">Active</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">Tenant Data Isolation</div>
           </div>
         </div>
       </div>
 
       {/* 2. PRIMARY TAB NAVIGATION */}
-      <div className="bg-white p-1.5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap gap-1.5">
+      <div className="bg-white p-1 rounded-xl border border-slate-200 shadow-xs flex flex-wrap gap-1">
         <button
           onClick={() => setActiveHubTab('accounts')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-2 cursor-pointer ${
+          className={`px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
             activeHubTab === 'accounts'
-              ? 'bg-indigo-600 text-white shadow-sm'
+              ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Users className="w-4 h-4" />
-          <span>Accounts &amp; Impersonation ({users.length})</span>
+          <Users className="w-3.5 h-3.5" />
+          <span>Accounts Directory ({scopedUsers.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveHubTab('impersonation')}
+          className={`px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+            activeHubTab === 'impersonation'
+              ? 'bg-purple-700 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Eye className="w-3.5 h-3.5 text-purple-400" />
+          <span>Impersonation Sandbox</span>
         </button>
 
         <button
           onClick={() => setActiveHubTab('sentry')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-2 cursor-pointer relative ${
+          className={`px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer relative ${
             activeHubTab === 'sentry'
-              ? 'bg-slate-900 text-white shadow-sm'
+              ? 'bg-slate-900 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <AlertTriangle className="w-4 h-4 text-amber-400" />
-          <span>Sentry Exception Diagnostics</span>
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+          <span>Exception Diagnostics</span>
           {errorLogs.filter(e => e.status !== 'resolved').length > 0 && (
-            <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">
+            <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center">
               {errorLogs.filter(e => e.status !== 'resolved').length}
             </span>
           )}
@@ -398,109 +393,46 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
 
         <button
           onClick={() => setActiveHubTab('web_vitals')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-2 cursor-pointer ${
+          className={`px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
             activeHubTab === 'web_vitals'
-              ? 'bg-slate-900 text-white shadow-sm'
+              ? 'bg-slate-900 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <BarChart3 className="w-4 h-4 text-cyan-500" />
-          <span>Core Web Vitals &amp; API Latency</span>
+          <BarChart3 className="w-3.5 h-3.5 text-cyan-600" />
+          <span>Web Vitals &amp; Latency</span>
         </button>
 
         <button
           onClick={() => setActiveHubTab('uptime')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-2 cursor-pointer ${
+          className={`px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
             activeHubTab === 'uptime'
-              ? 'bg-slate-900 text-white shadow-sm'
+              ? 'bg-slate-900 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Server className="w-4 h-4 text-emerald-500" />
-          <span>Uptime Heartbeat &amp; Probes</span>
+          <Server className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Uptime &amp; Health</span>
         </button>
 
         <button
           onClick={() => setActiveHubTab('audit')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-2 cursor-pointer ${
+          className={`px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
             activeHubTab === 'audit'
-              ? 'bg-slate-900 text-white shadow-sm'
+              ? 'bg-slate-900 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Shield className="w-4 h-4 text-purple-500" />
-          <span>SOC 2 Security Audit Stream</span>
+          <Shield className="w-3.5 h-3.5 text-purple-600" />
+          <span>Security Audit Ledger</span>
         </button>
       </div>
 
       {/* ========================================================================= */}
-      {/* TAB 1: ACCOUNTS, USERS & IMPERSONATION HUB                                */}
+      {/* TAB 1: ACCOUNTS DIRECTORY & USER LIFECYCLE                                */}
       {/* ========================================================================= */}
       {activeHubTab === 'accounts' && (
-        <div className="space-y-6 animate-fadeIn">
-          
-          {/* Quick Impersonation Persona Cards Row */}
-          <div className="bg-indigo-50/70 border border-indigo-200 rounded-3xl p-5 shadow-xs">
-            <div className="flex items-center justify-between gap-4 mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
-                  <Eye className="w-4 h-4" />
-                </div>
-                <div>
-                  <h2 className="text-xs font-extrabold text-indigo-950 uppercase tracking-wider">
-                    ⚡ 1-Click Persona Impersonation (&quot;See What They See&quot;)
-                  </h2>
-                  <p className="text-[11px] text-indigo-800">
-                    Instantly view and test the application from different role perspectives with complete permission scoping.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={openCommandPalette}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer hover:scale-105 shrink-0"
-                title="Open Persona Impersonation Studio with 3D faceted filters (⌘K)"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span>Search All Accounts (⌘K)</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-              {[
-                { id: 'user_elena', name: 'Elena Rostova', role: 'org_admin', title: 'Org Super Admin', desc: 'Executive governance & branding' },
-                { id: 'user_marcus', name: 'Marcus Vance', role: 'event_planner', title: 'Event Planner / Chair', desc: 'Budgets & approval queues' },
-                { id: 'user_sarah', name: 'Sarah Jenkins', role: 'committee_lead', title: 'Food Lead', desc: 'Scoped to Food Department only' },
-                { id: 'user_artisan_vendor', name: 'Artisan Bakery', role: 'vendor', title: 'Commercial Vendor', desc: 'Booth selection & invoices' },
-                { id: 'user_david_volunteer', name: 'David Chen', role: 'volunteer', title: 'Volunteer / Parent', desc: 'Passes & family registration' }
-              ].map(p => {
-                const isTargetActive = currentUser.id === p.id;
-                return (
-                  <div key={p.id} className={`p-3 bg-white rounded-2xl border transition-all ${isTargetActive ? 'ring-2 ring-indigo-600 border-indigo-400 bg-indigo-50/50' : 'border-slate-200 hover:border-indigo-300'}`}>
-                    <div className="flex justify-between items-start">
-                      <div className="font-extrabold text-xs text-slate-900">{p.name}</div>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${getRoleBadgeClass(p.role as UserRole)}`}>
-                        {p.role.replace('_', ' ')}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-slate-500 mt-1 leading-snug">{p.desc}</div>
-                    <button
-                      onClick={() => handleImpersonateClick({ id: p.id, name: p.name, role: p.role as UserRole, email: '', orgId: currentOrg.id })}
-                      disabled={isTargetActive}
-                      className={`w-full mt-2.5 py-1.5 rounded-xl text-[11px] font-extrabold transition flex items-center justify-center gap-1 cursor-pointer ${
-                        isTargetActive
-                          ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
-                          : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs'
-                      }`}
-                    >
-                      <Eye className="w-3 h-3" />
-                      <span>{isTargetActive ? 'Currently Active' : 'Impersonate'}</span>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        <div className="space-y-4 animate-fadeIn">
 
           {/* User Filter & Search Controls */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
@@ -744,39 +676,19 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
 
                           {/* Actions */}
                           <td className="px-5 py-3.5 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              {/* Impersonate */}
+                            <div className="flex items-center justify-end gap-1">
+                              {/* Impersonate in Read-Only Sandbox */}
                               <button
                                 onClick={() => handleImpersonateClick(u)}
                                 disabled={isCurrent || isSuspended}
-                                className={`p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                                className={`p-1.5 rounded-lg transition ${
                                   isCurrent || isSuspended
-                                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                    : 'bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 cursor-pointer'
+                                    ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
+                                    : 'bg-slate-100 hover:bg-purple-600 hover:text-white text-purple-700 cursor-pointer'
                                 }`}
-                                title={isSuspended ? 'Cannot impersonate suspended account' : `Impersonate ${u.name} (Read-Only in New Window)`}
+                                title={isSuspended ? 'Cannot impersonate suspended account' : `Impersonate ${u.name} (Read-Only Sandbox in New Window)`}
                               >
                                 <Eye className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">Impersonate</span>
-                              </button>
-
-                              {/* Grant / Revoke Org Admin */}
-                              <button
-                                onClick={() => {
-                                  if (u.role === 'org_admin') {
-                                    adminRevokeSuperAdmin(u.id, 'event_planner');
-                                  } else {
-                                    adminPromoteToSuperAdmin(u.id);
-                                  }
-                                }}
-                                className={`p-1.5 rounded-lg transition cursor-pointer ${
-                                  u.role === 'org_admin'
-                                    ? 'bg-purple-100 hover:bg-rose-100 text-purple-700 hover:text-rose-700'
-                                    : 'bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-700'
-                                }`}
-                                title={u.role === 'org_admin' ? 'Demote to Event Planner' : 'Promote to Org Super Admin'}
-                              >
-                                <Crown className="w-3.5 h-3.5" />
                               </button>
 
                               {/* Edit */}
@@ -843,6 +755,127 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB: IMPERSONATION SANDBOX (DEDICATED SEPARATE FEATURE)                    */}
+      {/* ========================================================================= */}
+      {activeHubTab === 'impersonation' && (
+        <div className="space-y-6 animate-fadeIn">
+          {/* Overview Hero Card */}
+          <div className="bg-gradient-to-br from-purple-950/80 via-slate-900 to-indigo-950 text-white rounded-2xl p-6 border border-purple-500/30 shadow-md">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="px-2.5 py-0.5 rounded-md bg-purple-500/30 text-purple-300 text-[10px] font-black uppercase tracking-wider border border-purple-400/30 flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-purple-400" />
+                    <span>Isolated Read-Only Sandbox</span>
+                  </span>
+                </div>
+                <h2 className="text-xl font-black text-white flex items-center gap-2">
+                  <span>🎭 User Impersonation &amp; Role Perspective Studio</span>
+                </h2>
+                <p className="text-slate-300 text-xs mt-1 max-w-2xl leading-relaxed">
+                  Test and experience REACH with the exact permissions and view of any platform user.
+                  All impersonation sessions launch in an isolated new browser window with write mutation guards enforced.
+                </p>
+              </div>
+
+              <button
+                onClick={openCommandPalette}
+                className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black transition flex items-center gap-2 shadow-md cursor-pointer hover:scale-105 shrink-0"
+                title="Open Spotlight Command Palette (⌘K)"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Open ⌘K Command Palette</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Canonical Role Personas */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+            <h3 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <span>Canonical Role Archetypes (1-Click Read-Only Sandbox)</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {[
+                { id: 'user_patchen', name: 'Patchen Uchiyama', role: 'org_admin', orgName: 'Lincoln High School PTA', desc: 'Platform superuser with full governance, cross-tenant telemetry, and accounts control.' },
+                { id: 'user_elena', name: 'Elena Rostova', role: 'org_admin', orgName: 'Lincoln High School PTA', desc: 'PTA President managing organizational branding, committees, and compliance.' },
+                { id: 'user_marcus', name: 'Marcus Vance', role: 'event_planner', orgName: 'Lincoln High School PTA', desc: 'Master campaign chair managing budgets, approval queues, and volunteer rosters.' },
+                { id: 'user_sarah', name: 'Sarah Jenkins', role: 'committee_lead', orgName: 'Lincoln High School PTA', desc: 'Department lead scoped strictly to Food & Hospitality shifts and supplies.' },
+                { id: 'user_artisan_vendor', name: 'Artisan Gourmet Bakery', role: 'vendor', orgName: 'Lincoln High School PTA', desc: 'Commercial sponsor selecting booth footprints, submitting COIs, and paying invoices.' },
+                { id: 'user_david_volunteer', name: 'David Chen', role: 'volunteer', orgName: 'Lincoln High School PTA', desc: 'Volunteer parent with personal QR check-in pass and linked family dependents.' }
+              ].map(p => {
+                const isTargetActive = currentUser.id === p.id;
+                return (
+                  <div key={p.id} className="p-4 bg-slate-50 hover:bg-indigo-50/40 rounded-xl border border-slate-200 hover:border-indigo-300 transition flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="font-extrabold text-xs text-slate-900">{p.name}</div>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${getRoleBadgeClass(p.role as UserRole)}`}>
+                          {p.role.replace('_', ' ')}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-1 leading-relaxed">{p.desc}</div>
+                    </div>
+
+                    <button
+                      onClick={() => handleImpersonateClick({ id: p.id, name: p.name, role: p.role as UserRole, email: '', orgId: currentOrg.id })}
+                      disabled={isTargetActive}
+                      className={`w-full mt-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        isTargetActive
+                          ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                          : 'bg-purple-700 hover:bg-purple-800 text-white shadow-xs'
+                      }`}
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{isTargetActive ? 'Currently Active Session' : 'Launch Sandbox (New Window)'}</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Custom Account Sandbox Launcher */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+            <h3 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2">
+              Launch Sandbox for Any Registered Account
+            </h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Select any account from the registered users directory to open an isolated read-only preview window with their exact permissions.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <select
+                value={selectedImpersonateTargetId || (scopedUsers[0]?.id || '')}
+                onChange={(e) => setSelectedImpersonateTargetId(e.target.value)}
+                className="w-full sm:flex-1 py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              >
+                {scopedUsers.map(u => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.email}) — Role: {u.role.replace('_', ' ').toUpperCase()} {u.isAppAdmin ? '[App Admin]' : ''}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={() => {
+                  const targetId = selectedImpersonateTargetId || scopedUsers[0]?.id;
+                  const target = scopedUsers.find(u => u.id === targetId) || scopedUsers[0];
+                  if (target) handleImpersonateClick(target);
+                }}
+                disabled={scopedUsers.length === 0}
+                className="w-full sm:w-auto px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-xs"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Launch in New Window</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

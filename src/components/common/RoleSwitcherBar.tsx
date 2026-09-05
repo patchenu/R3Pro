@@ -8,162 +8,72 @@ interface RoleSwitcherBarProps {
 }
 
 export const RoleSwitcherBar: React.FC<RoleSwitcherBarProps> = ({ setActiveTab }) => {
-  const { activeRole, switchRole, currentOrg, currentUser, isAuthenticated, isDemoMode, toggleDemoMode, resetDemoData, approvalRequests, openCommandPalette } = useApp();
+  const { activeRole, switchRole, isDemoMode, toggleDemoMode, resetDemoData, approvalRequests } = useApp();
 
-  const roles: { role: UserRole; label: string; icon: React.ReactNode; color: string; desc: string; persona: string; badgeCount?: number }[] = [
-    {
-      role: 'event_planner',
-      label: 'Event Planner / Chair',
-      icon: <ClipboardList className="w-4 h-4" />,
-      color: 'bg-indigo-600 text-white',
-      persona: 'Marcus Vance',
-      desc: 'Controls total budget, Planner Hub, approvals & volunteer manifest',
-      badgeCount: approvalRequests.filter(r => r.status === 'pending').length
-    },
+  // In Live Production Mode, do NOT render any simulator bar.
+  if (!isDemoMode) {
+    return null;
+  }
+
+  const roles: { role: UserRole; label: string; icon: React.ReactNode; color: string; persona: string; badgeCount?: number }[] = [
     {
       role: 'org_admin',
-      label: 'Org Super Admin',
-      icon: <Crown className="w-4 h-4" />,
+      label: 'Org Admin',
+      icon: <Crown className="w-3.5 h-3.5" />,
       color: 'bg-purple-600 text-white',
-      persona: 'Patchen Uchiyama',
-      desc: 'Full organization control, Accounts & Observability, Team Delegation, Master CRM'
+      persona: 'Patchen Uchiyama'
+    },
+    {
+      role: 'event_planner',
+      label: 'Event Planner',
+      icon: <ClipboardList className="w-3.5 h-3.5" />,
+      color: 'bg-indigo-600 text-white',
+      persona: 'Marcus Vance',
+      badgeCount: approvalRequests.filter(r => r.status === 'pending').length
     },
     {
       role: 'committee_lead',
       label: 'Committee Lead',
-      icon: <Utensils className="w-4 h-4" />,
+      icon: <Utensils className="w-3.5 h-3.5" />,
       color: 'bg-amber-600 text-white',
-      persona: 'Sarah Jenkins',
-      desc: 'Department-scoped Lead Portal, shifts, supplies & volunteer check-in'
+      persona: 'Sarah Jenkins'
     },
     {
       role: 'vendor',
-      label: 'Vendor / Sponsor',
-      icon: <Store className="w-4 h-4" />,
+      label: 'Vendor',
+      icon: <Store className="w-3.5 h-3.5" />,
       color: 'bg-emerald-600 text-white',
-      persona: 'Artisan Bakery',
-      desc: 'Vendor intake questionnaire, booth selection & tax receipts'
+      persona: 'Artisan Bakery'
     },
     {
       role: 'volunteer',
-      label: 'Volunteer / Parent',
-      icon: <HeartHandshake className="w-4 h-4" />,
+      label: 'Volunteer',
+      icon: <HeartHandshake className="w-3.5 h-3.5" />,
       color: 'bg-blue-600 text-white',
-      persona: 'David Chen',
-      desc: 'Public 60s shift sign-up, family registration & QR check-in pass'
+      persona: 'David Chen'
     },
     {
       role: 'kiosk',
-      label: 'On-Site Tablet Kiosk',
-      icon: <Tablet className="w-4 h-4" />,
+      label: 'Kiosk',
+      icon: <Tablet className="w-3.5 h-3.5" />,
       color: 'bg-slate-900 text-white',
-      persona: 'Door Kiosk',
-      desc: 'Express on-site check-in via QR scan, phone lookup & touch waivers'
+      persona: 'Front Gate'
     }
   ];
 
-  const currentRoleObj = roles.find(r => r.role === activeRole) || roles[0];
-
-  // 1. LIVE / CLEAN PRODUCTION MODE BAR
-  if (!isDemoMode) {
-    return (
-      <div className="bg-slate-900 text-white border-b border-slate-800 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-md sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
-            <Globe className="w-3.5 h-3.5" />
-            <span>LIVE PRODUCTION MODE</span>
-          </div>
-
-          <span className="text-slate-300 text-xs hidden sm:inline">
-            {isAuthenticated ? (
-              <span className="flex items-center gap-1.5">
-                <UserCheck className="w-3.5 h-3.5 text-indigo-400" />
-                Signed in as: <strong className="text-white">{currentUser.name}</strong> ({currentUser.email}) —{' '}
-                <span className="px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-200 text-[10px] font-black uppercase">
-                  {currentUser.role.replace('_', ' ')}
-                </span>
-              </span>
-            ) : (
-              <span className="text-slate-400">
-                Viewing as <strong>Unauthenticated Guest Visitor</strong> (Create real account & org from scratch)
-              </span>
-            )}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {isAuthenticated && (
-            <>
-              {activeRole !== 'org_admin' ? (
-                <button
-                  onClick={() => {
-                    switchRole('org_admin');
-                    if (setActiveTab) setActiveTab('admin_observability');
-                  }}
-                  className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer"
-                  title="Elevate this session to Org Super Admin"
-                >
-                  <Crown className="w-3.5 h-3.5 text-amber-300" />
-                  <span>👑 Elevate to Super Admin</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    if (setActiveTab) setActiveTab('admin_observability');
-                  }}
-                  className="bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer"
-                  title="Open Admin Observability & User Impersonation Hub"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-purple-300" />
-                  <span>🛡️ Accounts &amp; Observability</span>
-                </button>
-              )}
-            </>
-          )}
-
-          <button
-            onClick={openCommandPalette}
-            className="bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-500/40 text-xs font-extrabold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer hover:scale-105"
-            title="Open Persona Impersonation Studio & Command Palette (⌘K)"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>⌘K Persona Studio</span>
-          </button>
-
-          <button
-            onClick={() => toggleDemoMode(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition flex items-center gap-2 shadow-sm cursor-pointer"
-            title="Switch back to interactive Role Simulator sandbox"
-          >
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Switch to Demo Simulator</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 2. INTERACTIVE DEMO SIMULATOR BANNER (HIGH VISIBILITY)
   return (
-    <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white border-b-2 border-indigo-500/40 px-4 py-2.5 shadow-lg sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+    <div className="bg-slate-950 text-white border-b border-indigo-500/30 px-4 py-2 shadow-md sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
         
-        {/* Left: Active Persona Context */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-400 text-slate-950 text-[11px] font-black uppercase tracking-wider shadow-sm">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>DEMO SIMULATOR</span>
-          </div>
-
-          <div className="text-xs">
-            <span className="text-slate-300">Active Persona: </span>
-            <strong className="text-white font-bold text-sm bg-white/10 px-2 py-0.5 rounded-md border border-white/15">
-              {currentRoleObj.persona} ({currentRoleObj.label})
-            </strong>
-          </div>
+        {/* Left: Demo Sandbox Label */}
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider">
+            Demo Simulator
+          </span>
+          <span className="text-slate-400 text-xs hidden sm:inline">Role Sandbox:</span>
         </div>
 
-        {/* Center: Role Selector Pills */}
+        {/* Center: Clean Role Switcher Chips */}
         <div className="flex flex-wrap items-center gap-1.5">
           {roles.map(r => {
             const isActive = activeRole === r.role;
@@ -183,17 +93,17 @@ export const RoleSwitcherBar: React.FC<RoleSwitcherBarProps> = ({ setActiveTab }
               <button
                 key={r.role}
                 onClick={handleSelectRole}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 text-xs ${
+                className={`px-2.5 py-1 rounded-lg font-bold transition flex items-center gap-1.5 text-xs cursor-pointer ${
                   isActive
-                    ? `${r.color} ring-2 ring-white shadow-md scale-105`
-                    : 'bg-slate-800/90 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/60'
+                    ? `${r.color} shadow-xs`
+                    : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
                 }`}
-                title={`${r.persona}: ${r.desc}`}
+                title={`Simulate ${r.persona} (${r.label})`}
               >
                 {r.icon}
                 <span>{r.label}</span>
                 {r.badgeCount !== undefined && r.badgeCount > 0 && (
-                  <span className="w-4 h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center animate-bounce">
+                  <span className="w-3.5 h-3.5 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
                     {r.badgeCount}
                   </span>
                 )}
@@ -202,33 +112,24 @@ export const RoleSwitcherBar: React.FC<RoleSwitcherBarProps> = ({ setActiveTab }
           })}
         </div>
 
-        {/* Right: Reset & Exit Actions */}
+        {/* Right: Reset Data & Live Mode Switch */}
         <div className="flex items-center gap-2">
           <button
-            onClick={openCommandPalette}
-            className="text-amber-300 hover:text-white flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-indigo-950/80 border border-indigo-500/40 hover:bg-indigo-900 transition cursor-pointer"
-            title="Open Persona Impersonation Studio & Command Palette (⌘K)"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>⌘K Studio</span>
-          </button>
-
-          <button
             onClick={resetDemoData}
-            className="text-slate-300 hover:text-rose-300 flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 hover:border-slate-600 transition cursor-pointer"
-            title="Restore original sample events and rosters"
+            className="text-slate-400 hover:text-slate-200 text-xs px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 transition flex items-center gap-1 cursor-pointer"
+            title="Restore sample demo data"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Reset Data</span>
+            <RotateCcw className="w-3 h-3" />
+            <span className="hidden md:inline">Reset Demo</span>
           </button>
 
           <button
             onClick={() => toggleDemoMode(false)}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer"
-            title="Test real unauthenticated registration flow"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-lg transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+            title="Switch to Live Clean Mode"
           >
-            <Globe className="w-3.5 h-3.5" />
-            <span>Exit Demo (Live Mode)</span>
+            <Globe className="w-3 h-3" />
+            <span>Live Mode</span>
           </button>
         </div>
 
