@@ -22,7 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { 
     currentOrg, currentEvent, organizations, events, 
-    activeRole, currentUser, isAuthenticated, isDemoMode, approvalRequests, isAppAdmin,
+    activeRole, currentUser, isAuthenticated, isDemoMode, toggleDemoMode, approvalRequests, isAppAdmin,
     switchOrganization, switchEvent, openCommandPalette, showToast 
   } = useApp();
 
@@ -30,10 +30,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isOrgWizardOpen, setIsOrgWizardOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  const isOrgAdmin = activeRole === 'org_admin' || currentUser.role === 'org_admin';
-  const isSuperAdmin = isAppAdmin || isOrgAdmin;
-  const isPlannerOrAdmin = isSuperAdmin || activeRole === 'event_planner' || currentUser.role === 'event_planner';
-  const isLeadOrAdmin = isPlannerOrAdmin || activeRole === 'committee_lead' || currentUser.role === 'committee_lead';
+  // Permissions are strictly guarded by authentication status in Live Mode (or active role in Demo Mode)
+  const isUserAuthenticated = isDemoMode || isAuthenticated;
+  const isOrgAdmin = isUserAuthenticated && (activeRole === 'org_admin' || currentUser.role === 'org_admin');
+  const isSuperAdmin = isUserAuthenticated && (isAppAdmin || isOrgAdmin);
+  const isPlanner = isUserAuthenticated && (activeRole === 'event_planner' || currentUser.role === 'event_planner');
+  const isPlannerOrAdmin = isSuperAdmin || isPlanner;
+  const isLead = isUserAuthenticated && (activeRole === 'committee_lead' || currentUser.role === 'committee_lead');
+  const isLeadOrAdmin = isPlannerOrAdmin || isLead;
+  const isVendor = isUserAuthenticated && (activeRole === 'vendor' || currentUser.role === 'vendor');
+  const isKiosk = isUserAuthenticated && (activeRole === 'kiosk' || currentUser.role === 'kiosk');
+
   // Context selectors only appear in Demo Simulator sandbox, never in clean Live mode
   const showContextSelectors = isDemoMode;
 
@@ -165,6 +172,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">New Event</span>
+                </button>
+              )}
+
+              {/* Demo Mode Launcher (Visible in Live Mode to enter interactive demo sandbox) */}
+              {!isDemoMode && (
+                <button
+                  onClick={() => toggleDemoMode(true)}
+                  className="flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 border border-amber-300/80 px-2.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shadow-xs"
+                  title="Switch to Demo Simulator Sandbox to explore all 6 roles and sample campaigns"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <span className="hidden sm:inline">Demo Simulator</span>
+                  <span className="sm:hidden">Demo</span>
                 </button>
               )}
 

@@ -457,19 +457,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     phone: '',
     role: 'volunteer',
     orgId: '',
-    isRegisteredUser: false
+    isRegisteredUser: false,
+    isAppAdmin: false
   };
 
   const currentOrg = data.organizations.find((o: Organization) => o.id === data.currentOrgId) || data.organizations[0];
-  const rawUser = data.users.find((u: User) => u.id === data.currentUserId) || data.users[0];
-  const isPatchen = Boolean(rawUser && rawUser.email && rawUser.email.toLowerCase().includes('patchen'));
+  
+  // Resolve active user based on mode and auth state
+  const effectiveUserId = (!isDemoMode && !isAuthenticated) ? 'user_guest' : data.currentUserId;
+  const rawUser = effectiveUserId === 'user_guest' 
+    ? guestUser 
+    : (data.users.find((u: User) => u.id === effectiveUserId) || data.users[0]);
+
+  const isPatchen = Boolean(
+    (isDemoMode || isAuthenticated) && 
+    rawUser && 
+    rawUser.email && 
+    rawUser.email.toLowerCase().includes('patchen')
+  );
+
   const resolvedUser: User = isPatchen && (rawUser.role !== 'org_admin' || rawUser.isAppAdmin !== true)
     ? { ...rawUser, role: 'org_admin', isAppAdmin: true, orgId: rawUser.orgId || 'org_lincoln_pta' }
     : rawUser;
+
   const currentUser = (!isDemoMode && !isAuthenticated) ? guestUser : resolvedUser;
   const currentEvent = data.events.find((e: Event) => e.id === data.currentEventId) || data.events[0];
   const activeRole = currentUser.role;
-  const isAppAdmin = Boolean(currentUser?.isAppAdmin) || isPatchen;
+  const isAppAdmin = (!isDemoMode && !isAuthenticated) ? false : (Boolean(currentUser?.isAppAdmin) || isPatchen);
 
   // Read-only mutation interceptor
   const checkReadOnlyGuard = (actionName: string): boolean => {
@@ -486,6 +500,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       matchedUser = data.users.find((u: User) => u.role === role) || data.users[0];
     }
     setData((prev: any) => ({ ...prev, currentUserId: matchedUser?.id || prev.currentUserId }));
+    setIsAuthenticated(true);
     showToast('info', `Switched Role: ${role.toUpperCase()}`, `Now acting as ${matchedUser?.name} (${role})`);
   };
 

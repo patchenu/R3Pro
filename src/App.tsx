@@ -24,7 +24,7 @@ import { AdminObservabilityHub } from './components/admin/AdminObservabilityHub'
 import { ImpersonationCommandPalette } from './components/admin/ImpersonationCommandPalette';
 
 const MainLayout: React.FC = () => {
-  const { activeRole, switchEvent, switchOrganization, isAuthenticated, isImpersonating, toggleCommandPalette } = useApp();
+  const { activeRole, switchEvent, switchOrganization, isAuthenticated, isDemoMode, isImpersonating, toggleCommandPalette } = useApp();
   const [activeTab, setActiveTab] = useState<string>('discovery_hub');
   const [isEventBuilderOpen, setIsEventBuilderOpen] = useState(false);
   const [isOrgWizardOpen, setIsOrgWizardOpen] = useState(false);
@@ -33,6 +33,16 @@ const MainLayout: React.FC = () => {
   const [showRoleSimulator, setShowRoleSimulator] = useState(true);
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
   const [activeLegalTab, setActiveLegalTab] = useState<LegalDocType>('terms');
+
+  // Guard against unauthenticated access to internal workspace tabs in live mode
+  useEffect(() => {
+    if (!isAuthenticated && !isDemoMode) {
+      const internalTabs = ['planner_dashboard', 'lead_portal', 'org_admin_view', 'admin_observability', 'vendor_portal', 'gap_analysis', 'reports_center', 'marketing_hub', 'kiosk_mode'];
+      if (internalTabs.includes(activeTab)) {
+        setActiveTab('discovery_hub');
+      }
+    }
+  }, [isAuthenticated, isDemoMode, activeTab]);
 
   const handleOpenLegal = (doc: LegalDocType) => {
     setActiveLegalTab(doc);
