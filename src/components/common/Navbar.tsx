@@ -22,7 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { 
     currentOrg, currentEvent, organizations, events, 
-    activeRole, currentUser, isAuthenticated, approvalRequests, 
+    activeRole, currentUser, isAuthenticated, isDemoMode, approvalRequests, 
     switchOrganization, switchEvent, openCommandPalette, showToast 
   } = useApp();
 
@@ -33,6 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isSuperAdmin = activeRole === 'org_admin' || currentUser.role === 'org_admin' || (currentUser.email && currentUser.email.toLowerCase().includes('patchen'));
   const isPlannerOrAdmin = isSuperAdmin || activeRole === 'event_planner' || currentUser.role === 'event_planner';
   const isLeadOrAdmin = isPlannerOrAdmin || activeRole === 'committee_lead' || currentUser.role === 'committee_lead';
+  const showContextSelectors = isDemoMode || (isAuthenticated && isLeadOrAdmin);
 
   const pendingApprovalsCount = approvalRequests.filter(r => r.status === 'pending').length;
 
@@ -92,54 +93,56 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </div>
 
-              {/* Org & Event Selectors */}
-              <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-slate-200">
-                {/* Org Selector */}
-                <div className="relative">
-                  <select
-                    value={currentOrg.id}
-                    onChange={handleOrgChange}
-                    className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg py-1 pl-2.5 pr-7 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                  >
-                    <optgroup label="Active Organizations">
-                      {organizations.map((org) => (
-                        <option key={org.id} value={org.id}>
-                          {org.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <option value="NEW_ORG" className="text-indigo-600 font-bold">
-                      + Add New Organization...
-                    </option>
-                  </select>
-                  <Building2 className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-
-                {/* Event Selector */}
-                <div className="relative">
-                  <select
-                    value={currentEvent.id}
-                    onChange={handleEventChange}
-                    className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg py-1 pl-2.5 pr-7 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 max-w-[180px] truncate"
-                  >
-                    <optgroup label="Active Campaigns">
-                      {events
-                        .filter((e) => e.orgId === currentOrg.id)
-                        .map((evt) => (
-                          <option key={evt.id} value={evt.id}>
-                            {evt.title}
+              {/* Org & Event Selectors - Only shown in Demo Mode or to Authenticated Staff/Admins */}
+              {showContextSelectors && (
+                <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-slate-200">
+                  {/* Org Selector */}
+                  <div className="relative">
+                    <select
+                      value={currentOrg.id}
+                      onChange={handleOrgChange}
+                      className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg py-1 pl-2.5 pr-7 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    >
+                      <optgroup label="Active Organizations">
+                        {organizations.map((org) => (
+                          <option key={org.id} value={org.id}>
+                            {org.name}
                           </option>
                         ))}
-                    </optgroup>
-                    {(isSuperAdmin || isPlannerOrAdmin) && (
-                      <option value="NEW_EVENT" className="text-indigo-600 font-bold">
-                        + Create New Event...
+                      </optgroup>
+                      <option value="NEW_ORG" className="text-indigo-600 font-bold">
+                        + Add New Organization...
                       </option>
-                    )}
-                  </select>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </select>
+                    <Building2 className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+
+                  {/* Event Selector */}
+                  <div className="relative">
+                    <select
+                      value={currentEvent.id}
+                      onChange={handleEventChange}
+                      className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg py-1 pl-2.5 pr-7 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 max-w-[180px] truncate"
+                    >
+                      <optgroup label="Active Campaigns">
+                        {events
+                          .filter((e) => e.orgId === currentOrg.id)
+                          .map((evt) => (
+                            <option key={evt.id} value={evt.id}>
+                              {evt.title}
+                            </option>
+                          ))}
+                      </optgroup>
+                      {(isSuperAdmin || isPlannerOrAdmin) && (
+                        <option value="NEW_EVENT" className="text-indigo-600 font-bold">
+                          + Create New Event...
+                        </option>
+                      )}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Right Quick Actions */}
