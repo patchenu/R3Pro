@@ -557,21 +557,36 @@ Organizations and Event Chairs maintain a centralized **Legal Compliance & E-Sig
 
 ---
 
-## 8. Database Architecture & Roadmap (Supabase PostgreSQL)
+## 8. Database Architecture & Live PostgreSQL Production Hardening
 
-Full PostgreSQL DDL schema with multi-tenant Row Level Security (RLS) policies is detailed in **[`docs/DATABASE_ROADMAP.md`](file:///Users/patchenuchiyama/Library/Mobile%20Documents/com~apple~CloudDocs/R3Pro/docs/DATABASE_ROADMAP.md)**:
-* `users` (unique email, encrypted password hash, role)
-* `organizations` (unique normalized EIN index)
-* `events` (unique `org_id` + `slug` index)
-* `sub_parts` (committees, lead contact, allocated budget)
-* `shifts` (start/end timestamps, capacity, waiver requirement)
-* `item_slots` (wishlist items, quantity pledged, drop-off location)
-* `ticket_tiers` (pricing, FMV, capacity, vendor packages)
-* `registrations` (256-bit manage token, contact info)
-* `group_members` (household dependents, minor flag, emergency contact)
-* `signed_waivers` (parent co-signature vector data, timestamp, IP)
-* `shift_claims` (checked-in status, timestamps)
-* `donations` (amount, fee coverage flag, receipt number)
-* `approval_requests` (variable threshold queue)
-* `announcements` (real-time organizer updates)
-* `audit_logs` (immutable change history)
+Full PostgreSQL DDL schema with 100% Row-Level Security (RLS) policies is provisioned on the live **Vercel Postgres (Neon)** cluster (`api/_lib/schema.sql` and `api/_lib/security_rls.sql`):
+* `organizations` (unique normalized alphanumeric EIN index, branding, signatory profile)
+* `users` (unique email, encrypted password hash, system role, active status)
+* `events` (unique `org_id` + `slug` index, fiscal year, unique `event_key`)
+* `sub_parts` (committees, designated lead contact, radio channel, reporting gate, allocated budget)
+* `shifts` (start/end ISO timestamps, capacity spots, minimum age, waiver requirements)
+* `item_slots` (wishlist items, promised vs delivered quantities, drop-off location, FMV)
+* `ticket_tiers` (pricing, FMV offset, capacity, sponsor packages, booth footprint & power)
+* `registrations` (256-bit cryptographic `manage_token`, primary contact)
+* `registration_members` (household dependents, minor flag, emergency contact, dietary notes)
+* `registration_shifts` (claimed shift assignments, 1-tap check-in timestamps, verified hours)
+* `registration_items` (pledged wishlist item quantities, delivery verification)
+* `registration_tickets` (purchased admission tickets & sponsor tiers, booth assignments)
+* `waiver_templates` (customizable legal agreements: general liability, minor consent, food safety, photo release)
+* `waiver_signatures` (vector stroke signature data, parent/guardian co-signer, IP address, timestamp)
+* `donations` (amount, fee coverage flag, receipt number, payment method)
+* `tax_receipts` (IRS 501(c)(3) tax substantiation, immutable receipt trigger)
+* `crm_supporters` (volunteer & donor directory, lifetime hours/donations, behavioral tags)
+* `volunteer_event_history` (chronological service ledger tied to campaign financial outcomes)
+* `broadcast_announcements` (multi-channel announcements: email, SMS, push, kiosk)
+* `audit_logs` (immutable security and role mutation audit trail)
+
+### 8.1 Production Security & Compliance Hardening
+1. **100% PostgreSQL Row-Level Security (RLS)**: Enforced across all 20 tables with tenant isolation policies (`app.current_org_id`).
+2. **IRS 501(c)(3) Immutability Trigger**: Database-level PL/pgSQL trigger `prevent_immutable_tax_receipt_tampering` prevents mutation or deletion of issued tax receipts.
+3. **Timing-Safe OTP Authentication**: Constant-time byte comparisons (`crypto.timingSafeEqual`) eliminate side-channel timing vulnerabilities.
+4. **Stateless JWT Sessions in HttpOnly Cookies**: HMAC-SHA256 signed session tokens delivered via `HttpOnly`, `Secure`, `SameSite=Strict` cookies.
+5. **Token-Bucket Rate Limiting**: Sliding-window rate limiters with standard `X-RateLimit-*` headers on all serverless API routes.
+6. **Server-Side Zod Schemas**: Strict input validation and sanitization on all `/api/*` endpoints.
+7. **Enterprise HTTP Security Headers**: HSTS, anti-clickjacking `X-Frame-Options: DENY`, nosniff, and strict CSP deployed via `vercel.json`.
+

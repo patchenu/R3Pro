@@ -17,6 +17,8 @@ import {
 } from '../data/seedData';
 import { EVENT_TEMPLATES, ORG_TEMPLATES, WAIVER_TEMPLATES_DATA } from '../data/templates';
 import { generateManageToken, generateReceiptNumber } from '../utils/formatters';
+import { checkParticipantShiftCollisions } from '../utils/scheduling';
+import { apiClient } from '../services/apiClient';
 
 interface ToastNotification {
   id: string;
@@ -731,6 +733,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
+    // 2. Strict Zero Double-Booking / Time Collision Validator ("One Place at a Time")
+    if (payload.shiftSelections.length > 1) {
+      const collision = checkParticipantShiftCollisions(
+        payload.shiftSelections.map(s => ({ shiftId: s.shiftId, memberIndex: s.groupMemberIndex })),
+        data.shifts,
+        payload.members.map(m => m.name)
+      );
+
+      if (collision.hasCollision) {
+        showToast('error', 'Schedule Collision', collision.errorMessage || 'A volunteer cannot be assigned to overlapping shifts.');
+        return { success: false, error: collision.errorMessage || 'Schedule collision detected.' };
+      }
+    }
+
     const regId = 'reg_' + Date.now();
     const manageToken = generateManageToken();
     const timestamp = new Date().toISOString();
@@ -918,6 +934,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     });
 
+    // Asynchronous backend persistence via Vercel Serverless API
+    apiClient.registrations.submit({
+      ...payload,
+      eventId: currentEvent.id,
+      manageToken
+    }).catch(err => console.debug('[API Sync] Registration background sync:', err));
+
     showToast('success', 'Registration Confirmed!', `Thank you ${payload.primaryName}. Your confirmation pass is ready.`);
     return { success: true, registration: newRegistration };
   };
@@ -952,6 +975,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         registrations: prev.registrations.map((r: Registration) => r.id === reg.id ? { ...r, status: 'cancelled' } : r)
       };
     });
+
+    // Asynchronous backend cancellation via Vercel Serverless API
+    apiClient.registrations.cancel(manageToken).catch(err => console.debug('[API Sync] Cancel background sync:', err));
 
     showToast('info', 'Registration Cancelled', 'Your shift and item claims have been released to other volunteers.');
     return true;

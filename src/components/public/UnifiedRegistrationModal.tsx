@@ -9,6 +9,7 @@ import {
   Key, Lock, HelpCircle, CheckCircle, UserCheck, Clock
 } from 'lucide-react';
 import { formatCurrency, formatTimeRange, calculateAge } from '../../utils/formatters';
+import { checkParticipantShiftCollisions, getShiftCapacityStats } from '../../utils/scheduling';
 import { WAIVER_TEMPLATES_DATA } from '../../data/templates';
 
 interface UnifiedRegistrationModalProps {
@@ -249,28 +250,14 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
     });
   };
 
-  // Overlap Validation Check
+  // Overlap Validation Check ("One Place at a Time")
   const checkOverlap = () => {
-    for (let i = 0; i < shiftAssignments.length; i++) {
-      for (let j = i + 1; j < shiftAssignments.length; j++) {
-        if (shiftAssignments[i].memberIndex === shiftAssignments[j].memberIndex) {
-          const shift1 = shifts.find(s => s.id === shiftAssignments[i].shiftId);
-          const shift2 = shifts.find(s => s.id === shiftAssignments[j].shiftId);
-          if (shift1 && shift2) {
-            const start1 = new Date(shift1.startTime).getTime();
-            const end1 = new Date(shift1.endTime).getTime();
-            const start2 = new Date(shift2.startTime).getTime();
-            const end2 = new Date(shift2.endTime).getTime();
-
-            if (start1 < end2 && end1 > start2) {
-              const memberName = members[shiftAssignments[i].memberIndex]?.name || 'Participant';
-              return `Time Conflict: ${memberName} is assigned to both "${shift1.title}" and "${shift2.title}" which overlap in time.`;
-            }
-          }
-        }
-      }
-    }
-    return null;
+    const result = checkParticipantShiftCollisions(
+      shiftAssignments,
+      shifts,
+      members.map(m => m.name)
+    );
+    return result.errorMessage;
   };
 
   const handleStep1Submit = (e: React.FormEvent) => {

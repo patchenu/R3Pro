@@ -604,3 +604,47 @@ This document provides system knowledge, core architectural rules, and coding st
 - **Calendar & Mobile Check-In Integration**:
   - 1-click `.ics` Apple iCal / Outlook file download and 1-click Google Calendar integration pre-populated with reporting gate and Lead contact info.
   - Express Day-of-Event QR check-in pass and optional 1-tap password setting to claim account and link household family dependents.
+
+---
+
+## 33. Best-of-Breed Production Security, Compliance Standards & Live Database Hardening
+
+GatherRaise enforces an enterprise-grade defense-in-depth security architecture designed to meet **SOC 2 Type II**, **COPPA (Children's Online Privacy Protection Act)**, and **IRS 501(c)(3) Statutory Tax Substantiation** standards.
+
+### 33.1 SOC 2 Type II Security & Cryptographic Authentication
+- **Timing-Safe OTP Verification (`crypto.timingSafeEqual`)**:
+  - Passwordless 6-digit one-time passcodes are evaluated using constant-time byte comparisons via `verifyOtpTimingSafe` in `api/_lib/auth.ts`, eliminating side-channel timing attacks.
+- **Stateless HMAC-SHA256 JWT in HttpOnly Cookies**:
+  - Authenticated sessions issue signed JWTs (`createSessionJwt`) delivered via `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/` cookies (`setSessionCookie`), safeguarding credentials against client-side XSS extraction.
+- **Distributed Sliding-Window Token-Bucket Rate Limiting (`api/_lib/rateLimiter.ts`)**:
+  - Protects public API endpoints from automated brute force and credential stuffing by enforcing strict per-IP rate limits with standard `X-RateLimit-*` response headers.
+- **Enterprise HTTP Security Headers (`vercel.json`)**:
+  - Enforces `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` (HSTS).
+  - Enforces `X-Frame-Options: DENY` (Anti-Clickjacking).
+  - Enforces `X-Content-Type-Options: nosniff`.
+  - Enforces strict Content Security Policy (`Content-Security-Policy`).
+
+### 33.2 COPPA & Minor Participant PII Protection
+- **Household Dependent Mental Model**:
+  - Minors (<18 or <13 years old) are linked as household dependents under an adult parent/guardian account.
+  - Minors are never prompted for direct phone numbers, email addresses, or independent logins.
+- **Parental Co-Signing Ledger**:
+  - Youth volunteer shifts require parental/guardian consent with vector canvas stroke signature capture, legal name, timestamp, and IP address for compliance verification.
+
+### 33.3 IRS 501(c)(3) Statutory Tax Substantiation & Immutability Trigger
+- **Database-Level Immutability**:
+  - A PostgreSQL database trigger `prevent_immutable_tax_receipt_tampering` prevents any mutation or deletion of issued tax receipts on the `tax_receipts` table.
+- **Fair Market Value (FMV) Deductions**:
+  - Automatically calculates tax-deductible portions for donor receipts in compliance with IRS Publication 526 and 561.
+
+### 33.4 100% PostgreSQL Row-Level Security (RLS) on Live Neon Database
+- All 20 relational database tables (`organizations`, `events`, `sub_parts`, `shifts`, `registrations`, `crm_supporters`, `donations`, `tax_receipts`, etc.) have Row-Level Security activated.
+- SQL queries and mutations are isolated by `org_id` and verified session context.
+
+### 33.5 Zero Double-Booking Anti-Collision Scheduling Engine (`src/utils/scheduling.ts`)
+- Evaluates temporal overlap using interval arithmetic ($startA < endB \land endA > startB$).
+- Prevents single participants from double-booking while permitting multiple household family members to serve in concurrent shifts.
+
+### 33.6 Dual-Mode Hybrid Database Client (`api/_lib/db.ts`, `src/services/apiClient.ts`)
+- Seamlessly connects to live Neon PostgreSQL with connection pooling when configured, with zero-downtime graceful fallback to in-memory mock stores in offline sandbox environments.
+

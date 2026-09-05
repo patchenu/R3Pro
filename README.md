@@ -81,13 +81,15 @@ R3Pro is an enterprise-grade web application combining the volunteer coordinatio
 17. **Master Broadcast Announcements Hub**:
     - Real-time multi-channel broadcast creation (*Email, SMS, Mobile Push, Gate Kiosk*) with urgency tiering (*Normal, Urgent, Critical*) and immutable dispatch ledgers.
 
-18. **Volunteer CRM Historical Event Service Logging & Full-Spectrum Pass Parity**:
-    - Manual past event service entry recording hours, item pledges, donations, campaign outcomes (\$ raised), and verifying signatures.
-    - 4-in-1 self-service pass & post-signup confirmation cards for Shifts, Pledged Supplies, Tickets/Sponsor Packages, and Donations with 1-click `.ics` calendar sync.
+19. **Best-of-Breed Production Security & Compliance Hardening**:
+    - **SOC 2 Type II**: Timing-safe OTP comparison (`crypto.timingSafeEqual`), HMAC-SHA256 JWT sessions in `HttpOnly`, `Secure`, `SameSite=Strict` cookies, sliding-window rate limiting, and enterprise HTTP security headers.
+    - **COPPA & Minor PII Safety**: Household mental model with zero minor contact info collection and parent/guardian co-signing vector signature ledgers.
+    - **IRS 501(c)(3) Immutability Trigger**: PostgreSQL database trigger `prevent_immutable_tax_receipt_tampering` prevents mutation or deletion of issued tax receipts.
+    - **100% PostgreSQL Row-Level Security (RLS)**: Active across all 20 relational database tables on Vercel Postgres (Neon).
 
 ---
 
-## 🛠️ Local Development & Running
+## 🛠️ Local Development & Database Operations
 
 ### Prerequisites
 - Node.js v18+ and npm
@@ -100,6 +102,10 @@ npm install
 # Start local development server
 npm run dev
 
+# Run PostgreSQL database migration & verify RLS
+npm run db:migrate
+npm run db:verify
+
 # Build for production
 npm run build
 ```
@@ -108,19 +114,13 @@ npm run build
 
 ## 🚀 GitHub & Production Hosting
 
-1. **Create a GitHub Repository**:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit: GatherRaise platform"
-   git remote add origin https://github.com/your-username/gather-raise.git
-   git push -u origin main
-   ```
-2. **Deploy to Vercel / Netlify / Cloudflare Pages**:
-   - Connect your GitHub repository.
+1. **GitHub Remote Operations**:
+   - Primary authorized account: `patchenu` (`patchenu@yahoo.com`)
+   - Repository: `https://github.com/patchenu/R3Pro.git`
+2. **Deploy to Vercel**:
    - Build command: `npm run build`
    - Output directory: `dist`
-   - Automatic CI/CD deploys every push to `main`!
+   - Configured with serverless `/api` endpoints, HTTP security headers, and Neon PostgreSQL connection pooling.
 
 ---
 
@@ -128,7 +128,8 @@ npm run build
 
 Located in `.agents/skills/`:
 - `event-gap-analyzer`: Automated diagnostic scanning for critical staffing and supply shortages.
-- `volunteer-waiver-auditor`: Compliance auditing for minor consent and liability waivers.
-- `tax-receipt-generator`: Formats IRS 501(c)(3) tax acknowledgement letters with FMV offsets.
+- `volunteer-waiver-auditor`: Legal compliance auditing for COPPA minor consent and liability waivers with vector signature verification.
+- `tax-receipt-generator`: Formats IRS 501(c)(3) tax acknowledgement letters with FMV deduction offsets and statutory disclosures.
 - `reminder-schedule-dispatcher`: Evaluates reminder cadences (72h, 24h, 2h) and generates shift logistics.
 - `vendor-booth-allocator`: Reviews commercial vendor applications and calculates booth grid maps.
+
