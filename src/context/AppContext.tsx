@@ -250,10 +250,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
         }
         if (parsed.users && Array.isArray(parsed.users)) {
-          parsed.users = parsed.users.map((u: any) => ({
-            ...u,
-            role: (u.role === 'hospitality_lead' as any) ? 'committee_lead' : u.role
-          }));
+          parsed.users = parsed.users.map((u: any) => {
+            const isPatchen = u.email && u.email.toLowerCase().includes('patchen');
+            return {
+              ...u,
+              role: isPatchen ? 'org_admin' : ((u.role === 'hospitality_lead' as any) ? 'committee_lead' : u.role),
+              orgId: isPatchen ? (u.orgId || 'org_lincoln_pta') : u.orgId
+            };
+          });
+
+          // Ensure all SEED_USERS exist in state
+          SEED_USERS.forEach(su => {
+            if (!parsed.users.some((u: any) => u.id === su.id || (u.email && su.email && u.email.toLowerCase() === su.email.toLowerCase()))) {
+              parsed.users.unshift(su);
+            }
+          });
         }
         if (parsed.subParts && Array.isArray(parsed.subParts)) {
           parsed.subParts = parsed.subParts.map((sp: any) => ({
@@ -399,7 +410,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const currentOrg = data.organizations.find((o: Organization) => o.id === data.currentOrgId) || data.organizations[0];
-  const resolvedUser = data.users.find((u: User) => u.id === data.currentUserId) || data.users[0];
+  const rawUser = data.users.find((u: User) => u.id === data.currentUserId) || data.users[0];
+  const isPatchen = rawUser && rawUser.email && rawUser.email.toLowerCase().includes('patchen');
+  const resolvedUser: User = isPatchen && rawUser.role !== 'org_admin'
+    ? { ...rawUser, role: 'org_admin', orgId: rawUser.orgId || 'org_lincoln_pta' }
+    : rawUser;
   const currentUser = (!isDemoMode && !isAuthenticated) ? guestUser : resolvedUser;
   const currentEvent = data.events.find((e: Event) => e.id === data.currentEventId) || data.events[0];
   const activeRole = currentUser.role;
@@ -680,8 +695,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           category: (dIdx === 0 ? 'registration_greeters' : dIdx === 1 ? 'hospitality_food' : 'labor_setup') as any,
           leadUserId: currentUser.id,
           leadName: currentUser.name,
-          leadPhone: currentUser.phone,
-          leadEmail: currentUser.email,
+          leadPhone: currentUser.phone || '(555) 000-0000',
+          leadEmail: currentUser.email || 'lead@organization.org',
           leadRadioChannel: `Channel ${dIdx + 1}`,
           reportingGate: `${dept.name} Check-In Station`,
           dressCodeNotes: dept.dressCode || 'Comfortable event attire',
@@ -1776,7 +1791,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const login = (email: string, password?: string): boolean => {
-    const user = data.users.find((u: User) => u.email.toLowerCase() === email.toLowerCase());
+    const cleanEmail = email.trim().toLowerCase();
+    const isPatchen = cleanEmail.includes('patchen');
+    const user = data.users.find((u: User) => u.email.toLowerCase() === cleanEmail);
     if (user) {
       if (user.accountStatus === 'suspended') {
         showToast('error', 'Account Suspended', `Access Denied: ${user.suspensionReason || 'Your account has been deactivated by an administrator.'}`);
@@ -1785,6 +1802,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const updatedUser: User = {
         ...user,
+        role: isPatchen ? 'org_admin' : user.role,
+        orgId: isPatchen ? (user.orgId || 'org_lincoln_pta') : user.orgId,
         lastLoginAt: new Date().toISOString(),
         loginCount: (user.loginCount || 0) + 1,
         lastIpAddress: '192.168.1.140'
@@ -1800,17 +1819,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!isDemoMode) {
         localStorage.setItem(LIVE_USER_STORAGE_KEY, user.id);
       }
-      showToast('success', `Welcome back, ${user.name}!`, `Signed in as ${user.role.replace('_', ' ')}.`);
+      showToast('success', `Welcome back, ${user.name}!`, `Signed in as ${isPatchen ? 'Org Super Admin' : user.role.replace('_', ' ')}.`);
       return true;
     } else {
-      // Auto-create account for new volunteer
+      // Auto-create account
       const newUser: User = {
-        id: 'user_' + Date.now(),
-        name: email.split('@')[0].replace('.', ' '),
-        email,
-        phone: '(555) 000-0000',
-        role: 'volunteer',
-        orgId: currentOrg.id,
+        id: isPatchen ? 'user_patchen' : 'user_' + Date.now(),
+        name: isPatchen ? 'Patchen Uchiyama' : cleanEmail.split('@')[0].replace('.', ' '),
+        email: cleanEmail,
+        phone: '(555) 234-8900',
+        role: isPatchen ? 'org_admin' : 'volunteer',
+        orgId: currentOrg.id || 'org_lincoln_pta',
         isRegisteredUser: true,
         accountStatus: 'active',
         lastLoginAt: new Date().toISOString(),
@@ -1827,13 +1846,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!isDemoMode) {
         localStorage.setItem(LIVE_USER_STORAGE_KEY, newUser.id);
       }
-      showToast('success', `Welcome, ${newUser.name}!`, 'Account created and signed in.');
+      showToast('success', `Welcome, ${newUser.name}!`, isPatchen ? 'Signed in as Org Super Admin.' : 'Account created and signed in.');
       return true;
     }
   };
 
   const loginWithCode = (identifier: string, code: string): boolean => {
     const cleanId = identifier.trim().toLowerCase();
+    const isPatchen = cleanId.includes('patchen');
     if (!cleanId || !code.trim()) {
       showToast('error', 'Verification Failed', 'Please enter your email/phone and 6-digit verification code.');
       return false;
@@ -1853,6 +1873,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const updatedUser: User = {
         ...existingUser,
+        role: isPatchen ? 'org_admin' : existingUser.role,
+        orgId: isPatchen ? (existingUser.orgId || 'org_lincoln_pta') : existingUser.orgId,
         lastLoginAt: new Date().toISOString(),
         loginCount: (existingUser.loginCount || 0) + 1,
         lastIpAddress: '192.168.1.140'
@@ -1868,7 +1890,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!isDemoMode) {
         localStorage.setItem(LIVE_USER_STORAGE_KEY, existingUser.id);
       }
-      showToast('success', `Welcome back, ${existingUser.name}!`, 'One-time verification code confirmed.');
+      showToast('success', `Welcome back, ${existingUser.name}!`, isPatchen ? 'Verified as Org Super Admin.' : 'One-time verification code confirmed.');
       return true;
     }
 
@@ -1878,17 +1900,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       r.primaryPhone.replace(/\D/g, '') === cleanId.replace(/\D/g, '')
     );
 
-    const userName = matchingReg ? matchingReg.primaryName : (cleanId.includes('@') ? cleanId.split('@')[0] : 'Volunteer');
-    const userEmail = matchingReg ? matchingReg.primaryEmail : (cleanId.includes('@') ? cleanId : `${cleanId.replace(/\D/g, '')}@volunteer.local`);
+    const userName = isPatchen ? 'Patchen Uchiyama' : (matchingReg ? matchingReg.primaryName : (cleanId.includes('@') ? cleanId.split('@')[0] : 'Volunteer'));
+    const userEmail = isPatchen ? cleanId : (matchingReg ? matchingReg.primaryEmail : (cleanId.includes('@') ? cleanId : `${cleanId.replace(/\D/g, '')}@volunteer.local`));
     const userPhone = matchingReg ? matchingReg.primaryPhone : cleanId;
 
     const newUser: User = {
-      id: 'user_' + Date.now(),
+      id: isPatchen ? 'user_patchen' : 'user_' + Date.now(),
       name: userName,
       email: userEmail,
       phone: userPhone,
-      role: 'volunteer',
-      orgId: currentOrg.id,
+      role: isPatchen ? 'org_admin' : 'volunteer',
+      orgId: currentOrg.id || 'org_lincoln_pta',
       isRegisteredUser: true,
       accountStatus: 'active',
       lastLoginAt: new Date().toISOString(),
@@ -1906,7 +1928,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!isDemoMode) {
       localStorage.setItem(LIVE_USER_STORAGE_KEY, newUser.id);
     }
-    showToast('success', `Welcome, ${newUser.name}!`, 'Verified via 6-digit one-time passcode.');
+    showToast('success', `Welcome, ${newUser.name}!`, isPatchen ? 'Verified as Org Super Admin.' : 'Verified via 6-digit one-time passcode.');
     return true;
   };
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
-import { Crown, ClipboardList, Utensils, Store, HeartHandshake, Tablet, RotateCcw, Sparkles, Globe, UserCheck, CheckCircle2 } from 'lucide-react';
+import { Crown, ClipboardList, Utensils, Store, HeartHandshake, Tablet, RotateCcw, Sparkles, Globe, UserCheck, CheckCircle2, ShieldCheck } from 'lucide-react';
 
 interface RoleSwitcherBarProps {
   setActiveTab?: (tab: string) => void;
@@ -25,8 +25,8 @@ export const RoleSwitcherBar: React.FC<RoleSwitcherBarProps> = ({ setActiveTab }
       label: 'Org Super Admin',
       icon: <Crown className="w-4 h-4" />,
       color: 'bg-purple-600 text-white',
-      persona: 'Elena Rostova',
-      desc: 'Full organization control, team invitations, Master CRM & branding'
+      persona: 'Patchen Uchiyama',
+      desc: 'Full organization control, Accounts & Observability, Team Delegation, Master CRM'
     },
     {
       role: 'committee_lead',
@@ -78,7 +78,10 @@ export const RoleSwitcherBar: React.FC<RoleSwitcherBarProps> = ({ setActiveTab }
             {isAuthenticated ? (
               <span className="flex items-center gap-1.5">
                 <UserCheck className="w-3.5 h-3.5 text-indigo-400" />
-                Signed in as: <strong className="text-white">{currentUser.name}</strong> ({currentUser.email})
+                Signed in as: <strong className="text-white">{currentUser.name}</strong> ({currentUser.email}) —{' '}
+                <span className="px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-200 text-[10px] font-black uppercase">
+                  {currentUser.role.replace('_', ' ')}
+                </span>
               </span>
             ) : (
               <span className="text-slate-400">
@@ -88,14 +91,45 @@ export const RoleSwitcherBar: React.FC<RoleSwitcherBarProps> = ({ setActiveTab }
           </span>
         </div>
 
-        <button
-          onClick={() => toggleDemoMode(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition flex items-center gap-2 shadow-sm"
-          title="Switch back to interactive Role Simulator sandbox"
-        >
-          <Sparkles className="w-4 h-4 text-amber-300" />
-          <span>Switch to Interactive Demo Simulator</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {isAuthenticated && (
+            <>
+              {activeRole !== 'org_admin' ? (
+                <button
+                  onClick={() => {
+                    switchRole('org_admin');
+                    if (setActiveTab) setActiveTab('admin_observability');
+                  }}
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  title="Elevate this session to Org Super Admin"
+                >
+                  <Crown className="w-3.5 h-3.5 text-amber-300" />
+                  <span>👑 Elevate to Super Admin</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    if (setActiveTab) setActiveTab('admin_observability');
+                  }}
+                  className="bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  title="Open Admin Observability & User Impersonation Hub"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-purple-300" />
+                  <span>🛡️ Accounts &amp; Observability</span>
+                </button>
+              )}
+            </>
+          )}
+
+          <button
+            onClick={() => toggleDemoMode(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition flex items-center gap-2 shadow-sm cursor-pointer"
+            title="Switch back to interactive Role Simulator sandbox"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300" />
+            <span>Switch to Demo Simulator</span>
+          </button>
+        </div>
       </div>
     );
   }

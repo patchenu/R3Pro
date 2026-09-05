@@ -30,6 +30,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isOrgWizardOpen, setIsOrgWizardOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
+  const isSuperAdmin = activeRole === 'org_admin' || currentUser.role === 'org_admin' || (currentUser.email && currentUser.email.toLowerCase().includes('patchen'));
+  const isPlannerOrAdmin = isSuperAdmin || activeRole === 'event_planner' || currentUser.role === 'event_planner';
+  const isLeadOrAdmin = isPlannerOrAdmin || activeRole === 'committee_lead' || currentUser.role === 'committee_lead';
+
   const pendingApprovalsCount = approvalRequests.filter(r => r.status === 'pending').length;
 
   const handleOrgChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -98,15 +102,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg py-1 pl-2.5 pr-7 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   >
                     <optgroup label="Active Organizations">
-                      {organizations.map(o => (
-                        <option key={o.id} value={o.id}>{o.name}</option>
+                      {organizations.map((org) => (
+                        <option key={org.id} value={org.id}>
+                          {org.name}
+                        </option>
                       ))}
                     </optgroup>
-                    <optgroup label="Actions">
-                      <option value="NEW_ORG">+ Register New Organization...</option>
-                    </optgroup>
+                    <option value="NEW_ORG" className="text-indigo-600 font-bold">
+                      + Add New Organization...
+                    </option>
                   </select>
-                  <ChevronDown className="w-3 h-3 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Building2 className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
 
                 {/* Event Selector */}
@@ -114,18 +120,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <select
                     value={currentEvent.id}
                     onChange={handleEventChange}
-                    className="appearance-none bg-indigo-50/70 hover:bg-indigo-100/70 border border-indigo-200 rounded-lg py-1 pl-2.5 pr-7 text-xs font-bold text-indigo-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 max-w-[200px] truncate"
+                    className="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg py-1 pl-2.5 pr-7 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 max-w-[180px] truncate"
                   >
-                    <optgroup label="Active Events">
-                      {events.filter(e => e.orgId === currentOrg.id).map(e => (
-                        <option key={e.id} value={e.id}>{e.title}</option>
-                      ))}
+                    <optgroup label="Active Campaigns">
+                      {events
+                        .filter((e) => e.orgId === currentOrg.id)
+                        .map((evt) => (
+                          <option key={evt.id} value={evt.id}>
+                            {evt.title}
+                          </option>
+                        ))}
                     </optgroup>
-                    <optgroup label="Actions">
-                      <option value="NEW_EVENT">+ Create New Event...</option>
-                    </optgroup>
+                    {(isSuperAdmin || isPlannerOrAdmin) && (
+                      <option value="NEW_EVENT" className="text-indigo-600 font-bold">
+                        + Create New Event...
+                      </option>
+                    )}
                   </select>
-                  <ChevronDown className="w-3 h-3 text-indigo-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
             </div>
@@ -141,7 +153,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>Share Link</span>
               </button>
 
-              {(activeRole === 'org_admin' || activeRole === 'event_planner') && (
+              {isPlannerOrAdmin && (
                 <button
                   onClick={openEventBuilder}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs shadow-sm transition flex items-center gap-1"
@@ -211,7 +223,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             {/* 3. PLANNER HUB */}
-            {(activeRole === 'org_admin' || activeRole === 'event_planner') && (
+            {isPlannerOrAdmin && (
               <button
                 onClick={() => setActiveTab('planner_dashboard')}
                 className={`relative px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
@@ -232,7 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             {/* 4. Committee Leads */}
-            {(activeRole === 'org_admin' || activeRole === 'event_planner' || activeRole === 'committee_lead') && (
+            {isLeadOrAdmin && (
               <button
                 onClick={() => setActiveTab('lead_portal')}
                 className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
@@ -246,8 +258,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* 5. Org CRM */}
-            {activeRole === 'org_admin' && (
+            {/* 5. Org Super Admin */}
+            {isSuperAdmin && (
               <button
                 onClick={() => setActiveTab('org_admin_view')}
                 className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
@@ -262,7 +274,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             {/* 6. Admin Observability, Accounts & Impersonation Hub */}
-            {activeRole === 'org_admin' && (
+            {isSuperAdmin && (
               <button
                 onClick={() => setActiveTab('admin_observability')}
                 className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
@@ -277,8 +289,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* 6. Vendor & Sponsor Hub (Only visible to Vendors or Admins/Planners) */}
-            {(activeRole === 'vendor' || activeRole === 'org_admin' || activeRole === 'event_planner') && (
+            {/* 7. Vendor & Sponsor Hub (Only visible to Vendors or Admins/Planners) */}
+            {(activeRole === 'vendor' || isPlannerOrAdmin) && (
               <button
                 onClick={() => setActiveTab('vendor_portal')}
                 className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
@@ -292,8 +304,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* 7. Door Check-In Kiosk (Only visible to Event Planners, Admins, or Kiosk Station) */}
-            {(activeRole === 'org_admin' || activeRole === 'event_planner' || activeRole === 'kiosk') && (
+            {/* 8. Door Check-In Kiosk (Only visible to Event Planners, Admins, or Kiosk Station) */}
+            {(isPlannerOrAdmin || activeRole === 'kiosk') && (
               <button
                 onClick={() => setActiveTab('kiosk_mode')}
                 className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${

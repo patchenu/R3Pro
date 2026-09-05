@@ -96,6 +96,21 @@ export const SEED_USERS: User[] = [
     createdAt: '2026-01-01T08:00:00'
   },
   {
+    id: 'user_patchen_alt',
+    name: 'Patchen Uchiyama',
+    email: 'patchen@yahoo.com',
+    phone: '(555) 234-8900',
+    role: 'org_admin',
+    orgId: 'org_lincoln_pta',
+    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+    accountStatus: 'active',
+    lastLoginAt: '2026-09-05T09:20:00',
+    lastIpAddress: '192.168.1.140',
+    loginCount: 156,
+    twoFactorEnabled: true,
+    createdAt: '2026-01-01T08:00:00'
+  },
+  {
     id: 'user_elena',
     name: 'Elena Rostova',
     email: 'elena@lincolnpta.org',

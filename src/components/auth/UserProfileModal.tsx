@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { Modal } from '../common/Modal';
 import { 
   User as UserIcon, Building2, Calendar, ShieldCheck, 
-  Receipt, QrCode, CheckCircle2, Clock, MapPin, LogOut, ArrowRight, Plus, Settings, Lock, KeyRound 
+  Receipt, QrCode, CheckCircle2, Clock, MapPin, LogOut, ArrowRight, Plus, Settings, Lock, KeyRound, Crown 
 } from 'lucide-react';
 import { formatCurrency, formatTimeRange, formatDate } from '../../utils/formatters';
 import { QrCodeModal } from '../common/QrCodeModal';
@@ -115,6 +115,19 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
+              {currentUser.role !== 'org_admin' && (
+                <button
+                  onClick={() => {
+                    switchRole('org_admin');
+                    onClose();
+                  }}
+                  className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3.5 rounded-xl text-xs shadow-sm transition"
+                >
+                  <Crown className="w-3.5 h-3.5 text-amber-300" />
+                  <span>👑 Elevate to Super Admin</span>
+                </button>
+              )}
+
               <button
                 onClick={() => {
                   onClose();
