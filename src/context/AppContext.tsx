@@ -4,7 +4,7 @@ import {
   Registration, Donation, VendorApplication, ApprovalRequest, 
   VolunteerCrmRecord, Announcement, AuditLog, UserRole, WaiverTemplate,
   PaidContractor, ProBonoPledge, VendorInquiry, VendorLead, VendorAddOn,
-  VendorAddOnOrder, CorporateSeasonPass, EventImpactMetrics 
+  VendorAddOnOrder, CorporateSeasonPass, EventImpactMetrics, VolunteerEventHistory
 } from '../types';
 import { 
   SEED_ORGANIZATIONS, SEED_USERS, SEED_EVENTS, SEED_SUBPARTS, 
@@ -179,6 +179,7 @@ interface AppContextType {
 
   // CRM Management & Tagging
   addVolunteer: (volunteer: Omit<VolunteerCrmRecord, 'id' | 'orgId' | 'lifetimeHours' | 'lifetimeDonations' | 'eventsParticipated' | 'attendanceRate' | 'lastActive'> & { lifetimeHours?: number; lifetimeDonations?: number }) => VolunteerCrmRecord;
+  addVolunteerServiceRecord: (volunteerId: string, serviceRecord: VolunteerEventHistory) => void;
   updateVolunteer: (volunteerId: string, updates: Partial<VolunteerCrmRecord>) => void;
   deleteVolunteer: (volunteerId: string) => void;
   addVolunteerTag: (volunteerId: string, tag: string) => void;
@@ -1021,14 +1022,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setData((prev: any) => {
       const updatedOrgs = prev.organizations.map((o: Organization) => {
         if (o.id === orgId) {
-          return { ...o, ...updates };
+          return {
+            ...o,
+            ...updates,
+            settings: updates.settings ? { ...(o.settings || {}), ...updates.settings } : o.settings
+          };
         }
         return o;
       });
       return { ...prev, organizations: updatedOrgs };
     });
 
-    showToast('success', 'Branding Saved', 'Organization logo, primary color, and signatory updated successfully.');
+    showToast('success', 'Organization Profile & Policies Saved', 'Organization branding, legal details, and variable threshold defaults updated successfully.');
   };
 
   const addSubPart = (subPartData: Omit<SubPart, 'id' | 'budgetSpent' | 'shiftIds' | 'itemSlotIds'>): SubPart => {
@@ -1956,6 +1961,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newVol;
   };
 
+  const addVolunteerServiceRecord = (volunteerId: string, serviceRecord: VolunteerEventHistory) => {
+    setData((prev: any) => ({
+      ...prev,
+      volunteerCrm: prev.volunteerCrm.map((v: VolunteerCrmRecord) => {
+        if (v.id === volunteerId) {
+          const updatedHistory = [serviceRecord, ...(v.eventHistory || [])];
+          const newLifetimeHours = (v.lifetimeHours || 0) + (Number(serviceRecord.hoursContributed) || 0);
+          const newLifetimeDonations = (v.lifetimeDonations || 0) + (Number(serviceRecord.amountDonated) || 0);
+          const newEventsCount = (v.eventsParticipated || 0) + 1;
+          return {
+            ...v,
+            lifetimeHours: newLifetimeHours,
+            lifetimeDonations: newLifetimeDonations,
+            eventsParticipated: newEventsCount,
+            lastActive: serviceRecord.eventDate || new Date().toISOString(),
+            eventHistory: updatedHistory
+          };
+        }
+        return v;
+      })
+    }));
+    showToast('success', 'Service Record Logged', `Logged ${serviceRecord.hoursContributed} service hours for ${serviceRecord.eventTitle}.`);
+  };
+
   const updateVolunteer = (volunteerId: string, updates: Partial<VolunteerCrmRecord>) => {
     setData((prev: any) => ({
       ...prev,
@@ -2123,6 +2152,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateTeamMember,
       removeTeamMember,
       addVolunteer,
+      addVolunteerServiceRecord,
       updateVolunteer,
       deleteVolunteer,
       addVolunteerTag,

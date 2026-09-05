@@ -558,3 +558,49 @@ This document provides system knowledge, core architectural rules, and coding st
      - Responsive HTML iframe embed snippet + high-resolution downloadable QR code in organization brand colors.
   5. **👥 Volunteer CRM Pool Re-Engagement Blast**:
      - 1-click targeted broadcast to past volunteer database.
+
+---
+
+## 32. Enterprise Governance, Pro-Bono Services, Broadcasts & Full-Spectrum Pass Parity
+
+### 32.1 Organization Legal Identity & Policy Defaults (`OrgExecutiveDashboard.tsx`, `AppContext.tsx`)
+- **Legal Entity & Tax Classification**:
+  - Full authoring and live synchronization of **Legal Organization Name**, **Tax EIN (Tax ID)**, **Organization Type** (`school_pta`, `non_profit`, `youth_sports`, `church_faith`, `corporate_giving`, `other`), and **Default Currency** (USD, CAD, EUR, GBP).
+- **Default Campaign Governance & Variable Approvals**:
+  - Org-wide default budget threshold limit ($) and shift spots limit for Lead auto-approval vs Planner queue escalation.
+  - Default reminder notification cadence configuration (*Standard 72h/24h/2h, Intensive 7d/72h/24h/2h, Same-Day Urgent, Custom*).
+- **Team Leadership Contact Attributes**:
+  - Author and edit Full Legal Name, Direct Email, Mobile Phone, System Role, and Department Lead assignments with real-time state persistence.
+
+### 32.2 Pro-Bono In-Kind Professional Service Ledger (`MasterPlannerDashboard.tsx`, `LeadPortal.tsx`)
+- **Professional Services Tracking**:
+  - Dedicated ledger for pro-bono commercial services (*Graphic Design, Audio/Visual Engineering, Legal Counsel, Electrical Setup, Photography, Security*).
+  - Captures Donor / Company Name, Service Description, Estimated Fair Market Value (FMV), and Assigned Committee Department.
+- **1-Click Delivery Verification**:
+  - Planners and Department Leads can toggle status between `Pledged / Scheduled` and `✓ Verified Delivered`, automatically calculating in-kind financial contributions for annual 990/CPA reports.
+
+### 32.3 Master Broadcast Announcements Hub (`MasterPlannerDashboard.tsx`)
+- **Multi-Channel Dispatch Engine**:
+  - Real-time broadcast creation with multi-channel selection (*Email Blast*, *SMS Text*, *Mobile Push*, *Gate Kiosk Notice*).
+  - Urgency categorization (*Normal Update*, *Urgent Attention*, *Critical Alert*).
+  - Target audience scoping (*All Attendees & Volunteers*, *Lead Chairs & Staff Only*, *Active Shift Volunteers*).
+- **Immutable Notification Ledger**:
+  - Dispatched broadcasts are rendered in a chronological announcement ledger with status badges, audience tags, and 1-click removal.
+
+### 32.4 Volunteer CRM Historical Service Logging (`VolunteerCrm.tsx`, `AppContext.tsx`)
+- **Manual Historical Service Entry Modal**:
+  - Coordinators can record past event service for volunteers outside active online campaigns:
+    - Event / Campaign Title and Historical Event Date.
+    - Contributed Service Hours, Roles / Shifts Served, Supplies Donated, and Direct Donations ($).
+    - Event Campaign Outcome ($ raised for cause) and Authorized Verifying Coordinator Name.
+  - Automatically updates the volunteer's lifetime statistics (`lifetimeHours`, `lifetimeDonations`, `eventsParticipated`, `lastActive`) and appends an immutable `VolunteerEventHistory` entry.
+
+### 32.5 Complete Self-Service Pass & Confirmation Card 4-in-1 Parity (`ManageRegistration.tsx`, `ConfirmationCard.tsx`)
+- **Full-Spectrum Registration Management**:
+  1. **Scheduled Volunteer Shifts**: Displays shift title, start/end timeframe, assigned household member, committee department, reporting gate, lead on duty contact, dress code notes, and real-time check-in status.
+  2. **Pledged Wishlist Supplies & Equipment**: Displays item name, promised quantity, drop-off location/gate, deadline, calculated FMV per unit, and received delivery status.
+  3. **Admission & Commercial Tickets / Sponsor Packages**: Displays package title, quantity, total price, and assigned booth footprint number.
+  4. **Direct Donations & Tax Receipts**: Displays monetary donation amount, 501(c)(3) tax receipt number, and tax deduction eligibility.
+- **Calendar & Mobile Check-In Integration**:
+  - 1-click `.ics` Apple iCal / Outlook file download and 1-click Google Calendar integration pre-populated with reporting gate and Lead contact info.
+  - Express Day-of-Event QR check-in pass and optional 1-tap password setting to claim account and link household family dependents.

@@ -6,7 +6,7 @@ import {
   Plus, Settings, CheckCircle2, ArrowRight, Layers, Store, HeartHandshake,
   Printer, FileSpreadsheet, Search, Filter, ShieldCheck, Award, Share2, AlertTriangle, FileText, Package,
   Edit3, Trash2, Tag, Calendar, MapPin, Radio, AlertCircle, Check, X, Zap, Clock,
-  Shirt, ArrowUp, ArrowDown, ArrowUpDown, Briefcase, Building2, FileCheck, CheckSquare
+  Shirt, ArrowUp, ArrowDown, ArrowUpDown, Briefcase, Building2, FileCheck, CheckSquare, Send
 } from 'lucide-react';
 import { formatCurrency, formatPercentage, formatTimeRange } from '../../utils/formatters';
 import { exportRosterToCsv } from '../../utils/exportCsv';
@@ -32,7 +32,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   onOpenReports
 }) => {
   const { 
-    currentEvent, currentOrg, subParts, shifts, itemSlots, ticketTiers,
+    currentEvent, currentOrg, currentUser, subParts, shifts, itemSlots, ticketTiers,
     registrations, donations, approvalRequests, announcements, updateEvent, toggleCheckIn,
     contractors, proBonoPledges,
     addSubPart, updateSubPart, deleteSubPart, 
@@ -40,6 +40,8 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
     addItemSlot, updateItemSlot, deleteItemSlot,
     createTicketTier, updateTicketTier, deleteTicketTier, reorderTicketTiers,
     addContractor, updateContractor, deleteContractor,
+    pledgeProBonoService, updateProBonoPledge, deleteProBonoPledge,
+    postAnnouncement, deleteAnnouncement,
     showToast
   } = useApp();
 
@@ -119,6 +121,27 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   const [contractorStatus, setContractorStatus] = useState<ContractorPaymentStatus>('contract_signed');
   const [contractorInvoiceNum, setContractorInvoiceNum] = useState('');
   const [contractorNotes, setContractorNotes] = useState('');
+
+  // Pro-Bono In-Kind Professional Service Modal State
+  const [isAddProBonoModalOpen, setIsAddProBonoModalOpen] = useState(false);
+  const [editingProBono, setEditingProBono] = useState<ProBonoPledge | null>(null);
+  const [pbBusinessName, setPbBusinessName] = useState('');
+  const [pbContactName, setPbContactName] = useState('');
+  const [pbEmail, setPbEmail] = useState('');
+  const [pbPhone, setPbPhone] = useState('');
+  const [pbServiceCategory, setPbServiceCategory] = useState('Graphic Design & Printing');
+  const [pbDescription, setPbDescription] = useState('');
+  const [pbEstimatedFmv, setPbEstimatedFmv] = useState<number>(350);
+  const [pbSubPartId, setPbSubPartId] = useState<string>('');
+  const [pbStatus, setPbStatus] = useState<'pledged' | 'verified_delivered'>('pledged');
+
+  // Broadcast Announcements Modal State
+  const [isAnnouncementsModalOpen, setIsAnnouncementsModalOpen] = useState(false);
+  const [annTitle, setAnnTitle] = useState('');
+  const [annMessage, setAnnMessage] = useState('');
+  const [annUrgency, setAnnUrgency] = useState<'normal' | 'important' | 'urgent_emergency'>('important');
+  const [annSubPartId, setAnnSubPartId] = useState<string>('');
+  const [annChannel, setAnnChannel] = useState<'in_app' | 'sms_simulated' | 'email_simulated' | 'all'>('all');
 
   // Volunteer Management Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -580,6 +603,104 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
     }
   };
 
+  const handleOpenAddProBono = (subPartId?: string) => {
+    setEditingProBono(null);
+    setPbBusinessName('');
+    setPbContactName('');
+    setPbEmail('');
+    setPbPhone('');
+    setPbServiceCategory('Graphic Design & Printing');
+    setPbDescription('');
+    setPbEstimatedFmv(350);
+    setPbSubPartId(subPartId || subParts[0]?.id || '');
+    setPbStatus('pledged');
+    setIsAddProBonoModalOpen(true);
+  };
+
+  const handleOpenEditProBono = (pb: ProBonoPledge) => {
+    setEditingProBono(pb);
+    setPbBusinessName(pb.businessName);
+    setPbContactName(pb.contactName);
+    setPbEmail(pb.email);
+    setPbPhone(pb.phone);
+    setPbServiceCategory(pb.serviceCategory);
+    setPbDescription(pb.serviceDescription);
+    setPbEstimatedFmv(pb.estimatedFmv);
+    setPbSubPartId(pb.subPartId || subParts[0]?.id || '');
+    setPbStatus(pb.status);
+    setIsAddProBonoModalOpen(true);
+  };
+
+  const handleSaveProBono = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pbBusinessName.trim() || !pbContactName.trim() || pbEstimatedFmv <= 0) {
+      showToast('error', 'Missing Information', 'Please provide business name, contact, and fair market value (FMV).');
+      return;
+    }
+
+    if (editingProBono) {
+      updateProBonoPledge(editingProBono.id, {
+        businessName: pbBusinessName.trim(),
+        contactName: pbContactName.trim(),
+        email: pbEmail.trim(),
+        phone: pbPhone.trim(),
+        serviceCategory: pbServiceCategory,
+        serviceDescription: pbDescription.trim(),
+        estimatedFmv: Number(pbEstimatedFmv),
+        subPartId: pbSubPartId || undefined,
+        status: pbStatus
+      });
+    } else {
+      pledgeProBonoService({
+        eventId: currentEvent.id,
+        subPartId: pbSubPartId || undefined,
+        businessName: pbBusinessName.trim(),
+        contactName: pbContactName.trim(),
+        email: pbEmail.trim(),
+        phone: pbPhone.trim(),
+        serviceCategory: pbServiceCategory,
+        serviceDescription: pbDescription.trim(),
+        estimatedFmv: Number(pbEstimatedFmv)
+      });
+    }
+
+    setIsAddProBonoModalOpen(false);
+  };
+
+  const handleDeleteProBono = (pledgeId: string) => {
+    if (confirm('Are you sure you want to remove this pro-bono service pledge?')) {
+      deleteProBonoPledge(pledgeId);
+      setIsAddProBonoModalOpen(false);
+    }
+  };
+
+  const handleToggleProBonoStatus = (pb: ProBonoPledge) => {
+    const nextStatus = pb.status === 'verified_delivered' ? 'pledged' : 'verified_delivered';
+    updateProBonoPledge(pb.id, { status: nextStatus });
+    showToast('success', 'Service Status Updated', `Marked ${pb.businessName} service as ${nextStatus === 'verified_delivered' ? 'Verified Delivered' : 'Pledged'}.`);
+  };
+
+  const handleSendAnnouncement = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!annTitle.trim() || !annMessage.trim()) return;
+
+    postAnnouncement({
+      eventId: currentEvent.id,
+      subPartId: annSubPartId || undefined,
+      subPartName: annSubPartId ? subParts.find(sp => sp.id === annSubPartId)?.name : undefined,
+      senderName: currentUser.name || 'Event Planner',
+      senderRole: 'Event Planner',
+      title: annTitle.trim(),
+      message: annMessage.trim(),
+      urgency: annUrgency,
+      channel: annChannel
+    });
+
+    setAnnTitle('');
+    setAnnMessage('');
+    showToast('success', 'Announcement Broadcasted', `Live update dispatched across ${annChannel.replace('_', ' ')}.`);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
@@ -620,6 +741,14 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setIsAnnouncementsModalOpen(true)}
+              className="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold py-2 px-3.5 rounded-xl text-xs transition cursor-pointer"
+            >
+              <Radio className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+              <span>Announcements ({announcements.filter(a => a.eventId === currentEvent.id).length})</span>
+            </button>
+
             <button
               onClick={() => {
                 setActivePlannerTab('reports');
@@ -1087,30 +1216,126 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
                   </div>
                 )}
 
-                {/* Pro-Bono In-Kind Services Overview */}
-                {eventProBono.length > 0 && (
-                  <div className="pt-4 border-t border-slate-200">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5 mb-2.5">
-                      <HeartHandshake className="w-4 h-4 text-emerald-600" />
-                      <span>Pro-Bono In-Kind Professional Service Donations ({eventProBono.length})</span>
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {eventProBono.map(pb => (
-                        <div key={pb.id} className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 flex justify-between items-center text-xs">
-                          <div>
-                            <span className="font-extrabold text-slate-900 block">{pb.businessName}</span>
-                            <span className="text-[11px] text-slate-600">{pb.serviceDescription}</span>
-                            <span className="text-[10px] font-mono text-emerald-800 block mt-0.5">{pb.inKindReceiptNumber}</span>
-                          </div>
-                          <div className="text-right shrink-0 pl-3">
-                            <span className="text-sm font-black text-emerald-700 block">{formatCurrency(pb.estimatedFmv)}</span>
-                            <span className="text-[10px] font-bold text-emerald-800">501(c)(3) FMV</span>
-                          </div>
-                        </div>
-                      ))}
+                {/* Pro-Bono In-Kind Services Management */}
+                <div className="pt-4 border-t border-slate-200 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                        <HeartHandshake className="w-4 h-4 text-emerald-600" />
+                        <span>Pro-Bono In-Kind Professional Service Donations ({eventProBono.length})</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-500">
+                        Donated professional services (graphic design, accounting, photography) with 501(c)(3) tax FMV receipts.
+                      </p>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleOpenAddProBono()}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 self-start sm:self-auto"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Log Pro-Bono Donation</span>
+                    </button>
                   </div>
-                )}
+
+                  {eventProBono.length === 0 ? (
+                    <div className="p-6 text-center bg-emerald-50/40 rounded-2xl border border-dashed border-emerald-200 space-y-2">
+                      <HeartHandshake className="w-6 h-6 text-emerald-400 mx-auto" />
+                      <div className="text-xs font-bold text-slate-700">No Pro-Bono Services Logged</div>
+                      <p className="text-[11px] text-slate-500">
+                        Record professional services donated by community partners to issue official tax acknowledgement letters.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenAddProBono()}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition inline-flex items-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Pro-Bono Pledge</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {eventProBono.map(pb => {
+                        const dept = subParts.find(sp => sp.id === pb.subPartId);
+                        const isDelivered = pb.status === 'verified_delivered';
+
+                        return (
+                          <div key={pb.id} className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200 text-xs space-y-2 flex flex-col justify-between hover:border-emerald-300 transition">
+                            <div>
+                              <div className="flex justify-between items-start gap-2">
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
+                                  {pb.serviceCategory}
+                                </span>
+
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditProBono(pb)}
+                                    className="p-1 text-slate-400 hover:text-emerald-700 transition"
+                                    title="Edit Pro-Bono Details"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteProBono(pb.id)}
+                                    className="p-1 text-slate-400 hover:text-rose-600 transition"
+                                    title="Remove Pledge"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              <h4 className="font-extrabold text-sm text-slate-900 mt-1.5">{pb.businessName}</h4>
+                              <p className="text-[11px] text-slate-600 mt-0.5">{pb.serviceDescription}</p>
+                              
+                              <div className="text-slate-600 mt-1 text-[11px]">
+                                Contact: <strong>{pb.contactName}</strong> • {pb.phone || pb.email}
+                              </div>
+
+                              {dept && (
+                                <div className="text-[10px] text-indigo-700 font-semibold mt-1">
+                                  Committee: {dept.name}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="mt-3 pt-2.5 border-t border-emerald-200/80 flex items-center justify-between">
+                              <div>
+                                <span className="text-base font-black text-emerald-800 block">{formatCurrency(pb.estimatedFmv)}</span>
+                                <span className="text-[9px] font-mono text-slate-500">{pb.inKindReceiptNumber}</span>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => handleToggleProBonoStatus(pb)}
+                                className={`px-2.5 py-1 rounded-lg font-bold text-[10px] transition flex items-center gap-1 ${
+                                  isDelivered ? 'bg-emerald-600 text-white shadow-xs' : 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300'
+                                }`}
+                                title="Click to toggle delivery status"
+                              >
+                                {isDelivered ? (
+                                  <>
+                                    <Check className="w-3 h-3" />
+                                    <span>Verified Delivered</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Clock className="w-3 h-3" />
+                                    <span>Pledged (Pending Delivery)</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
 
               </div>
             );
@@ -2370,6 +2595,333 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
               </div>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* MODAL: ADD / EDIT PRO-BONO SERVICE PLEDGE */}
+      {isAddProBonoModalOpen && (
+        <Modal
+          isOpen={isAddProBonoModalOpen}
+          onClose={() => setIsAddProBonoModalOpen(false)}
+          title={editingProBono ? `Edit Pro-Bono Service: ${editingProBono.businessName}` : 'Log Pro-Bono In-Kind Professional Service'}
+          subtitle="Document donated professional services with IRS 501(c)(3) tax FMV acknowledgement receipts"
+          maxWidth="lg"
+        >
+          <form onSubmit={handleSaveProBono} className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Business / Firm Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={pbBusinessName}
+                  onChange={(e) => setPbBusinessName(e.target.value)}
+                  placeholder="e.g. Acme Design Studio"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Contact Person Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={pbContactName}
+                  onChange={(e) => setPbContactName(e.target.value)}
+                  placeholder="e.g. Marcus Vance"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Contact Email *</label>
+                <input
+                  type="email"
+                  required
+                  value={pbEmail}
+                  onChange={(e) => setPbEmail(e.target.value)}
+                  placeholder="marcus@acmedesign.com"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Contact Phone</label>
+                <input
+                  type="text"
+                  value={pbPhone}
+                  onChange={(e) => setPbPhone(e.target.value)}
+                  placeholder="(555) 345-6789"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Service Category</label>
+                <select
+                  value={pbServiceCategory}
+                  onChange={(e) => setPbServiceCategory(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                >
+                  <option value="Graphic Design & Printing">🎨 Graphic Design, Signage & Printing</option>
+                  <option value="Legal & Accounting">⚖️ Legal, CPA & Accounting</option>
+                  <option value="Photography & Videography">📷 Photography & Videography</option>
+                  <option value="Marketing & PR">📣 Marketing, PR & Social Media</option>
+                  <option value="Audio / Visual & DJ">🎵 Audio / Visual & Sound Engineering</option>
+                  <option value="Catering & Hospitality">☕ Catering & Food Prep</option>
+                  <option value="Other Pro-Bono Service">💼 Other Professional Service</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Fair Market Value (FMV $) *</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={pbEstimatedFmv}
+                    onChange={(e) => setPbEstimatedFmv(Number(e.target.value) || 0)}
+                    className="w-full pl-7 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-black text-emerald-800"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Assigned Department Committee</label>
+                <select
+                  value={pbSubPartId}
+                  onChange={(e) => setPbSubPartId(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                >
+                  <option value="">General Event Scope</option>
+                  {subParts.map(sp => (
+                    <option key={sp.id} value={sp.id}>{sp.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Delivery Fulfillment Status</label>
+                <select
+                  value={pbStatus}
+                  onChange={(e) => setPbStatus(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                >
+                  <option value="pledged">Pledged (Pending Delivery)</option>
+                  <option value="verified_delivered">Verified Delivered</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">Service Scope & Deliverables Description *</label>
+                <textarea
+                  rows={2}
+                  required
+                  value={pbDescription}
+                  onChange={(e) => setPbDescription(e.target.value)}
+                  placeholder="e.g. Donated 40 hours of graphic design work for event banners, flyers, and digital programs..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
+              {editingProBono ? (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteProBono(editingProBono.id)}
+                  className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Pledge</span>
+                </button>
+              ) : <div />}
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddProBonoModalOpen(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+                >
+                  <HeartHandshake className="w-3.5 h-3.5" />
+                  <span>{editingProBono ? 'Save Pro-Bono Changes' : 'Record In-Kind Donation'}</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* MODAL: BROADCAST ANNOUNCEMENTS & LIVE COMMUNICATIONS */}
+      {isAnnouncementsModalOpen && (
+        <Modal
+          isOpen={isAnnouncementsModalOpen}
+          onClose={() => setIsAnnouncementsModalOpen(false)}
+          title="Event Broadcast & Live Announcements Hub"
+          subtitle={`Dispatch event-wide alerts, gate updates, or urgent notices to volunteers and attendees for ${currentEvent.title}`}
+          maxWidth="2xl"
+        >
+          <div className="space-y-6 text-xs">
+            {/* New Broadcast Form */}
+            <form onSubmit={handleSendAnnouncement} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                <Radio className="w-4 h-4 text-amber-600" />
+                <span>Send New Live Announcement</span>
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block font-bold text-slate-700 mb-1">Announcement Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={annTitle}
+                    onChange={(e) => setAnnTitle(e.target.value)}
+                    placeholder="e.g. Gate 2 Load-In Delay or Cake Walk Volunteer Shift Update"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Urgency Level</label>
+                  <select
+                    value={annUrgency}
+                    onChange={(e) => setAnnUrgency(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold"
+                  >
+                    <option value="normal">Normal (Routine Update)</option>
+                    <option value="important">Important (Notice)</option>
+                    <option value="urgent_emergency">🚨 Urgent / Emergency</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Audience Scope</label>
+                  <select
+                    value={annSubPartId}
+                    onChange={(e) => setAnnSubPartId(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold"
+                  >
+                    <option value="">All Event Volunteers & Guests</option>
+                    {subParts.map(sp => (
+                      <option key={sp.id} value={sp.id}>{sp.name} Team Only</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block font-bold text-slate-700 mb-1">Dispatch Channels</label>
+                  <select
+                    value={annChannel}
+                    onChange={(e) => setAnnChannel(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold"
+                  >
+                    <option value="all">In-App Banner + SMS + Email Notification</option>
+                    <option value="in_app">In-App Live Banner Only</option>
+                    <option value="sms_simulated">SMS Text Broadcast Only</option>
+                    <option value="email_simulated">Email Broadcast Only</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-3">
+                  <label className="block font-bold text-slate-700 mb-1">Broadcast Message Body *</label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={annMessage}
+                    onChange={(e) => setAnnMessage(e.target.value)}
+                    placeholder="Enter urgent instructions, gate reassignments, weather notices, or schedule adjustments..."
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-xs transition flex items-center gap-1.5"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Broadcast Announcement Now</span>
+                </button>
+              </div>
+            </form>
+
+            {/* Active Announcements Ledger */}
+            <div className="space-y-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
+                Active Announcements Ledger ({announcements.filter(a => a.eventId === currentEvent.id).length})
+              </span>
+
+              {announcements.filter(a => a.eventId === currentEvent.id).length === 0 ? (
+                <div className="p-6 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                  <p className="text-slate-500 text-xs">No active announcements posted for this event yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  {announcements
+                    .filter(a => a.eventId === currentEvent.id)
+                    .map(a => (
+                      <div
+                        key={a.id}
+                        className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                          a.urgency === 'urgent_emergency' ? 'bg-rose-50/70 border-rose-200' :
+                          a.urgency === 'important' ? 'bg-amber-50/70 border-amber-200' :
+                          'bg-slate-50 border-slate-200'
+                        }`}
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider ${
+                              a.urgency === 'urgent_emergency' ? 'bg-rose-600 text-white' :
+                              a.urgency === 'important' ? 'bg-amber-600 text-white' :
+                              'bg-slate-200 text-slate-800'
+                            }`}>
+                              {a.urgency.replace('_', ' ')}
+                            </span>
+                            <h5 className="font-bold text-slate-900 text-xs">{a.title}</h5>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {new Date(a.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <p className="text-slate-700 text-xs">{a.message}</p>
+                          <div className="text-[10px] text-slate-500">
+                            Sent by <strong>{a.senderName}</strong> • Audience: {a.subPartName || 'All Event'} • Channel: {a.channel.replace('_', ' ')}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => deleteAnnouncement(a.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition shrink-0"
+                          title="Delete Announcement"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsAnnouncementsModalOpen(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
+              >
+                Close Announcements Hub
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
 

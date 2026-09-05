@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ORG_TEMPLATES } from '../../data/templates';
-import { Event, User } from '../../types';
+import { Event, User, OrganizationType } from '../../types';
 import { VolunteerCrm } from './VolunteerCrm';
 import { LegalComplianceStudio } from './LegalComplianceStudio';
 import { Modal } from '../common/Modal';
@@ -76,6 +76,9 @@ export const OrgExecutiveDashboard: React.FC = () => {
 
   // Edit Team Member State
   const [editingTeamMember, setEditingTeamMember] = useState<User | null>(null);
+  const [editMemberName, setEditMemberName] = useState('');
+  const [editMemberEmail, setEditMemberEmail] = useState('');
+  const [editMemberPhone, setEditMemberPhone] = useState('');
   const [editMemberRole, setEditMemberRole] = useState<'committee_lead' | 'event_planner' | 'org_admin'>('committee_lead');
   const [editMemberSubPartId, setEditMemberSubPartId] = useState<string>('');
 
@@ -90,7 +93,15 @@ export const OrgExecutiveDashboard: React.FC = () => {
   const [inviteRole, setInviteRole] = useState<'committee_lead' | 'event_planner' | 'org_admin'>('committee_lead');
   const [inviteDept, setInviteDept] = useState('Hospitality & Food Services');
 
-  // Branding Form State
+  // Organization Legal Governance & Branding Form State
+  const [orgName, setOrgName] = useState(currentOrg.name || '');
+  const [orgEin, setOrgEin] = useState(currentOrg.ein || '');
+  const [orgType, setOrgType] = useState<OrganizationType>(currentOrg.type || 'school_pta');
+  const [orgCurrency, setOrgCurrency] = useState(currentOrg.settings?.defaultCurrency || 'USD');
+  const [orgApprovalThresholdBudget, setOrgApprovalThresholdBudget] = useState(currentOrg.settings?.approvalThresholdBudget ?? 250);
+  const [orgApprovalThresholdSlots, setOrgApprovalThresholdSlots] = useState(currentOrg.settings?.approvalThresholdSlots ?? 5);
+  const [orgReminderCadence, setOrgReminderCadence] = useState<'standard' | 'intensive' | 'same_day' | 'custom'>(currentOrg.settings?.defaultReminderCadence || 'standard');
+
   const [logoUrl, setLogoUrl] = useState(currentOrg.logoUrl || '');
   const [primaryColor, setPrimaryColor] = useState(currentOrg.primaryColor || '#4f46e5');
   const [signatoryName, setSignatoryName] = useState(currentOrg.signatoryOfficerName || 'Elena Rostova');
@@ -100,6 +111,25 @@ export const OrgExecutiveDashboard: React.FC = () => {
   const [orgPhone, setOrgPhone] = useState(currentOrg.phone || '');
   const [orgEmail, setOrgEmail] = useState(currentOrg.contactEmail || '');
   const [orgWebsite, setOrgWebsite] = useState(currentOrg.website || 'https://lincolnpta.org');
+
+  useEffect(() => {
+    setOrgName(currentOrg.name || '');
+    setOrgEin(currentOrg.ein || '');
+    setOrgType(currentOrg.type || 'school_pta');
+    setOrgCurrency(currentOrg.settings?.defaultCurrency || 'USD');
+    setOrgApprovalThresholdBudget(currentOrg.settings?.approvalThresholdBudget ?? 250);
+    setOrgApprovalThresholdSlots(currentOrg.settings?.approvalThresholdSlots ?? 5);
+    setOrgReminderCadence(currentOrg.settings?.defaultReminderCadence || 'standard');
+    setLogoUrl(currentOrg.logoUrl || '');
+    setPrimaryColor(currentOrg.primaryColor || '#4f46e5');
+    setSignatoryName(currentOrg.signatoryOfficerName || 'Elena Rostova');
+    setSignatoryTitle(currentOrg.signatoryOfficerTitle || 'President & Authorized Signatory');
+    setSignatorySigUrl(currentOrg.signatorySignatureUrl || 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=160&auto=format&fit=crop&q=80');
+    setOrgAddress(currentOrg.address || '');
+    setOrgPhone(currentOrg.phone || '');
+    setOrgEmail(currentOrg.contactEmail || '');
+    setOrgWebsite(currentOrg.website || 'https://lincolnpta.org');
+  }, [currentOrg]);
 
   // Helper: Compute Quarter Groups
   const quarterGroups = React.useMemo(() => {
@@ -229,6 +259,9 @@ export const OrgExecutiveDashboard: React.FC = () => {
 
   const handleOpenEditTeamMember = (user: User) => {
     setEditingTeamMember(user);
+    setEditMemberName(user.name);
+    setEditMemberEmail(user.email);
+    setEditMemberPhone(user.phone || '');
     setEditMemberRole(user.role as any);
     setEditMemberSubPartId(user.assignedSubPartIds?.[0] || '');
   };
@@ -238,6 +271,9 @@ export const OrgExecutiveDashboard: React.FC = () => {
     if (!editingTeamMember) return;
 
     updateTeamMember(editingTeamMember.id, {
+      name: editMemberName.trim() || editingTeamMember.name,
+      email: editMemberEmail.trim() || editingTeamMember.email,
+      phone: editMemberPhone.trim() || undefined,
       role: editMemberRole,
       assignedSubPartIds: editMemberRole === 'committee_lead' && editMemberSubPartId ? [editMemberSubPartId] : []
     });
@@ -259,6 +295,9 @@ export const OrgExecutiveDashboard: React.FC = () => {
   const handleSaveBranding = (e: React.FormEvent) => {
     e.preventDefault();
     updateOrganizationBranding(currentOrg.id, {
+      name: orgName.trim() || currentOrg.name,
+      ein: orgEin.trim() || currentOrg.ein,
+      type: orgType,
       logoUrl,
       primaryColor,
       signatoryOfficerName: signatoryName,
@@ -267,7 +306,13 @@ export const OrgExecutiveDashboard: React.FC = () => {
       address: orgAddress,
       phone: orgPhone,
       contactEmail: orgEmail,
-      website: orgWebsite
+      website: orgWebsite,
+      settings: {
+        defaultCurrency: orgCurrency,
+        approvalThresholdBudget: Number(orgApprovalThresholdBudget) || 250,
+        approvalThresholdSlots: Number(orgApprovalThresholdSlots) || 5,
+        defaultReminderCadence: orgReminderCadence
+      }
     });
   };
 
@@ -1072,17 +1117,135 @@ export const OrgExecutiveDashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Left: Branding Form */}
-          <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
             <div>
-              <h3 className="text-xl font-bold text-slate-900">Organization Branding & Document Assets</h3>
+              <h3 className="text-xl font-bold text-slate-900">Organization Profile, Governance & Document Branding</h3>
               <p className="text-xs text-slate-500 mt-1">
-                Upload your official organization logo, select brand colors, and configure authorized executive signatories for automated IRS tax acknowledgement letters, student service certificates, and volunteer lanyards.
+                Manage your legal entity registration, EIN tax status, organization-wide variable approval thresholds, brand logo assets, and authorized signatories for automated IRS tax receipts and volunteer verification.
               </p>
             </div>
 
             <form onSubmit={handleSaveBranding} className="space-y-6">
               
-              {/* 1. Logo Upload & Presets */}
+              {/* 1. Legal Entity & Tax Classification */}
+              <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Building2 className="w-4 h-4 text-purple-600" />
+                  <span>Legal Organization Entity & Tax Status</span>
+                </span>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <span className="text-xs text-slate-600 font-medium block mb-1">Legal Organization Name *</span>
+                    <input
+                      type="text"
+                      required
+                      value={orgName}
+                      onChange={(e) => setOrgName(e.target.value)}
+                      placeholder="e.g. Lincoln High School PTA"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="text-xs text-slate-600 font-medium block mb-1">EIN (Tax ID Number) *</span>
+                    <input
+                      type="text"
+                      required
+                      value={orgEin}
+                      onChange={(e) => setOrgEin(e.target.value)}
+                      placeholder="e.g. 94-2849102"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono font-semibold"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <span className="text-xs text-slate-600 font-medium block mb-1">Organization Type</span>
+                    <select
+                      value={orgType}
+                      onChange={(e) => setOrgType(e.target.value as OrganizationType)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold"
+                    >
+                      <option value="school_pta">School PTA / Booster Club</option>
+                      <option value="non_profit">501(c)(3) Non-Profit Charity</option>
+                      <option value="youth_sports">Youth Sports League</option>
+                      <option value="church_faith">Faith Community / Church</option>
+                      <option value="corporate_giving">Corporate Giving / Foundation</option>
+                      <option value="other">Other Community Entity</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <span className="text-xs text-slate-600 font-medium block mb-1">Default Currency</span>
+                    <select
+                      value={orgCurrency}
+                      onChange={(e) => setOrgCurrency(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold"
+                    >
+                      <option value="USD">USD ($)</option>
+                      <option value="CAD">CAD ($)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="GBP">GBP (£)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Organization-Wide Variable Approval & Automation Policies */}
+              <div className="space-y-3 p-4 bg-purple-50/50 rounded-2xl border border-purple-100">
+                <span className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-purple-600" />
+                  <span>Default Campaign Governance & Variable Approval Thresholds</span>
+                </span>
+                <p className="text-[11px] text-slate-600">
+                  Lead budget or shift additions within limits are auto-approved; requests exceeding limits require Planner approval.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  <div>
+                    <span className="text-xs text-slate-700 font-semibold block mb-1">Budget Auto-Approval Limit</span>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={orgApprovalThresholdBudget}
+                        onChange={(e) => setOrgApprovalThresholdBudget(Number(e.target.value) || 0)}
+                        className="w-full pl-7 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-xs text-slate-700 font-semibold block mb-1">Shift Slots Auto-Approval Limit</span>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={orgApprovalThresholdSlots}
+                        onChange={(e) => setOrgApprovalThresholdSlots(Number(e.target.value) || 0)}
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-xs text-slate-700 font-semibold block mb-1">Default Reminder Cadence</span>
+                    <select
+                      value={orgReminderCadence}
+                      onChange={(e) => setOrgReminderCadence(e.target.value as any)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold"
+                    >
+                      <option value="standard">Standard (72h, 24h, 2h)</option>
+                      <option value="intensive">Intensive (7d, 72h, 24h, 2h)</option>
+                      <option value="same_day">Same-Day Only (4h, 1h)</option>
+                      <option value="custom">Custom Configuration</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Logo Upload & Presets */}
               <div className="space-y-3">
                 <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
                   Organization Logo (Appears on Tax Receipts, Badges & Flyers)
@@ -1275,7 +1438,7 @@ export const OrgExecutiveDashboard: React.FC = () => {
                   className="bg-purple-600 hover:bg-purple-700 text-white font-extrabold py-3 px-6 rounded-2xl text-xs shadow-md transition flex items-center gap-2"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Save Branding & Signatory Settings</span>
+                  <span>Save Organization Profile & Governance Settings</span>
                 </button>
               </div>
 
@@ -2172,26 +2335,63 @@ export const OrgExecutiveDashboard: React.FC = () => {
         </Modal>
       )}
 
-      {/* MODAL: EDIT TEAM MEMBER ROLE & DEPARTMENT */}
+      {/* MODAL: EDIT TEAM MEMBER PROFILE & ROLE */}
       {editingTeamMember && (
         <Modal
           isOpen={Boolean(editingTeamMember)}
           onClose={() => setEditingTeamMember(null)}
-          title={`Edit Role: ${editingTeamMember.name}`}
-          subtitle={`Update leadership permissions and committee assignments for ${currentOrg.name}`}
+          title={`Edit Team Member: ${editingTeamMember.name}`}
+          subtitle={`Update contact info, leadership permissions, and committee assignments for ${currentOrg.name}`}
         >
           <form onSubmit={handleSaveEditTeamMember} className="space-y-4 text-xs">
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">Role Level</label>
-              <select
-                value={editMemberRole}
-                onChange={(e) => setEditMemberRole(e.target.value as any)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
-              >
-                <option value="committee_lead">Committee Lead (Scoped Department)</option>
-                <option value="event_planner">Event Planner (Master Event Logistics & Approvals)</option>
-                <option value="org_admin">Organization Super Admin (Full Governance & CRM)</option>
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Full Legal Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editMemberName}
+                  onChange={(e) => setEditMemberName(e.target.value)}
+                  placeholder="e.g. Rachel Green"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Email Address *</label>
+                <input
+                  type="email"
+                  required
+                  value={editMemberEmail}
+                  onChange={(e) => setEditMemberEmail(e.target.value)}
+                  placeholder="rachel@example.com"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Phone Number</label>
+                <input
+                  type="text"
+                  value={editMemberPhone}
+                  onChange={(e) => setEditMemberPhone(e.target.value)}
+                  placeholder="(555) 000-0000"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Role Level</label>
+                <select
+                  value={editMemberRole}
+                  onChange={(e) => setEditMemberRole(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                >
+                  <option value="committee_lead">Committee Lead (Scoped Department)</option>
+                  <option value="event_planner">Event Planner (Master Event Logistics & Approvals)</option>
+                  <option value="org_admin">Organization Super Admin (Full Governance & CRM)</option>
+                </select>
+              </div>
             </div>
 
             {editMemberRole === 'committee_lead' && (
@@ -2222,7 +2422,7 @@ export const OrgExecutiveDashboard: React.FC = () => {
                 type="submit"
                 className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-md"
               >
-                Update Permissions
+                Save Member Details
               </button>
             </div>
           </form>

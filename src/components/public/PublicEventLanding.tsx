@@ -103,6 +103,8 @@ export const PublicEventLanding: React.FC = () => {
             event={currentEvent}
             subParts={subParts}
             shifts={shifts}
+            itemSlots={itemSlots}
+            ticketTiers={ticketTiers}
             onClose={() => setConfirmedReg(null)}
           />
         </div>

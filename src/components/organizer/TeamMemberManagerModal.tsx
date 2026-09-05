@@ -20,6 +20,9 @@ export const TeamMemberManagerModal: React.FC<TeamMemberManagerModalProps> = ({ 
 
   // Edit Member State
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
   const [editRole, setEditRole] = useState<UserRole>('event_planner');
   const [editSubPartId, setEditSubPartId] = useState<string>(subParts[0]?.id || '');
 
@@ -45,6 +48,9 @@ export const TeamMemberManagerModal: React.FC<TeamMemberManagerModalProps> = ({ 
 
   const handleOpenEdit = (user: User) => {
     setEditingUser(user);
+    setEditName(user.name);
+    setEditEmail(user.email);
+    setEditPhone(user.phone || '');
     setEditRole(user.role);
     setEditSubPartId(user.assignedSubPartIds?.[0] || subParts[0]?.id || '');
   };
@@ -54,6 +60,9 @@ export const TeamMemberManagerModal: React.FC<TeamMemberManagerModalProps> = ({ 
     if (!editingUser) return;
 
     updateTeamMember(editingUser.id, {
+      name: editName.trim() || editingUser.name,
+      email: editEmail.trim() || editingUser.email,
+      phone: editPhone.trim() || undefined,
       role: editRole,
       assignedSubPartIds: editRole === 'committee_lead' && editSubPartId ? [editSubPartId] : []
     });
@@ -228,26 +237,63 @@ export const TeamMemberManagerModal: React.FC<TeamMemberManagerModalProps> = ({ 
           </div>
         </div>
 
-        {/* Modal: Edit Team Member Role */}
+        {/* Modal: Edit Team Member Profile & Role */}
         {editingUser && (
           <Modal
             isOpen={Boolean(editingUser)}
             onClose={() => setEditingUser(null)}
-            title={`Edit Permissions: ${editingUser.name}`}
-            subtitle="Change role level or assign to a different committee department"
+            title={`Edit Team Member: ${editingUser.name}`}
+            subtitle="Update contact details, role permissions, or assigned committee department"
           >
             <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Role Level</label>
-                <select
-                  value={editRole}
-                  onChange={(e) => setEditRole(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
-                >
-                  <option value="event_planner">Event Planner (Full Event Logistics)</option>
-                  <option value="committee_lead">Committee Lead (Scoped Department)</option>
-                  <option value="org_admin">Org Co-Admin (Full Org Access)</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Full Legal Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="e.g. Rachel Green"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    placeholder="rachel@example.com"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    placeholder="(555) 000-0000"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Role Level</label>
+                  <select
+                    value={editRole}
+                    onChange={(e) => setEditRole(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                  >
+                    <option value="event_planner">Event Planner (Full Event Logistics)</option>
+                    <option value="committee_lead">Committee Lead (Scoped Department)</option>
+                    <option value="org_admin">Org Co-Admin (Full Org Access)</option>
+                  </select>
+                </div>
               </div>
 
               {editRole === 'committee_lead' && (
@@ -277,7 +323,7 @@ export const TeamMemberManagerModal: React.FC<TeamMemberManagerModalProps> = ({ 
                   type="submit"
                   className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-sm"
                 >
-                  Save Permissions
+                  Save Member Profile
                 </button>
               </div>
             </form>

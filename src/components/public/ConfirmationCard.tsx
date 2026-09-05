@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Registration, Event, SubPart, Shift } from '../../types';
+import { Registration, Event, SubPart, Shift, ItemSlot, TicketTier } from '../../types';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
   CheckCircle2, Calendar, MapPin, Phone, ShieldCheck, 
   Download, Printer, HeartHandshake, ArrowRight, Share2,
-  Key, Lock, Check
+  Key, Lock, Check, Gift, Ticket
 } from 'lucide-react';
 import { formatDate, formatTimeRange, formatCurrency } from '../../utils/formatters';
 import { generateIcsFile, getGoogleCalendarUrl } from '../../utils/calendar';
@@ -14,6 +14,8 @@ interface ConfirmationCardProps {
   event: Event;
   subParts: SubPart[];
   shifts: Shift[];
+  itemSlots?: ItemSlot[];
+  ticketTiers?: TicketTier[];
   onClose: () => void;
 }
 
@@ -22,6 +24,8 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
   event,
   subParts,
   shifts,
+  itemSlots = [],
+  ticketTiers = [],
   onClose
 }) => {
   const [accountPassword, setAccountPassword] = useState('');
@@ -29,6 +33,8 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
 
   const shiftMap = new Map(shifts.map(s => [s.id, s]));
   const subPartMap = new Map(subParts.map(sp => [sp.id, sp]));
+  const itemMap = new Map((itemSlots || []).map(i => [i.id, i]));
+  const tierMap = new Map((ticketTiers || []).map(t => [t.id, t]));
 
   const downloadCalendar = () => {
     const firstClaim = registration.shiftClaims[0];
@@ -170,18 +176,67 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
         )}
 
         {/* Pledged Items Summary */}
-        {registration.itemPledges.length > 0 && (
+        {registration.itemPledges && registration.itemPledges.length > 0 && (
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-              Pledged Supplies & Items
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+              <Gift className="w-4 h-4 text-emerald-600" />
+              <span>Pledged Supplies & Equipment ({registration.itemPledges.length})</span>
             </h4>
-            <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 divide-y divide-slate-200 text-xs">
-              {registration.itemPledges.map((p, idx) => (
-                <div key={idx} className="py-2 first:pt-0 last:pb-0 flex justify-between items-center">
-                  <span className="font-semibold text-slate-800">Item Pledge #{idx + 1}</span>
-                  <span className="font-bold text-indigo-600">{p.quantity} Promised</span>
-                </div>
-              ))}
+            <div className="space-y-2">
+              {registration.itemPledges.map((p, idx) => {
+                const item = itemMap.get(p.itemSlotId);
+                return (
+                  <div key={idx} className="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h5 className="font-bold text-slate-900 text-sm">{item?.itemName || `Pledged Item #${idx + 1}`}</h5>
+                      <p className="text-xs text-slate-600 mt-0.5">
+                        Drop-Off Gate: <strong>{item?.dropOffLocation || 'Main Receiving Gate'}</strong> • Deadline: <strong>{item?.dropOffDeadline || 'Day of Event'}</strong>
+                      </p>
+                      {item?.estimatedFmvPerUnit && (
+                        <div className="text-[11px] text-emerald-700 font-semibold mt-0.5">
+                          Est. FMV: {formatCurrency(item.estimatedFmvPerUnit * p.quantity)} ({formatCurrency(item.estimatedFmvPerUnit)}/{item.unit})
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="px-2.5 py-1 bg-white text-emerald-800 font-bold text-xs rounded-lg border border-emerald-200 shadow-sm block">
+                        {p.quantity} {item?.unit || 'units'} Promised
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Admission & Commercial Tickets / Sponsor Packages */}
+        {registration.ticketPurchases && registration.ticketPurchases.length > 0 && (
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+              <Ticket className="w-4 h-4 text-indigo-600" />
+              <span>Admission & Sponsorship Packages ({registration.ticketPurchases.length})</span>
+            </h4>
+            <div className="space-y-2">
+              {registration.ticketPurchases.map((tp, idx) => {
+                const tier = tierMap.get(tp.ticketTierId);
+                return (
+                  <div key={idx} className="bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100 flex justify-between items-center">
+                    <div>
+                      <h5 className="font-bold text-slate-900 text-sm">{tier?.title || 'Admission Package'}</h5>
+                      <p className="text-xs text-slate-600 mt-0.5">{tp.quantity}x Tickets / Packages</p>
+                      {tp.boothAssignedNumber && (
+                        <div className="text-[11px] text-indigo-600 font-bold mt-0.5">
+                          Assigned Booth: {tp.boothAssignedNumber}
+                        </div>
+                      )}
+                    </div>
+                    <span className="font-black text-slate-900 text-sm">
+                      {tier ? formatCurrency(tier.price * tp.quantity) : ''}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

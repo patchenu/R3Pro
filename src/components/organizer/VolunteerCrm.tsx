@@ -12,8 +12,8 @@ import { formatCurrency, formatDate, formatBirthDate, calculateAge } from '../..
 
 export const VolunteerCrm: React.FC = () => {
   const { 
-    currentOrg, volunteerCrm, 
-    addVolunteer, updateVolunteer, deleteVolunteer,
+    currentOrg, volunteerCrm, events, currentUser,
+    addVolunteer, addVolunteerServiceRecord, updateVolunteer, deleteVolunteer,
     addVolunteerTag, removeVolunteerTag, updateVolunteerNotes, showToast 
   } = useApp();
   
@@ -39,6 +39,17 @@ export const VolunteerCrm: React.FC = () => {
   const [formLifetimeHours, setFormLifetimeHours] = useState<number>(0);
   const [formLifetimeDonations, setFormLifetimeDonations] = useState<number>(0);
   const [formNotes, setFormNotes] = useState('');
+
+  // Log Past Event Service & Hours Modal State
+  const [isLogServiceModalOpen, setIsLogServiceModalOpen] = useState(false);
+  const [svcEventTitle, setSvcEventTitle] = useState('');
+  const [svcEventDate, setSvcEventDate] = useState('');
+  const [svcRolesServed, setSvcRolesServed] = useState('');
+  const [svcHours, setSvcHours] = useState<number>(4);
+  const [svcItemsDonated, setSvcItemsDonated] = useState('');
+  const [svcAmountDonated, setSvcAmountDonated] = useState<number>(0);
+  const [svcOutcomeRaised, setSvcOutcomeRaised] = useState<number>(12000);
+  const [svcVerifiedBy, setSvcVerifiedBy] = useState('');
 
   const selectedVolunteer = volunteerCrm.find(v => v.id === selectedVolunteerId) || null;
 
@@ -160,6 +171,41 @@ export const VolunteerCrm: React.FC = () => {
       setSelectedVolunteerId(null);
       setIsEditVolunteerModalOpen(false);
     }
+  };
+
+  const handleOpenLogService = () => {
+    setSvcEventTitle(events[0]?.title || 'Annual Fall Carnival');
+    setSvcEventDate(events[0]?.startDate ? events[0].startDate.slice(0, 10) : new Date().toISOString().slice(0, 10));
+    setSvcRolesServed('Lead Greeter, Booth Setup');
+    setSvcHours(4);
+    setSvcItemsDonated('');
+    setSvcAmountDonated(0);
+    setSvcOutcomeRaised(events[0]?.fundraisingGoal || 12000);
+    setSvcVerifiedBy(currentUser.name || 'Event Coordinator');
+    setIsLogServiceModalOpen(true);
+  };
+
+  const handleSaveLogService = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedVolunteerId || !svcEventTitle.trim() || svcHours <= 0) {
+      showToast('error', 'Missing Information', 'Please provide event title and positive hours contributed.');
+      return;
+    }
+
+    const serviceRecord: VolunteerEventHistory = {
+      eventId: 'evt_past_' + Date.now(),
+      eventTitle: svcEventTitle.trim(),
+      eventDate: svcEventDate,
+      rolesServed: svcRolesServed.split(',').map(r => r.trim()).filter(Boolean),
+      hoursContributed: Number(svcHours),
+      itemsDonated: svcItemsDonated ? svcItemsDonated.split(';').map(i => i.trim()).filter(Boolean) : undefined,
+      amountDonated: Number(svcAmountDonated) > 0 ? Number(svcAmountDonated) : undefined,
+      eventOutcomeRaised: Number(svcOutcomeRaised) > 0 ? Number(svcOutcomeRaised) : undefined,
+      verifiedBy: svcVerifiedBy.trim() || undefined
+    };
+
+    addVolunteerServiceRecord(selectedVolunteerId, serviceRecord);
+    setIsLogServiceModalOpen(false);
   };
 
   const handleBlastReinvite = () => {
@@ -632,7 +678,7 @@ export const VolunteerCrm: React.FC = () => {
 
             {/* Historical Events Supported & Impact Tie-Back */}
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-indigo-600" />
@@ -640,48 +686,72 @@ export const VolunteerCrm: React.FC = () => {
                   </h4>
                   <p className="text-[10px] text-slate-500">Every shift, supply drop-off, and donation tied directly to event outcomes</p>
                 </div>
-                <span className="text-[10px] text-slate-400 font-mono">Chronological Ledger</span>
+                
+                <button
+                  type="button"
+                  onClick={handleOpenLogService}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1 self-start sm:self-auto"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Log Past Event Service</span>
+                </button>
               </div>
 
-              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                {(selectedVolunteer.eventHistory || []).map((evt, eIdx) => (
-                  <div key={eIdx} className="p-4 rounded-2xl border border-slate-200 bg-white space-y-2 hover:border-slate-300 hover:shadow-xs transition">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-100 pb-2">
-                      <div>
-                        <h5 className="font-bold text-slate-900 text-xs">{evt.eventTitle}</h5>
-                        <span className="text-[10px] text-slate-400 font-mono">{formatDate(evt.eventDate)}</span>
-                      </div>
-
-                      {evt.eventOutcomeRaised && (
-                        <div className="text-right">
-                          <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-lg text-[10px] border border-emerald-200">
-                            🎯 Event Raised {formatCurrency(evt.eventOutcomeRaised)}
-                          </span>
+              {(selectedVolunteer.eventHistory || []).length === 0 ? (
+                <div className="p-6 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
+                  <Clock className="w-6 h-6 text-slate-400 mx-auto" />
+                  <div className="text-xs font-bold text-slate-700">No Historical Service Records Logged</div>
+                  <p className="text-[11px] text-slate-500">Log past volunteer shifts, hours, or supply donations for this supporter.</p>
+                  <button
+                    type="button"
+                    onClick={handleOpenLogService}
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition inline-flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Log First Service Record</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                  {(selectedVolunteer.eventHistory || []).map((evt, eIdx) => (
+                    <div key={eIdx} className="p-4 rounded-2xl border border-slate-200 bg-white space-y-2 hover:border-slate-300 hover:shadow-xs transition">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-100 pb-2">
+                        <div>
+                          <h5 className="font-bold text-slate-900 text-xs">{evt.eventTitle}</h5>
+                          <span className="text-[10px] text-slate-400 font-mono">{formatDate(evt.eventDate)}</span>
                         </div>
-                      )}
+
+                        {evt.eventOutcomeRaised && (
+                          <div className="text-right">
+                            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-extrabold rounded-lg text-[10px] border border-emerald-200">
+                              🎯 Event Raised {formatCurrency(evt.eventOutcomeRaised)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
+                        <div>
+                          <span className="text-slate-400 font-semibold uppercase text-[9px] block">Shifts / Roles Served</span>
+                          <div className="font-bold text-slate-800">{evt.rolesServed.join(', ')}</div>
+                          <div className="text-indigo-600 font-semibold text-[10px]">{evt.hoursContributed} hrs contributed</div>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-400 font-semibold uppercase text-[9px] block">Supplies & Pledges</span>
+                          <div className="text-slate-700">{evt.itemsDonated ? evt.itemsDonated.join('; ') : 'None requested'}</div>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-400 font-semibold uppercase text-[9px] block">Donations & Verification</span>
+                          <div className="font-bold text-emerald-700">{evt.amountDonated ? formatCurrency(evt.amountDonated) : '$0.00'}</div>
+                          {evt.verifiedBy && <div className="text-[9px] text-slate-400">Verified by: {evt.verifiedBy}</div>}
+                        </div>
+                      </div>
                     </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
-                      <div>
-                        <span className="text-slate-400 font-semibold uppercase text-[9px] block">Shifts / Roles Served</span>
-                        <div className="font-bold text-slate-800">{evt.rolesServed.join(', ')}</div>
-                        <div className="text-indigo-600 font-semibold text-[10px]">{evt.hoursContributed} hrs contributed</div>
-                      </div>
-
-                      <div>
-                        <span className="text-slate-400 font-semibold uppercase text-[9px] block">Supplies & Pledges</span>
-                        <div className="text-slate-700">{evt.itemsDonated ? evt.itemsDonated.join('; ') : 'None requested'}</div>
-                      </div>
-
-                      <div>
-                        <span className="text-slate-400 font-semibold uppercase text-[9px] block">Donations & Verification</span>
-                        <div className="font-bold text-emerald-700">{evt.amountDonated ? formatCurrency(evt.amountDonated) : '$0.00'}</div>
-                        {evt.verifiedBy && <div className="text-[9px] text-slate-400">Verified by: {evt.verifiedBy}</div>}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
@@ -1022,6 +1092,139 @@ export const VolunteerCrm: React.FC = () => {
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Save Profile Changes</span>
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* MODAL 3: LOG PAST EVENT SERVICE & HOURS */}
+      {isLogServiceModalOpen && selectedVolunteer && (
+        <Modal
+          isOpen={isLogServiceModalOpen}
+          onClose={() => setIsLogServiceModalOpen(false)}
+          title={`Log Past Event Service: ${selectedVolunteer.name}`}
+          subtitle="Record past volunteer shifts, service hours, item donations, and event outcomes in the CRM ledger"
+          maxWidth="lg"
+        >
+          <form onSubmit={handleSaveLogService} className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">Event / Campaign Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={svcEventTitle}
+                  onChange={(e) => setSvcEventTitle(e.target.value)}
+                  placeholder="e.g. Annual Fall Carnival & Silent Auction 2025"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Event Date (YYYY-MM-DD) *</label>
+                <input
+                  type="date"
+                  required
+                  value={svcEventDate}
+                  onChange={(e) => setSvcEventDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Hours Contributed *</label>
+                <div className="relative">
+                  <Clock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="number"
+                    min="0.5"
+                    step="0.5"
+                    required
+                    value={svcHours}
+                    onChange={(e) => setSvcHours(Number(e.target.value) || 0)}
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-indigo-700"
+                  />
+                </div>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">Roles / Shifts Served (Comma Separated) *</label>
+                <input
+                  type="text"
+                  required
+                  value={svcRolesServed}
+                  onChange={(e) => setSvcRolesServed(e.target.value)}
+                  placeholder="e.g. Lead Chef, Ticket Greeter, Teardown Crew"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Supplies Donated (Optional)</label>
+                <input
+                  type="text"
+                  value={svcItemsDonated}
+                  onChange={(e) => setSvcItemsDonated(e.target.value)}
+                  placeholder="e.g. 2 sheet cakes; 5 cases water"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Direct Donation Amount ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={svcAmountDonated}
+                    onChange={(e) => setSvcAmountDonated(Number(e.target.value) || 0)}
+                    className="w-full pl-7 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-emerald-800"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Total Campaign Raised ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={svcOutcomeRaised}
+                    onChange={(e) => setSvcOutcomeRaised(Number(e.target.value) || 0)}
+                    className="w-full pl-7 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Verifying Coordinator Name</label>
+                <input
+                  type="text"
+                  value={svcVerifiedBy}
+                  onChange={(e) => setSvcVerifiedBy(e.target.value)}
+                  placeholder="e.g. David Chen, Lead Chair"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                />
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsLogServiceModalOpen(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Save Service Record & Update Hours</span>
               </button>
             </div>
           </form>

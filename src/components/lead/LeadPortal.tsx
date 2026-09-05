@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { SubPart, Shift, ItemSlot, PaidContractor } from '../../types';
+import { SubPart, Shift, ItemSlot, PaidContractor, ProBonoPledge } from '../../types';
 import { 
   Users, Plus, Gift, Clock, Send, ShieldCheck, CheckCircle2, 
   MapPin, Phone, AlertTriangle, DollarSign, QrCode, TrendingUp,
-  Edit3, Trash2, Package, Shirt, Briefcase, Building2 
+  Edit3, Trash2, Package, Shirt, Briefcase, Building2, HeartHandshake, Check 
 } from 'lucide-react';
 import { formatCurrency, formatTimeRange, formatPercentage } from '../../utils/formatters';
 import { LeadBroadcastModal } from './LeadBroadcastModal';
@@ -13,10 +13,11 @@ import { Modal } from '../common/Modal';
 export const LeadPortal: React.FC = () => {
   const { 
     currentEvent, subParts, shifts, itemSlots, registrations, currentUser, 
-    contractors,
+    contractors, proBonoPledges,
     updateSubPart, addShift, updateShift, deleteShift,
     addItemSlot, updateItemSlot, deleteItemSlot,
-    requestBudgetIncrease, toggleCheckIn 
+    requestBudgetIncrease, toggleCheckIn,
+    updateProBonoPledge, showToast 
   } = useApp();
 
   // Scoped SubPart: Find user's assigned subpart, or default to the first one
@@ -696,83 +697,171 @@ export const LeadPortal: React.FC = () => {
 
       {/* TAB 3: HIRED CONTRACTORS & DEPARTMENT EXPENSES */}
       {activeLeadTab === 'contractors' && (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
           {(() => {
             const deptContractors = (contractors || []).filter(c => c.subPartId === currentSubPart.id);
+            const deptProBono = (proBonoPledges || []).filter(p => p.subPartId === currentSubPart.id || !p.subPartId);
             const totalDeptContracted = deptContractors.reduce((sum, c) => sum + Number(c.contractAmount), 0);
-
-            if (deptContractors.length === 0) {
-              return (
-                <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
-                  <Briefcase className="w-8 h-8 text-slate-300 mx-auto" />
-                  <h4 className="text-xs font-bold text-slate-700">No Hired Contractors Allocated to {currentSubPart.name}</h4>
-                  <p className="text-[11px] text-slate-500">If you need professional sound, sanitation, or stage rentals, submit a budget request to the Event Chair.</p>
-                  <button
-                    onClick={() => setIsBudgetReqOpen(true)}
-                    className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition"
-                  >
-                    + Request Additional Budget
-                  </button>
-                </div>
-              );
-            }
+            const totalDeptProBono = deptProBono.reduce((sum, p) => sum + Number(p.estimatedFmv), 0);
 
             return (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="p-1.5 rounded-lg bg-blue-50 text-blue-700">
-                        <Briefcase className="w-4 h-4" />
-                      </span>
-                      <h3 className="text-base font-extrabold text-slate-900">
-                        Assigned Hired Contractors & Professional Services ({deptContractors.length})
-                      </h3>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Paid vendors and equipment providers allocated to {currentSubPart.name} ({formatCurrency(totalDeptContracted)} total spend).
-                    </p>
+              <div className="space-y-6">
+                {/* Header Summary */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-600 font-semibold">Department Contracted Spend:</span>
+                    <span className="text-sm font-black text-slate-900">{formatCurrency(totalDeptContracted)}</span>
+                  </div>
+                  <div className="flex items-center justify-between sm:border-l sm:border-slate-200 sm:pl-4">
+                    <span className="text-xs text-emerald-700 font-semibold">Department Pro-Bono (FMV):</span>
+                    <span className="text-sm font-black text-emerald-700">{formatCurrency(totalDeptProBono)}</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {deptContractors.map(c => (
-                    <div key={c.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-2">
-                      <div className="flex justify-between items-start">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
-                          {c.serviceCategory}
+                {/* Paid Contractors */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="p-1.5 rounded-lg bg-blue-50 text-blue-700">
+                          <Briefcase className="w-4 h-4" />
                         </span>
-                        <span className="font-mono text-[10px] text-slate-500">{c.invoiceNumber || 'No invoice #'}</span>
+                        <h3 className="text-base font-extrabold text-slate-900">
+                          Assigned Hired Contractors ({deptContractors.length})
+                        </h3>
                       </div>
-
-                      <div>
-                        <h4 className="font-extrabold text-sm text-slate-900">{c.businessName}</h4>
-                        <div className="text-base font-black text-slate-900 mt-0.5">{formatCurrency(c.contractAmount)}</div>
-                        <div className="text-slate-600 mt-0.5">
-                          Contact: <strong>{c.contactName}</strong> • {c.phone || c.email}
-                        </div>
-                      </div>
-
-                      {c.notes && (
-                        <p className="text-[11px] text-slate-500 italic bg-white p-2 rounded-lg border border-slate-100">
-                          "{c.notes}"
-                        </p>
-                      )}
-
-                      <div className="pt-2 border-t border-slate-200/80 flex items-center gap-2 text-[10px]">
-                        <span className={`px-2 py-0.5 rounded font-bold ${c.w9Received ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                          {c.w9Received ? '✓ W-9 on file' : '✗ W-9 Needed'}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded font-bold ${c.coiReceived ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                          {c.coiReceived ? '✓ COI Verified' : '⚠ COI Pending'}
-                        </span>
-                        <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-bold ml-auto">
-                          {c.paymentStatus.replace('_', ' ')}
-                        </span>
-                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Paid vendors and equipment providers debited from {currentSubPart.name} budget.
+                      </p>
                     </div>
-                  ))}
+
+                    <button
+                      onClick={() => setIsBudgetReqOpen(true)}
+                      className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl border border-indigo-200 transition"
+                    >
+                      + Request Budget Increase
+                    </button>
+                  </div>
+
+                  {deptContractors.length === 0 ? (
+                    <div className="p-6 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-1">
+                      <Briefcase className="w-6 h-6 text-slate-300 mx-auto" />
+                      <h4 className="text-xs font-bold text-slate-700">No Hired Contractors Allocated</h4>
+                      <p className="text-[11px] text-slate-500">If you need professional sound, staging, or sanitation, submit a budget request.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {deptContractors.map(c => (
+                        <div key={c.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-2">
+                          <div className="flex justify-between items-start">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
+                              {c.serviceCategory}
+                            </span>
+                            <span className="font-mono text-[10px] text-slate-500">{c.invoiceNumber || 'No invoice #'}</span>
+                          </div>
+
+                          <div>
+                            <h4 className="font-extrabold text-sm text-slate-900">{c.businessName}</h4>
+                            <div className="text-base font-black text-slate-900 mt-0.5">{formatCurrency(c.contractAmount)}</div>
+                            <div className="text-slate-600 mt-0.5">
+                              Contact: <strong>{c.contactName}</strong> • {c.phone || c.email}
+                            </div>
+                          </div>
+
+                          {c.notes && (
+                            <p className="text-[11px] text-slate-500 italic bg-white p-2 rounded-lg border border-slate-100">
+                              "{c.notes}"
+                            </p>
+                          )}
+
+                          <div className="pt-2 border-t border-slate-200/80 flex items-center gap-2 text-[10px]">
+                            <span className={`px-2 py-0.5 rounded font-bold ${c.w9Received ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                              {c.w9Received ? '✓ W-9 on file' : '✗ W-9 Needed'}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded font-bold ${c.coiReceived ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                              {c.coiReceived ? '✓ COI Verified' : '⚠ COI Pending'}
+                            </span>
+                            <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-bold ml-auto">
+                              {c.paymentStatus.replace('_', ' ')}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
+                {/* Pro-Bono Services Allocated to Department */}
+                {deptProBono.length > 0 && (
+                  <div className="pt-4 border-t border-slate-200 space-y-3">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                        <HeartHandshake className="w-4 h-4 text-emerald-600" />
+                        <span>Allocated Pro-Bono Professional Services ({deptProBono.length})</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-500">
+                        In-kind services supporting {currentSubPart.name}. Verify delivery status upon completion.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {deptProBono.map(pb => {
+                        const isDelivered = pb.status === 'verified_delivered';
+                        return (
+                          <div key={pb.id} className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200 text-xs space-y-2 flex flex-col justify-between">
+                            <div>
+                              <div className="flex justify-between items-start">
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
+                                  {pb.serviceCategory}
+                                </span>
+                                <span className="font-mono text-[10px] text-emerald-900">{pb.inKindReceiptNumber}</span>
+                              </div>
+
+                              <h4 className="font-extrabold text-sm text-slate-900 mt-1.5">{pb.businessName}</h4>
+                              <p className="text-[11px] text-slate-600 mt-0.5">{pb.serviceDescription}</p>
+                              
+                              <div className="text-slate-600 mt-1 text-[11px]">
+                                Contact: <strong>{pb.contactName}</strong> • {pb.phone || pb.email}
+                              </div>
+                            </div>
+
+                            <div className="mt-3 pt-2.5 border-t border-emerald-200/80 flex items-center justify-between">
+                              <div>
+                                <span className="text-sm font-black text-emerald-800 block">{formatCurrency(pb.estimatedFmv)}</span>
+                                <span className="text-[9px] font-bold text-emerald-700">501(c)(3) FMV</span>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nextStatus = isDelivered ? 'pledged' : 'verified_delivered';
+                                  updateProBonoPledge(pb.id, { status: nextStatus });
+                                  showToast('success', 'Service Status Updated', `Marked ${pb.businessName} as ${nextStatus === 'verified_delivered' ? 'Verified Delivered' : 'Pledged'}.`);
+                                }}
+                                className={`px-2.5 py-1 rounded-lg font-bold text-[10px] transition flex items-center gap-1 ${
+                                  isDelivered ? 'bg-emerald-600 text-white shadow-xs' : 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300'
+                                }`}
+                              >
+                                {isDelivered ? (
+                                  <>
+                                    <Check className="w-3 h-3" />
+                                    <span>Verified Delivered</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Clock className="w-3 h-3" />
+                                    <span>Mark Delivered</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
               </div>
             );
           })()}
