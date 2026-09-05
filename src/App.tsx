@@ -21,9 +21,10 @@ import { LegalModalCenter } from './components/legal/LegalModalCenter';
 import { LegalDocType } from './content/legal';
 import { StickyImpersonationBanner } from './components/common/StickyImpersonationBanner';
 import { AdminObservabilityHub } from './components/admin/AdminObservabilityHub';
+import { ImpersonationCommandPalette } from './components/admin/ImpersonationCommandPalette';
 
 const MainLayout: React.FC = () => {
-  const { activeRole, switchEvent, switchOrganization, isAuthenticated, isImpersonating } = useApp();
+  const { activeRole, switchEvent, switchOrganization, isAuthenticated, isImpersonating, toggleCommandPalette } = useApp();
   const [activeTab, setActiveTab] = useState<string>('discovery_hub');
   const [isEventBuilderOpen, setIsEventBuilderOpen] = useState(false);
   const [isOrgWizardOpen, setIsOrgWizardOpen] = useState(false);
@@ -76,6 +77,18 @@ const MainLayout: React.FC = () => {
     }
   }, []);
 
+  // Global ⌘K / Ctrl+K keyboard shortcut listener for Persona Impersonation Studio
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        toggleCommandPalette();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleCommandPalette]);
+
   // If in kiosk role or kiosk tab, render fullscreen Kiosk
   if (activeRole === 'kiosk' || activeTab === 'kiosk_mode') {
     return (
@@ -91,6 +104,7 @@ const MainLayout: React.FC = () => {
           </button>
         </div>
         <KioskSelfCheckIn />
+        <ImpersonationCommandPalette />
         <ToastContainer />
       </div>
     );
@@ -192,6 +206,9 @@ const MainLayout: React.FC = () => {
         onClose={() => setIsLegalModalOpen(false)}
         initialTab={activeLegalTab}
       />
+
+      {/* Persona Impersonation Studio & Spotlight Command Palette */}
+      <ImpersonationCommandPalette />
 
       {/* Toast Notifications */}
       <ToastContainer />

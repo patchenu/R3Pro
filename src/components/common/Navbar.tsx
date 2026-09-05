@@ -23,7 +23,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { 
     currentOrg, currentEvent, organizations, events, 
     activeRole, currentUser, isAuthenticated, approvalRequests, 
-    switchOrganization, switchEvent, showToast 
+    switchOrganization, switchEvent, openCommandPalette, showToast 
   } = useApp();
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -153,10 +153,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>Share Link</span>
               </button>
 
+              {isSuperAdmin && (
+                <button
+                  onClick={openCommandPalette}
+                  className="hidden md:flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200/80 px-2.5 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                  title="Open Persona Impersonation Studio & Command Palette (⌘K)"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                  <span>⌘K Switcher</span>
+                </button>
+              )}
+
               {isPlannerOrAdmin && (
                 <button
                   onClick={openEventBuilder}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs shadow-sm transition flex items-center gap-1"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs shadow-sm transition flex items-center gap-1 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">New Event</span>

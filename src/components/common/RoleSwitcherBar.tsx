@@ -8,7 +8,7 @@ interface RoleSwitcherBarProps {
 }
 
 export const RoleSwitcherBar: React.FC<RoleSwitcherBarProps> = ({ setActiveTab }) => {
-  const { activeRole, switchRole, currentOrg, currentUser, isAuthenticated, isDemoMode, toggleDemoMode, resetDemoData, approvalRequests } = useApp();
+  const { activeRole, switchRole, currentOrg, currentUser, isAuthenticated, isDemoMode, toggleDemoMode, resetDemoData, approvalRequests, openCommandPalette } = useApp();
 
   const roles: { role: UserRole; label: string; icon: React.ReactNode; color: string; desc: string; persona: string; badgeCount?: number }[] = [
     {
@@ -122,6 +122,15 @@ export const RoleSwitcherBar: React.FC<RoleSwitcherBarProps> = ({ setActiveTab }
           )}
 
           <button
+            onClick={openCommandPalette}
+            className="bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-500/40 text-xs font-extrabold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer hover:scale-105"
+            title="Open Persona Impersonation Studio & Command Palette (⌘K)"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>⌘K Persona Studio</span>
+          </button>
+
+          <button
             onClick={() => toggleDemoMode(true)}
             className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition flex items-center gap-2 shadow-sm cursor-pointer"
             title="Switch back to interactive Role Simulator sandbox"
@@ -196,8 +205,17 @@ export const RoleSwitcherBar: React.FC<RoleSwitcherBarProps> = ({ setActiveTab }
         {/* Right: Reset & Exit Actions */}
         <div className="flex items-center gap-2">
           <button
+            onClick={openCommandPalette}
+            className="text-amber-300 hover:text-white flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-indigo-950/80 border border-indigo-500/40 hover:bg-indigo-900 transition cursor-pointer"
+            title="Open Persona Impersonation Studio & Command Palette (⌘K)"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>⌘K Studio</span>
+          </button>
+
+          <button
             onClick={resetDemoData}
-            className="text-slate-300 hover:text-rose-300 flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 hover:border-slate-600 transition"
+            className="text-slate-300 hover:text-rose-300 flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 hover:border-slate-600 transition cursor-pointer"
             title="Restore original sample events and rosters"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -206,7 +224,7 @@ export const RoleSwitcherBar: React.FC<RoleSwitcherBarProps> = ({ setActiveTab }
 
           <button
             onClick={() => toggleDemoMode(false)}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer"
             title="Test real unauthenticated registration flow"
           >
             <Globe className="w-3.5 h-3.5" />

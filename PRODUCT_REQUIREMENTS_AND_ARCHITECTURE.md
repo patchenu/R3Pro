@@ -398,6 +398,22 @@ GatherRaise enforces an enterprise-grade, defense-in-depth security and complian
 * **Uptime Heartbeat & Infrastructure Probes**:
   - Proactive health probes monitoring Neon PostgreSQL, Redis BullMQ queues, AWS SES / Resend gateways, and 10DLC SMS endpoints with 1-click on-demand re-auditing.
 
+### 6.10 Spotlight Command Palette (⌘K) & Role/Scope Studio (`ImpersonationCommandPalette.tsx`)
+* **Spotlight Global Command Palette (`⌘K` / `Ctrl+K`)**:
+  - Scales persona switching and identity inspection across tens of thousands of users across all tenant organizations.
+  - Multi-attribute fuzzy search across Legal Name, Email, Phone, System Role, Organization, and Scoped Committee Departments.
+* **3-Dimensional Multi-Tenant Faceted Rail**:
+  - **Organization Facet**: Filter accounts by tenant organization or cross-tenant aggregate.
+  - **Role Taxonomy Facet**: Dynamic counters computing live matches across all standard roles (`Super Admin`, `Event Planner`, `Committee Lead`, `Vendor`, `Volunteer / Parent`, `Door Kiosk`).
+  - **Committee Department Facet**: Scoped filtering across operational departments (*Food & Hospitality*, *Labor & Setup*, *Vendor Marketplace*, *Silent Auction*, *Registration & Greeters*).
+* **Perspective Preview Dossier & Live Identity Telemetry**:
+  - 2-column split view displaying account status, login counts, last IP, 2FA status, and full granular permission breakdown.
+* **On-the-Fly Role & Department Scope Modifier**:
+  - Allows Super Admins to adjust user roles and multi-select committee department scopes directly from the dossier without navigating away.
+* **1-Click Super Admin Status Promotion & Revocation**:
+  - Instant elevation (`adminPromoteToSuperAdmin`) and demotion (`adminRevokeSuperAdmin`) with SOC 2 Type II audit trail integration (`ADMIN_PRIVILEGES_GRANTED`, `ADMIN_PRIVILEGES_REVOKED`).
+
+
 
 
 

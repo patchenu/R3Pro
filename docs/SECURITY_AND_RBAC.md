@@ -198,4 +198,14 @@ $$ LANGUAGE plpgsql;
 - **Infrastructure Uptime Probes**: Monitors live health of Neon PostgreSQL, Redis BullMQ queues, AWS SES / Resend gateways, and 10DLC SMS endpoints with on-demand health auditing.
 - **Immutable SOC 2 Security Audit Stream**: Real-time stream of all platform security, authentication, and governance operations with 1-click statutory CSV export.
 
+### 11.4 Spotlight Command Palette (⌘K) & Role/Scope Studio Security (`ImpersonationCommandPalette.tsx`)
+- **Global Keybinding Authorization**: Only authenticated Super Admins (`currentUser.role === 'org_admin'`) can open the Spotlight Command Palette.
+- **3-Dimensional Multi-Tenant Filtering**: Scopes and counts users across Tenant Organizations, Role Taxonomies, and Committee Sub-Parts.
+- **On-the-Fly Role & Department Scoping**: Super Admins can dynamically reassign user roles and committee department memberships (`adminUpdateUserScope`), emitting immutable `USER_SCOPE_UPDATED` SOC 2 audit events.
+- **1-Click Super Admin Promotion & Revocation**:
+  - `adminPromoteToSuperAdmin`: Promotes a user to `org_admin` and emits `ADMIN_PRIVILEGES_GRANTED`.
+  - `adminRevokeSuperAdmin`: Demotes a user to a specified fallback role and emits `ADMIN_PRIVILEGES_REVOKED`.
+  - Protects against accidental revocation of the active admin's own credentials.
+
+
 

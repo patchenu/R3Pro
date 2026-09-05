@@ -7,7 +7,8 @@ import {
   Edit3, RefreshCw, Search, Filter, ArrowUpRight, Zap, 
   Flame, Check, X, Clock, Terminal, Globe, Download,
   Radio, Database, Mail, Smartphone, Layers, AlertCircle,
-  ExternalLink, BarChart3, ChevronRight, UserCheck, ShieldAlert
+  ExternalLink, BarChart3, ChevronRight, UserCheck, ShieldAlert,
+  Crown, Sparkles, Sliders
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
@@ -19,8 +20,9 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
   onNavigateToTab
 }) => {
   const { 
-    users, currentUser, currentOrg, activeRole, auditLogs,
+    users, currentUser, currentOrg, activeRole, auditLogs, subParts,
     isImpersonating, startImpersonation, stopImpersonation,
+    openCommandPalette, adminPromoteToSuperAdmin, adminRevokeSuperAdmin, adminUpdateUserScope,
     adminCreateUser, adminUpdateUser, adminToggleUserSuspension, 
     adminResetUserPassword, adminDeleteUser,
     errorLogs, webVitalsMetrics, apiLatencyMetrics, healthChecks, healthSuiteStatus,
@@ -145,6 +147,7 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
       email: editingUser.email,
       phone: editingUser.phone,
       role: editingUser.role,
+      assignedSubPartIds: editingUser.assignedSubPartIds || [],
       twoFactorEnabled: editingUser.twoFactorEnabled
     });
     setEditingUser(null);
@@ -255,6 +258,14 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
 
           {/* Quick Action CTAs */}
           <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={openCommandPalette}
+              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black rounded-xl shadow-lg shadow-purple-600/30 transition flex items-center gap-2 cursor-pointer hover:scale-105"
+              title="Open Persona Impersonation Studio & Command Palette (⌘K)"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>⌘K Impersonation Studio</span>
+            </button>
             <button
               onClick={() => setIsCreateUserModalOpen(true)}
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center gap-2 cursor-pointer hover:scale-105"
@@ -415,6 +426,15 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                   </p>
                 </div>
               </div>
+
+              <button
+                onClick={openCommandPalette}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer hover:scale-105 shrink-0"
+                title="Open Persona Impersonation Studio with 3D faceted filters (⌘K)"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>Search All Accounts (⌘K)</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
@@ -635,6 +655,25 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 <span className="hidden sm:inline">Impersonate</span>
+                              </button>
+
+                              {/* Grant / Revoke Super Admin */}
+                              <button
+                                onClick={() => {
+                                  if (u.role === 'org_admin') {
+                                    adminRevokeSuperAdmin(u.id, 'event_planner');
+                                  } else {
+                                    adminPromoteToSuperAdmin(u.id);
+                                  }
+                                }}
+                                className={`p-1.5 rounded-lg transition cursor-pointer ${
+                                  u.role === 'org_admin'
+                                    ? 'bg-purple-100 hover:bg-rose-100 text-purple-700 hover:text-rose-700'
+                                    : 'bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-700'
+                                }`}
+                                title={u.role === 'org_admin' ? 'Revoke Super Admin privileges' : '👑 Grant App Super Admin Status'}
+                              >
+                                <Crown className="w-3.5 h-3.5" />
                               </button>
 
                               {/* Edit */}
@@ -1409,6 +1448,44 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                   </select>
                 </div>
               </div>
+
+              {/* Committee Department Scoping (if Lead) */}
+              {editingUser.role === 'committee_lead' && (
+                <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-2">
+                  <label className="block text-xs font-bold text-amber-950">
+                    🍴 Assigned Committee Departments
+                  </label>
+                  <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto">
+                    {subParts.map(sp => {
+                      const isChecked = (editingUser.assignedSubPartIds || []).includes(sp.id);
+                      return (
+                        <label
+                          key={sp.id}
+                          className={`flex items-center gap-2 p-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                            isChecked
+                              ? 'bg-amber-100 border-amber-300 text-amber-900'
+                              : 'bg-white border-slate-200 text-slate-600 hover:border-amber-200'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              const currentIds = editingUser.assignedSubPartIds || [];
+                              const newIds = e.target.checked
+                                ? [...currentIds, sp.id]
+                                : currentIds.filter(id => id !== sp.id);
+                              setEditingUser({ ...editingUser, assignedSubPartIds: newIds });
+                            }}
+                            className="w-3.5 h-3.5 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                          />
+                          <span className="truncate">{sp.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center gap-2 pt-1">
                 <input

@@ -99,6 +99,14 @@ R3Pro is an enterprise-grade web application combining the volunteer coordinatio
     - **Core Web Vitals & Latency Metrics**: Real-time tracking of LCP, INP, CLS, FCP, TTFB, and backend API latency distributions.
     - **Infrastructure Uptime Probes**: Live health checks for Neon PostgreSQL, Redis, AWS SES / Resend, and 10DLC SMS endpoints with 1-click on-demand audits.
 
+21. **Spotlight Command Palette (⌘K) & Role/Scope Studio**:
+    - **Global Keyboard Shortcut (`⌘K` / `Ctrl+K`)**: Rapidly search and inspect any account across tens of thousands of users across all tenant organizations.
+    - **3-Dimensional Multi-Tenant Faceted Rail**: Filter by Organization, dynamic Role counts, and Committee Department Sub-Parts.
+    - **Perspective Preview Dossier**: Comprehensive user telemetry, 2FA status, and granular permission breakdown.
+    - **On-the-Fly Role & Scope Modifier**: Instant role adjustments and multi-select committee department assignments.
+    - **1-Click Super Admin Promotion & Demotion**: 1-tap elevation with SOC 2 Type II immutable audit logging.
+
+
 ---
 
 ## 🛠️ Local Development & Database Operations

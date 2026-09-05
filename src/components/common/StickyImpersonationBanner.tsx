@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Eye, ShieldAlert, ArrowLeft, UserCheck, Shield } from 'lucide-react';
+import { Eye, ShieldAlert, ArrowLeft, UserCheck, Shield, Users, Sparkles } from 'lucide-react';
 
 interface StickyImpersonationBannerProps {
   onReturnToAdmin?: () => void;
@@ -9,7 +9,7 @@ interface StickyImpersonationBannerProps {
 export const StickyImpersonationBanner: React.FC<StickyImpersonationBannerProps> = ({
   onReturnToAdmin
 }) => {
-  const { isImpersonating, currentUser, currentOrg, impersonatedOriginalUser, stopImpersonation } = useApp();
+  const { isImpersonating, currentUser, currentOrg, impersonatedOriginalUser, stopImpersonation, openCommandPalette } = useApp();
 
   if (!isImpersonating) return null;
 
@@ -67,15 +67,24 @@ export const StickyImpersonationBanner: React.FC<StickyImpersonationBannerProps>
           </div>
         </div>
 
-        {/* Right: Exit Impersonation CTA */}
+        {/* Right: Quick Switcher & Exit Impersonation CTA */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={openCommandPalette}
+            className="px-3 py-1.5 bg-black/30 hover:bg-black/50 text-amber-200 text-xs font-bold rounded-xl border border-amber-300/40 shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:scale-105"
+            title="Open Persona Impersonation Studio to switch accounts or customize scopes (⌘K)"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>Switch Perspective (⌘K)</span>
+          </button>
+
           <button
             onClick={handleExit}
             className="px-4 py-1.5 bg-white hover:bg-amber-50 text-slate-950 text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:scale-105 cursor-pointer"
             title="End impersonation session and return to Admin Observability Hub"
           >
             <ArrowLeft className="w-3.5 h-3.5 text-amber-600" />
-            <span>Exit Impersonation & Return to Admin</span>
+            <span>Exit Impersonation</span>
           </button>
         </div>
 

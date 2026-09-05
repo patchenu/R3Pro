@@ -188,6 +188,12 @@ interface AppContextType {
   impersonatedOriginalRole: UserRole | null;
   startImpersonation: (targetUserId: string) => boolean;
   stopImpersonation: () => void;
+
+  // Command Palette & Global Persona Switcher
+  isCommandPaletteOpen: boolean;
+  openCommandPalette: () => void;
+  closeCommandPalette: () => void;
+  toggleCommandPalette: () => void;
   
   // Full Account & User Lifecycle Control (Admin Section)
   adminCreateUser: (userData: Omit<User, 'id'> & { initialPassword?: string }) => User;
@@ -195,6 +201,9 @@ interface AppContextType {
   adminToggleUserSuspension: (userId: string, reason?: string) => void;
   adminResetUserPassword: (userId: string) => { temporaryCode: string };
   adminDeleteUser: (userId: string) => void;
+  adminPromoteToSuperAdmin: (userId: string) => void;
+  adminRevokeSuperAdmin: (userId: string, fallbackRole?: UserRole) => void;
+  adminUpdateUserScope: (userId: string, role: UserRole, subPartIds: string[], orgId?: string) => void;
 
   // Observability & Sentry Exception Diagnostics (Section 4)
   errorLogs: ErrorLogRecord[];
@@ -365,6 +374,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isImpersonating, setIsImpersonating] = useState<boolean>(false);
   const [impersonatedOriginalUser, setImpersonatedOriginalUser] = useState<User | null>(null);
   const [impersonatedOriginalRole, setImpersonatedOriginalRole] = useState<UserRole | null>(null);
+
+  // Command Palette & Global Persona Switcher
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
+  const openCommandPalette = () => setIsCommandPaletteOpen(true);
+  const closeCommandPalette = () => setIsCommandPaletteOpen(false);
+  const toggleCommandPalette = () => setIsCommandPaletteOpen(prev => !prev);
 
   const DEMO_MODE_STORAGE_KEY = 'r3pro_demo_mode_active';
   const LIVE_USER_STORAGE_KEY = 'r3pro_live_user_id';
@@ -2197,6 +2212,92 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('warning', 'User Purged', `Account for ${targetUser?.name || userId} has been deleted.`);
   };
 
+  const adminPromoteToSuperAdmin = (userId: string) => {
+    setData((prev: any) => {
+      const targetUser = prev.users.find((u: User) => u.id === userId);
+      if (!targetUser) return prev;
+      const updatedUsers = prev.users.map((u: User) => 
+        u.id === userId ? { ...u, role: 'org_admin' as UserRole } : u
+      );
+      const newAudit: AuditLog = {
+        id: 'audit_superadmin_prm_' + Date.now(),
+        orgId: targetUser.orgId || currentOrg.id,
+        actorId: currentUser.id,
+        actorName: currentUser.name,
+        actorRole: currentUser.role,
+        action: 'ADMIN_PRIVILEGES_GRANTED',
+        details: `Administrator ${currentUser.name} promoted ${targetUser.name} (${targetUser.email}) to App Super Admin (org_admin).`,
+        timestamp: new Date().toISOString()
+      };
+      return {
+        ...prev,
+        users: updatedUsers,
+        auditLogs: [newAudit, ...(prev.auditLogs || [])]
+      };
+    });
+    showToast('success', 'Admin Privileges Granted', `Account elevated to App Super Admin with full platform governance rights.`);
+  };
+
+  const adminRevokeSuperAdmin = (userId: string, fallbackRole: UserRole = 'event_planner') => {
+    setData((prev: any) => {
+      const targetUser = prev.users.find((u: User) => u.id === userId);
+      if (!targetUser) return prev;
+      const updatedUsers = prev.users.map((u: User) => 
+        u.id === userId ? { ...u, role: fallbackRole } : u
+      );
+      const newAudit: AuditLog = {
+        id: 'audit_superadmin_rvk_' + Date.now(),
+        orgId: targetUser.orgId || currentOrg.id,
+        actorId: currentUser.id,
+        actorName: currentUser.name,
+        actorRole: currentUser.role,
+        action: 'ADMIN_PRIVILEGES_REVOKED',
+        details: `Administrator ${currentUser.name} revoked Super Admin status for ${targetUser.name} (${targetUser.email}). New role: ${fallbackRole}.`,
+        timestamp: new Date().toISOString()
+      };
+      return {
+        ...prev,
+        users: updatedUsers,
+        auditLogs: [newAudit, ...(prev.auditLogs || [])]
+      };
+    });
+    showToast('info', 'Admin Privileges Revoked', `Account role reverted to ${fallbackRole.replace('_', ' ')}.`);
+  };
+
+  const adminUpdateUserScope = (userId: string, role: UserRole, subPartIds: string[], orgId?: string) => {
+    setData((prev: any) => {
+      const targetUser = prev.users.find((u: User) => u.id === userId);
+      if (!targetUser) return prev;
+      const updatedUsers = prev.users.map((u: User) => {
+        if (u.id === userId) {
+          return {
+            ...u,
+            role,
+            assignedSubPartIds: subPartIds,
+            ...(orgId ? { orgId } : {})
+          };
+        }
+        return u;
+      });
+      const newAudit: AuditLog = {
+        id: 'audit_scope_upd_' + Date.now(),
+        orgId: orgId || targetUser.orgId || currentOrg.id,
+        actorId: currentUser.id,
+        actorName: currentUser.name,
+        actorRole: currentUser.role,
+        action: 'USER_SCOPE_UPDATED',
+        details: `Updated role and scoping for ${targetUser.name} (${targetUser.email}). Role: ${role}, Sub-Parts: [${subPartIds.join(', ')}], Org: ${orgId || targetUser.orgId}.`,
+        timestamp: new Date().toISOString()
+      };
+      return {
+        ...prev,
+        users: updatedUsers,
+        auditLogs: [newAudit, ...(prev.auditLogs || [])]
+      };
+    });
+    showToast('success', 'User Scope Updated', `Role and department scope modifications saved.`);
+  };
+
   // ----------------------------------------------------
   // Observability, Sentry Diagnostics & Performance Probes
   // ----------------------------------------------------
@@ -2544,11 +2645,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       impersonatedOriginalRole,
       startImpersonation,
       stopImpersonation,
+      isCommandPaletteOpen,
+      openCommandPalette,
+      closeCommandPalette,
+      toggleCommandPalette,
       adminCreateUser,
       adminUpdateUser,
       adminToggleUserSuspension,
       adminResetUserPassword,
       adminDeleteUser,
+      adminPromoteToSuperAdmin,
+      adminRevokeSuperAdmin,
+      adminUpdateUserScope,
 
       // Observability & Sentry Diagnostics
       errorLogs: data.errorLogs || SEED_ERROR_LOGS,

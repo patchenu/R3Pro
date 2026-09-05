@@ -716,4 +716,25 @@ GatherRaise includes an enterprise-grade **Admin Observability, Accounts & Diagn
 - **Immutable Security Ledger**: Real-time chronological audit trail of all governance, auth, impersonation, suspension, and financial mutations.
 - **Search, Filter & 1-Click CSV Export**: Instant filtering by action type, actor, or date range, with statutory CSV audit ledger export for SOC 2 Type II compliance reviews.
 
+---
+
+## 34. Spotlight Command Palette (⌘K) & Impersonation Studio (`ImpersonationCommandPalette.tsx`)
+
+### 34.1 Global Command Palette & Multi-Attribute Search
+- **Shortcut**: `⌘K` (Mac) / `Ctrl+K` (Windows/Linux) or via `⌘K Switcher` header buttons.
+- **Multi-Attribute Search**: Matches against legal names, emails, phone numbers, roles, organizations, and department sub-parts.
+- **3-Dimensional Faceting Rail**:
+  - **Organizations**: Filter across all tenant orgs.
+  - **Role Taxonomy**: Dynamic match counters per role.
+  - **Committee Sub-Parts**: Departmental scoping filters.
+- **Smart Recents Queue**: Persists recently viewed/impersonated profiles in `sessionStorage`.
+- **6 Canonical Archetypes**: Instant 1-click persona switching (Super Admin, Event Chair, Food Lead, Vendor, Volunteer, Door Kiosk).
+
+### 34.2 Perspective Preview Dossier & Live Administration
+- **Live Identity Telemetry**: Real-time display of Account ID, Organization, Role, Email, Phone, Scoped Departments, Last Login, Total Logins, 2FA status, and granular permissions.
+- **On-the-Fly Role & Department Scope Modifier**: In-place editor allowing Super Admins to adjust user roles and multi-select committee department assignments with instant state persistence.
+- **1-Click Super Admin Promotion & Demotion**:
+  - Promotes user to Super Admin (`adminPromoteToSuperAdmin`) or revokes admin privileges (`adminRevokeSuperAdmin`) with full SOC 2 Type II audit logging (`ADMIN_PRIVILEGES_GRANTED`, `ADMIN_PRIVILEGES_REVOKED`).
+
+
 
