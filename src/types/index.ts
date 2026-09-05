@@ -33,6 +33,39 @@ export interface User {
   createdAt?: string;
 }
 
+export interface OrgCommunicationDnsRecord {
+  type: 'TXT' | 'CNAME' | 'MX';
+  name: string;
+  value: string;
+  status: 'verified' | 'pending' | 'failed';
+  purpose: 'DKIM' | 'SPF' | 'DMARC' | 'Return-Path';
+  priority?: number;
+}
+
+export interface OrgCommunicationSettings {
+  // Email Dispatch Settings
+  emailDeliveryMode: 'managed' | 'custom_domain'; // 'managed' = R3Pro Shared Cloud Pool (Default), 'custom_domain' = Custom Domain
+  customSendingDomain?: string; // e.g. "mail.lincolnpta.org"
+  customFromName?: string; // e.g. "Lincoln High PTA Events"
+  customFromEmail?: string; // e.g. "events@mail.lincolnpta.org"
+  customReplyTo?: string; // e.g. "treasurer@lincolnpta.org"
+  emailProvider: 'resend' | 'postmark' | 'ses' | 'smtp' | 'managed';
+  emailApiKey?: string;
+  dnsVerified?: boolean;
+  dnsRecords?: OrgCommunicationDnsRecord[];
+  
+  // SMS 10DLC Gateway Settings
+  smsDeliveryMode: 'managed_10dlc' | 'dedicated_10dlc'; // 'managed_10dlc' = R3Pro ISV Shared Campaign, 'dedicated_10dlc' = Dedicated Brand Number
+  smsBrandPrefix: string; // e.g. "[Lincoln High PTA]"
+  smsDedicatedNumber?: string; // e.g. "+1 (555) 234-8900"
+  smsCadenceT72h: boolean; // 72 Hours Prior
+  smsCadenceT24h: boolean; // 24 Hours Prior
+  smsCadenceT2h: boolean; // 2 Hours Prior (with Gate QR Pass)
+  smsEmergencyBroadcasts: boolean; // Urgent alerts
+  smsTaxReceipts: boolean; // Real-time donation receipts
+  smsOptInStatus: boolean; // Active 10DLC compliance toggle
+}
+
 export interface Organization {
   id: string;
   name: string;
@@ -55,6 +88,7 @@ export interface Organization {
     approvalThresholdSlots: number;  // e.g., 5 spots
     defaultReminderCadence: 'standard' | 'intensive' | 'same_day' | 'custom';
   };
+  communicationSettings?: OrgCommunicationSettings;
 }
 
 export type EventStatus = 'draft' | 'published' | 'in_progress' | 'completed' | 'archived';

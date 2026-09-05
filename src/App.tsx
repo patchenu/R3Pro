@@ -144,6 +144,7 @@ const MainLayout: React.FC = () => {
             onOpenEventBuilder={() => setIsEventBuilderOpen(true)}
             onOpenAuth={handleOpenAuth}
             onNavigateToVendorHub={() => setActiveTab('vendor_portal')}
+            onNavigateToOrgAdmin={() => setActiveTab('org_admin_view')}
           />
         )}
         

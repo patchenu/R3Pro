@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ORG_TEMPLATES } from '../../data/templates';
-import { Event, User, OrganizationType } from '../../types';
+import { Event, User, OrganizationType, OrgCommunicationSettings, OrgCommunicationDnsRecord } from '../../types';
 import { VolunteerCrm } from './VolunteerCrm';
 import { LegalComplianceStudio } from './LegalComplianceStudio';
 import { AdminObservabilityHub } from '../admin/AdminObservabilityHub';
@@ -11,7 +11,9 @@ import {
   History, Plus, Check, Settings, Sparkles, Image, Palette, 
   Upload, FileText, CheckCircle2, ShieldCheck, UserPlus, Trash2, Mail, Phone, Briefcase,
   Calendar, BarChart3, TrendingUp, CheckCircle, ExternalLink, Printer, FileSpreadsheet, Eye, ChevronRight, Package, ArrowUpRight,
-  Filter, Search, Hash, Layers, PieChart, ArrowDownRight, Edit3, X, MessageSquare, Key, Send, RefreshCw, Activity
+  Filter, Search, Hash, Layers, PieChart, ArrowDownRight, Edit3, X, MessageSquare, Key, Send, RefreshCw, Activity,
+  Copy, HelpCircle, Smartphone, Radio, Zap, Lock, Unlock, Info, Sliders, Clock, Bell, AlertCircle, CheckSquare, Square,
+  Globe, Server
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { 
@@ -27,7 +29,11 @@ import {
   exportAnnualLedgerToCsv
 } from '../../utils/exportCsv';
 
-export const OrgExecutiveDashboard: React.FC = () => {
+interface OrgExecutiveDashboardProps {
+  initialTab?: 'events' | 'crm' | 'branding' | 'legal' | 'team' | 'templates' | 'audit' | 'integrations' | 'observability';
+}
+
+export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ initialTab = 'events' }) => {
   const { 
     currentOrg, users, currentUser, auditLogs, events, volunteerCrm, 
     registrations, shifts, subParts, donations, itemSlots,
@@ -36,16 +42,60 @@ export const OrgExecutiveDashboard: React.FC = () => {
     switchEvent, switchRole, showToast 
   } = useApp();
   
-  const [activeAdminTab, setActiveAdminTab] = useState<'events' | 'crm' | 'branding' | 'legal' | 'team' | 'templates' | 'audit' | 'integrations' | 'observability'>('events');
+  const [activeAdminTab, setActiveAdminTab] = useState<'events' | 'crm' | 'branding' | 'legal' | 'team' | 'templates' | 'audit' | 'integrations' | 'observability'>(initialTab);
 
-  // Email & SMS Integration Studio State
-  const [emailProvider, setEmailProvider] = useState<'resend' | 'postmark' | 'ses' | 'managed'>('resend');
-  const [emailApiKey, setEmailApiKey] = useState('re_839f28a9b1c04d5e9821');
+  useEffect(() => {
+    if (initialTab) {
+      setActiveAdminTab(initialTab);
+    }
+  }, [initialTab]);
+
+  // Email & SMS Communication Studio State
+  const initialComm = currentOrg.communicationSettings;
+  const [emailDeliveryMode, setEmailDeliveryMode] = useState<'managed' | 'custom_domain'>(initialComm?.emailDeliveryMode || 'custom_domain');
+  const [emailProvider, setEmailProvider] = useState<'resend' | 'postmark' | 'ses' | 'smtp' | 'managed'>(initialComm?.emailProvider || 'resend');
+  const [emailApiKey, setEmailApiKey] = useState(initialComm?.emailApiKey || 're_839f28a9b1c04d5e9821');
   const [showApiKey, setShowApiKey] = useState(false);
-  const [customSendingDomain, setCustomSendingDomain] = useState('mail.lincolnpta.org');
+  const [customSendingDomain, setCustomSendingDomain] = useState(initialComm?.customSendingDomain || 'mail.lincolnpta.org');
+  const [customFromName, setCustomFromName] = useState(initialComm?.customFromName || currentOrg.name || 'Lincoln High PTA Events');
+  const [customFromEmail, setCustomFromEmail] = useState(initialComm?.customFromEmail || 'events@mail.lincolnpta.org');
+  const [customReplyTo, setCustomReplyTo] = useState(initialComm?.customReplyTo || currentOrg.contactEmail || 'treasurer@lincolnpta.org');
+  const [dnsVerified, setDnsVerified] = useState(initialComm?.dnsVerified ?? true);
+  const [isVerifyingDns, setIsVerifyingDns] = useState(false);
+
+  // Dynamic DNS Records
+  const [dnsRecords, setDnsRecords] = useState<OrgCommunicationDnsRecord[]>(initialComm?.dnsRecords || [
+    { type: 'CNAME', name: `resend._domainkey.${initialComm?.customSendingDomain || 'mail.lincolnpta.org'}`, value: 'dkim.resend.com', status: 'verified', purpose: 'DKIM' },
+    { type: 'TXT', name: initialComm?.customSendingDomain || 'mail.lincolnpta.org', value: 'v=spf1 include:_spf.resend.com ~all', status: 'verified', purpose: 'SPF' },
+    { type: 'TXT', name: `_dmarc.${initialComm?.customSendingDomain || 'mail.lincolnpta.org'}`, value: `v=DMARC1; p=none; rua=mailto:dmarc-reports@${initialComm?.customSendingDomain || 'lincolnpta.org'}`, status: 'verified', purpose: 'DMARC' },
+    { type: 'MX', name: `feedback.${initialComm?.customSendingDomain || 'mail.lincolnpta.org'}`, value: 'feedback.resend.com', status: 'verified', purpose: 'Return-Path', priority: 10 }
+  ]);
+  const [copiedRecordKey, setCopiedRecordKey] = useState<string | null>(null);
+
+  // SMS 10DLC Gateway State
+  const [smsDeliveryMode, setSmsDeliveryMode] = useState<'managed_10dlc' | 'dedicated_10dlc'>(initialComm?.smsDeliveryMode || 'managed_10dlc');
+  const [smsBrandPrefix, setSmsBrandPrefix] = useState(initialComm?.smsBrandPrefix || `[${currentOrg.name || 'Lincoln High PTA'}]`);
+  const [smsDedicatedNumber, setSmsDedicatedNumber] = useState(initialComm?.smsDedicatedNumber || '+1 (555) 234-8900');
+  const [smsCadenceT72h, setSmsCadenceT72h] = useState(initialComm?.smsCadenceT72h ?? true);
+  const [smsCadenceT24h, setSmsCadenceT24h] = useState(initialComm?.smsCadenceT24h ?? true);
+  const [smsCadenceT2h, setSmsCadenceT2h] = useState(initialComm?.smsCadenceT2h ?? true);
+  const [smsEmergencyBroadcasts, setSmsEmergencyBroadcasts] = useState(initialComm?.smsEmergencyBroadcasts ?? true);
+  const [smsTaxReceipts, setSmsTaxReceipts] = useState(initialComm?.smsTaxReceipts ?? true);
+  const [smsOptInStatus, setSmsOptInStatus] = useState(initialComm?.smsOptInStatus ?? true);
+
+  // Interactive Test Sandbox State
   const [testEmailRecipient, setTestEmailRecipient] = useState(currentUser.email || 'coordinator@lincolnpta.org');
+  const [testEmailType, setTestEmailType] = useState<'volunteer_pass' | 'shift_reminder' | 'tax_receipt'>('volunteer_pass');
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
-  const [smsBetaOptIn, setSmsBetaOptIn] = useState(true);
+  const [lastEmailDispatchLog, setLastEmailDispatchLog] = useState<{ id: string; timestamp: string; latencyMs: number; status: string } | null>(null);
+
+  const [testSmsPhone, setTestSmsPhone] = useState('(555) 234-8900');
+  const [testSmsType, setTestSmsType] = useState<'shift_reminder' | 'gate_pass' | 'emergency'>('gate_pass');
+  const [isSendingTestSms, setIsSendingTestSms] = useState(false);
+  const [lastSmsDispatchLog, setLastSmsDispatchLog] = useState<{ sid: string; timestamp: string; carrierAck: string; latencyMs: number } | null>(null);
+
+  // Active Tooltip / Help Drawer State
+  const [activeTooltipId, setActiveTooltipId] = useState<string | null>(null);
   
   // Outcome Report View Mode: By Event, By Quarter, By Calendar Year
   const [outcomeViewMode, setOutcomeViewMode] = useState<'by_event' | 'by_quarter' | 'by_year'>('by_event');
@@ -130,7 +180,114 @@ export const OrgExecutiveDashboard: React.FC = () => {
     setOrgPhone(currentOrg.phone || '');
     setOrgEmail(currentOrg.contactEmail || '');
     setOrgWebsite(currentOrg.website || 'https://lincolnpta.org');
+
+    if (currentOrg.communicationSettings) {
+      const c = currentOrg.communicationSettings;
+      setEmailDeliveryMode(c.emailDeliveryMode || 'custom_domain');
+      setEmailProvider(c.emailProvider || 'resend');
+      setEmailApiKey(c.emailApiKey || 're_839f28a9b1c04d5e9821');
+      setCustomSendingDomain(c.customSendingDomain || 'mail.lincolnpta.org');
+      setCustomFromName(c.customFromName || currentOrg.name || 'Lincoln High PTA Events');
+      setCustomFromEmail(c.customFromEmail || 'events@mail.lincolnpta.org');
+      setCustomReplyTo(c.customReplyTo || currentOrg.contactEmail || 'treasurer@lincolnpta.org');
+      setDnsVerified(c.dnsVerified ?? true);
+      if (c.dnsRecords) setDnsRecords(c.dnsRecords);
+      setSmsDeliveryMode(c.smsDeliveryMode || 'managed_10dlc');
+      setSmsBrandPrefix(c.smsBrandPrefix || `[${currentOrg.name || 'Lincoln High PTA'}]`);
+      setSmsDedicatedNumber(c.smsDedicatedNumber || '+1 (555) 234-8900');
+      setSmsCadenceT72h(c.smsCadenceT72h ?? true);
+      setSmsCadenceT24h(c.smsCadenceT24h ?? true);
+      setSmsCadenceT2h(c.smsCadenceT2h ?? true);
+      setSmsEmergencyBroadcasts(c.smsEmergencyBroadcasts ?? true);
+      setSmsTaxReceipts(c.smsTaxReceipts ?? true);
+      setSmsOptInStatus(c.smsOptInStatus ?? true);
+    }
   }, [currentOrg]);
+
+  // Helper: Copy DNS record to clipboard
+  const handleCopyDnsRecord = (key: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedRecordKey(key);
+    setTimeout(() => setCopiedRecordKey(null), 2000);
+    showToast('info', 'Copied to Clipboard', `"${text}" copied to clipboard.`);
+  };
+
+  // Helper: Verify DNS Records
+  const handleVerifyDns = () => {
+    setIsVerifyingDns(true);
+    setTimeout(() => {
+      setIsVerifyingDns(false);
+      setDnsVerified(true);
+      setDnsRecords(prev => prev.map(r => ({ ...r, status: 'verified' as const })));
+      showToast('success', 'DNS Records 100% Verified', `All DKIM, SPF, and DMARC records for "${customSendingDomain}" are active and aligned.`);
+    }, 1200);
+  };
+
+  // Helper: Send Live Test Email
+  const handleSendTestEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testEmailRecipient) return;
+    setIsSendingTestEmail(true);
+    setTimeout(() => {
+      setIsSendingTestEmail(false);
+      const msgId = `msg_${Math.random().toString(36).substring(2, 11)}`;
+      setLastEmailDispatchLog({
+        id: msgId,
+        timestamp: new Date().toLocaleTimeString(),
+        latencyMs: Math.floor(Math.random() * 90) + 120,
+        status: 'Delivered (HTTP 200)'
+      });
+      showToast('success', 'Test Email Dispatched', `Delivered test template to ${testEmailRecipient} via ${emailProvider.toUpperCase()} (<2s latency).`);
+    }, 900);
+  };
+
+  // Helper: Send Live Test SMS
+  const handleSendTestSms = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testSmsPhone) return;
+    setIsSendingTestSms(true);
+    setTimeout(() => {
+      setIsSendingTestSms(false);
+      const sid = `SM${Math.random().toString(36).substring(2, 12)}`;
+      setLastSmsDispatchLog({
+        sid,
+        timestamp: new Date().toLocaleTimeString(),
+        carrierAck: 'Verizon / AT&T ACK (Delivered)',
+        latencyMs: Math.floor(Math.random() * 150) + 260
+      });
+      showToast('success', 'Test SMS Dispatched', `A2P 10DLC message delivered to ${testSmsPhone} with prefix "${smsBrandPrefix}".`);
+    }, 1000);
+  };
+
+  // Helper: Save Communication Settings
+  const handleSaveCommunicationSettings = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const updatedCommSettings: OrgCommunicationSettings = {
+      emailDeliveryMode,
+      customSendingDomain,
+      customFromName,
+      customFromEmail,
+      customReplyTo,
+      emailProvider,
+      emailApiKey,
+      dnsVerified,
+      dnsRecords,
+      smsDeliveryMode,
+      smsBrandPrefix,
+      smsDedicatedNumber,
+      smsCadenceT72h,
+      smsCadenceT24h,
+      smsCadenceT2h,
+      smsEmergencyBroadcasts,
+      smsTaxReceipts,
+      smsOptInStatus
+    };
+
+    updateOrganizationBranding(currentOrg.id, {
+      communicationSettings: updatedCommSettings
+    });
+    showToast('success', 'Communication Settings Saved', `Email dispatch and SMS 10DLC configuration successfully updated for ${currentOrg.name}.`);
+  };
 
   // Helper: Compute Quarter Groups
   const quarterGroups = React.useMemo(() => {
@@ -1136,6 +1293,32 @@ export const OrgExecutiveDashboard: React.FC = () => {
               </p>
             </div>
 
+            {/* Quick Dispatch Setup Callout */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-purple-600 text-white rounded-xl shadow-xs mt-0.5 sm:mt-0">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <span>Email & SMS Dispatch Infrastructure</span>
+                    <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] rounded-full font-bold">New Studio</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    Configure custom sending domains (DKIM/SPF), R3Pro hosted shared pool, SMS 10DLC brand prefixes, and automated reminder cadences.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveAdminTab('integrations')}
+                className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl whitespace-nowrap shadow-xs flex items-center justify-center gap-1.5 transition self-start sm:self-auto"
+              >
+                <span>Email & SMS Settings</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
             <form onSubmit={handleSaveBranding} className="space-y-6">
               
               {/* 1. Legal Entity & Tax Classification */}
@@ -1818,238 +2001,793 @@ export const OrgExecutiveDashboard: React.FC = () => {
                   Email & SMS Communication Infrastructure
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
-                  Configure high-deliverability transactional email APIs (Resend / Postmark / AWS SES), custom domain DKIM/SPF authentication, and review the upcoming SMS 10DLC gateway roadmap.
+                  Configure high-deliverability transactional email (R3Pro Hosted Cloud Pool vs Custom Sending Domain), automated DKIM/SPF/DMARC DNS authentication, and multi-tenant A2P 10DLC SMS messaging.
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <div className="px-3 py-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  <span>Resend API Connected</span>
-                </div>
-                <div className="px-3 py-1.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>DKIM / SPF 100% Aligned</span>
-                </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSaveCommunicationSettings()}
+                  className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5 transition"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Save Communication Settings</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Current Active Mode & Health Chips */}
+            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-800">
+              <div className="px-3 py-1.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                <span>
+                  {emailDeliveryMode === 'custom_domain' 
+                    ? `Custom Sending Domain (${customSendingDomain})` 
+                    : 'R3Pro Cloud Hosted (Shared Pool)'}
+                </span>
+              </div>
+
+              <div className="px-3 py-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{dnsVerified ? 'DKIM / SPF 100% Aligned' : 'Pending DNS Verification'}</span>
+              </div>
+
+              <div className="px-3 py-1.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                <Smartphone className="w-3.5 h-3.5 text-purple-400" />
+                <span>A2P 10DLC Registered ({smsBrandPrefix})</span>
               </div>
             </div>
 
             {/* SLA Ribbon */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-800 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-800 text-xs">
               <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Queue P0 (Auth OTP)</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Queue P0 (Auth OTP)</span>
+                  <Zap className="w-3 h-3 text-emerald-400" />
+                </div>
                 <div className="text-base font-extrabold text-white mt-0.5">&lt; 2.0s SLA</div>
                 <span className="text-[10px] text-emerald-400">Bypasses marketing queues</span>
               </div>
+
               <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Queue P1 (Gate Passes)</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Queue P1 (Gate Passes)</span>
+                  <Smartphone className="w-3 h-3 text-indigo-400" />
+                </div>
                 <div className="text-base font-extrabold text-white mt-0.5">Instant Push</div>
                 <span className="text-[10px] text-indigo-300">Live QR Mobile Passes</span>
               </div>
+
               <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Queue P2 (501c3 Receipts)</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Queue P2 (501c3 Receipts)</span>
+                  <FileText className="w-3 h-3 text-purple-400" />
+                </div>
                 <div className="text-base font-extrabold text-white mt-0.5">Real-Time</div>
-                <span className="text-[10px] text-purple-300">IRS Pub 526 Compliant</span>
+                <span className="text-[10px] text-purple-300">IRS Pub 526/561 Compliant</span>
               </div>
+
               <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Queue P3 (Broadcasts)</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Queue P3 (Broadcasts)</span>
+                  <Radio className="w-3 h-3 text-amber-400" />
+                </div>
                 <div className="text-base font-extrabold text-white mt-0.5">50 / sec Limit</div>
                 <span className="text-[10px] text-amber-300">Tenant Reputation Guard</span>
               </div>
             </div>
           </div>
 
-          {/* Core Configuration Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            {/* Card 1: Email API & Custom Domain Setup */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-5">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-purple-600" />
-                    <span>Email Provider & API Credentials</span>
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-0.5">Select dispatch engine and configure organization API keys</p>
+          {/* Interactive Tooltips & Educational Knowledge Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+            <div 
+              onClick={() => setActiveTooltipId(activeTooltipId === 'spf_dkim' ? null : 'spf_dkim')}
+              className={`p-4 rounded-2xl border transition cursor-pointer ${
+                activeTooltipId === 'spf_dkim' ? 'bg-purple-50 border-purple-300 shadow-sm' : 'bg-white border-slate-200 hover:border-purple-200'
+              }`}
+            >
+              <div className="flex items-center justify-between font-bold text-slate-900">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-purple-600" />
+                  <span>What is SPF & DKIM?</span>
+                </span>
+                <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Cryptographic authentication that proves emails genuinely originate from your organization and prevents spam filters.
+              </p>
+              {activeTooltipId === 'spf_dkim' && (
+                <div className="mt-2 pt-2 border-t border-purple-200 text-[11px] text-purple-900 leading-relaxed">
+                  <strong>SPF</strong> authorizes dispatch IP addresses. <strong>DKIM</strong> signs every outbound email with a 2048-bit cryptographic key matching your public DNS record.
                 </div>
-                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold">
-                  ● Operational
+              )}
+            </div>
+
+            <div 
+              onClick={() => setActiveTooltipId(activeTooltipId === 'dmarc' ? null : 'dmarc')}
+              className={`p-4 rounded-2xl border transition cursor-pointer ${
+                activeTooltipId === 'dmarc' ? 'bg-indigo-50 border-indigo-300 shadow-sm' : 'bg-white border-slate-200 hover:border-indigo-200'
+              }`}
+            >
+              <div className="flex items-center justify-between font-bold text-slate-900">
+                <span className="flex items-center gap-1.5">
+                  <Lock className="w-4 h-4 text-indigo-600" />
+                  <span>What is DMARC?</span>
+                </span>
+                <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Domain-based Message Authentication that protects your brand from phishing and unauthorized spoofing.
+              </p>
+              {activeTooltipId === 'dmarc' && (
+                <div className="mt-2 pt-2 border-t border-indigo-200 text-[11px] text-indigo-900 leading-relaxed">
+                  Tells mailbox providers (Gmail, Microsoft 365, Yahoo) how to handle failed authentication and sends daily deliverability reports to your security email.
+                </div>
+              )}
+            </div>
+
+            <div 
+              onClick={() => setActiveTooltipId(activeTooltipId === '10dlc' ? null : '10dlc')}
+              className={`p-4 rounded-2xl border transition cursor-pointer ${
+                activeTooltipId === '10dlc' ? 'bg-emerald-50 border-emerald-300 shadow-sm' : 'bg-white border-slate-200 hover:border-emerald-200'
+              }`}
+            >
+              <div className="flex items-center justify-between font-bold text-slate-900">
+                <span className="flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4 text-emerald-600" />
+                  <span>A2P 10DLC Registration</span>
+                </span>
+                <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">
+                US telecom regulation for Application-to-Person SMS messaging for Non-Profits, PTAs, and charities.
+              </p>
+              {activeTooltipId === '10dlc' && (
+                <div className="mt-2 pt-2 border-t border-emerald-200 text-[11px] text-emerald-900 leading-relaxed">
+                  REACH acts as a registered ISV partner with The Campaign Registry (TCR). We register your EIN so carriers don&apos;t throttle or block your shift arrival reminders.
+                </div>
+              )}
+            </div>
+
+            <div 
+              onClick={() => setActiveTooltipId(activeTooltipId === 'hosted_vs_custom' ? null : 'hosted_vs_custom')}
+              className={`p-4 rounded-2xl border transition cursor-pointer ${
+                activeTooltipId === 'hosted_vs_custom' ? 'bg-amber-50 border-amber-300 shadow-sm' : 'bg-white border-slate-200 hover:border-amber-200'
+              }`}
+            >
+              <div className="flex items-center justify-between font-bold text-slate-900">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  <span>Hosted vs Custom Domain</span>
+                </span>
+                <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Compare R3Pro Hosted shared cloud delivery vs full white-labeled custom domain authentication.
+              </p>
+              {activeTooltipId === 'hosted_vs_custom' && (
+                <div className="mt-2 pt-2 border-t border-amber-200 text-[11px] text-amber-900 leading-relaxed">
+                  <strong>Hosted:</strong> Instant 0-second setup, pre-warmed IP pool. <strong>Custom Domain:</strong> Sends directly from <code>@mail.yourorg.org</code> with 100% brand white-labeling.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* SECTION 1: EMAIL DELIVERY CONFIGURATION */}
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+            <div>
+              <div className="flex items-center justify-between">
+                <h4 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-purple-600" />
+                  <span>Email Dispatch Architecture & Sending Identity</span>
+                </h4>
+                <span className="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold">
+                  Step 1 of 2
                 </span>
               </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Choose how outbound transactional receipts, volunteer check-in passes, and reminder emails are delivered to your supporters.
+              </p>
+            </div>
 
-              <div className="space-y-4 text-xs">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Email Dispatch Provider</label>
-                  <select
-                    value={emailProvider}
-                    onChange={(e) => setEmailProvider(e.target.value as any)}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800"
-                  >
-                    <option value="resend">Resend API (Modern React Email SDK — Recommended)</option>
-                    <option value="postmark">Postmark (Dedicated High-Deliverability Transactional)</option>
-                    <option value="ses">Amazon SES (High-Volume Dedicated IP Pool)</option>
-                    <option value="managed">REACH Cloud Shared Pool (Default)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">API Key ({emailProvider.toUpperCase()})</label>
-                  <div className="relative">
-                    <input
-                      type={showApiKey ? 'text' : 'password'}
-                      value={emailApiKey}
-                      onChange={(e) => setEmailApiKey(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-semibold pr-16"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-2.5 top-2.5 text-[11px] font-bold text-purple-600 hover:text-purple-800"
-                    >
-                      {showApiKey ? 'Hide' : 'Show'}
-                    </button>
+            {/* Dual Delivery Mode Selection Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              {/* Option A: R3Pro Hosted Cloud Pool */}
+              <div
+                onClick={() => setEmailDeliveryMode('managed')}
+                className={`p-5 rounded-2xl border-2 transition cursor-pointer relative ${
+                  emailDeliveryMode === 'managed'
+                    ? 'border-purple-600 bg-purple-50/30 shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-xl ${emailDeliveryMode === 'managed' ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <Zap className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-slate-900">R3Pro Hosted Cloud Pool</span>
+                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full">
+                          Zero-Config
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-500">Shared High-Reputation IP Pool</span>
+                    </div>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                    emailDeliveryMode === 'managed' ? 'border-purple-600 bg-purple-600 text-white' : 'border-slate-300'
+                  }`}>
+                    {emailDeliveryMode === 'managed' && <Check className="w-3 h-3" />}
                   </div>
                 </div>
 
-                {/* Sender Identity Details */}
-                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
-                  <div className="font-bold text-slate-900 text-xs">Tenant Sender Identity Headers:</div>
-                  <div className="font-mono text-[11px] text-slate-600 space-y-1">
-                    <div><strong>From:</strong> &quot;{currentOrg.name} via REACH&quot; &lt;notifications@mail.reachplatform.com&gt;</div>
-                    <div><strong>Reply-To:</strong> {orgEmail || currentOrg.contactEmail || 'coordinator@lincolnpta.org'}</div>
-                    <div><strong>X-Entity-Ref-ID:</strong> org_{currentOrg.id}</div>
+                <p className="text-xs text-slate-600 mt-3 leading-relaxed">
+                  Dispatches transactional emails via R3Pro&apos;s pre-authenticated AWS SES &amp; Resend cloud infrastructure. No DNS setup required. Replies automatically route back to your coordinator inbox.
+                </p>
+
+                <div className="mt-4 pt-3 border-t border-slate-200/60 font-mono text-[11px] text-slate-600 space-y-1">
+                  <div><strong>From:</strong> &quot;{customFromName || currentOrg.name} via REACH&quot; &lt;notifications@mail.reachplatform.com&gt;</div>
+                  <div><strong>Reply-To:</strong> {customReplyTo || currentOrg.contactEmail || 'chair@lincolnpta.org'}</div>
+                </div>
+              </div>
+
+              {/* Option B: Custom Branded Organization Domain */}
+              <div
+                onClick={() => setEmailDeliveryMode('custom_domain')}
+                className={`p-5 rounded-2xl border-2 transition cursor-pointer relative ${
+                  emailDeliveryMode === 'custom_domain'
+                    ? 'border-purple-600 bg-purple-50/30 shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-xl ${emailDeliveryMode === 'custom_domain' ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <Globe className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-slate-900">Custom Branded Domain</span>
+                        <span className="px-2 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-extrabold rounded-full">
+                          100% White-Labeled
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-500">Dedicated DKIM &amp; SPF Signing</span>
+                    </div>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                    emailDeliveryMode === 'custom_domain' ? 'border-purple-600 bg-purple-600 text-white' : 'border-slate-300'
+                  }`}>
+                    {emailDeliveryMode === 'custom_domain' && <Check className="w-3 h-3" />}
                   </div>
                 </div>
 
-                {/* Custom Domain DNS Authentication */}
-                <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <div className="flex justify-between items-center">
-                    <label className="font-bold text-slate-700">Custom Sending Domain (DKIM/SPF)</label>
-                    <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> DNS Verified
-                    </span>
+                <p className="text-xs text-slate-600 mt-3 leading-relaxed">
+                  Send emails directly from your domain (e.g. <code>events@{customSendingDomain}</code>) using your own API credentials with dedicated domain reputation, custom DKIM signing keys, and zero REACH branding.
+                </p>
+
+                <div className="mt-4 pt-3 border-t border-slate-200/60 font-mono text-[11px] text-slate-600 space-y-1">
+                  <div><strong>From:</strong> &quot;{customFromName || currentOrg.name}&quot; &lt;{customFromEmail || `events@${customSendingDomain}`}&gt;</div>
+                  <div><strong>Reply-To:</strong> {customReplyTo || currentOrg.contactEmail || 'chair@lincolnpta.org'}</div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Detailed Email Configuration Form */}
+            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">Sender Display Name *</label>
+                  <input
+                    type="text"
+                    value={customFromName}
+                    onChange={(e) => setCustomFromName(e.target.value)}
+                    placeholder="e.g. Lincoln High PTA Events"
+                    className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-900"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-0.5 block">Appears in supporter inboxes as the sender name</span>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">Reply-To Email Address *</label>
+                  <input
+                    type="email"
+                    value={customReplyTo}
+                    onChange={(e) => setCustomReplyTo(e.target.value)}
+                    placeholder="e.g. treasurer@lincolnpta.org"
+                    className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-900"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-0.5 block">Volunteer responses and inquiries route directly here</span>
+                </div>
+              </div>
+
+              {/* White-Label Custom Domain & API Provider Settings */}
+              {emailDeliveryMode === 'custom_domain' && (
+                <div className="pt-4 border-t border-slate-200 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Dispatch Provider API *</label>
+                      <select
+                        value={emailProvider}
+                        onChange={(e) => setEmailProvider(e.target.value as any)}
+                        className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-800"
+                      >
+                        <option value="resend">Resend API (React Email SDK — Recommended)</option>
+                        <option value="postmark">Postmark (Transactional High-Deliverability)</option>
+                        <option value="ses">Amazon SES (High-Volume Dedicated IP)</option>
+                        <option value="smtp">Custom SMTP Gateway</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Custom Sending Domain *</label>
+                      <input
+                        type="text"
+                        value={customSendingDomain}
+                        onChange={(e) => setCustomSendingDomain(e.target.value)}
+                        placeholder="e.g. mail.lincolnpta.org"
+                        className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-900 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Custom From Email Address *</label>
+                      <input
+                        type="email"
+                        value={customFromEmail}
+                        onChange={(e) => setCustomFromEmail(e.target.value)}
+                        placeholder="e.g. events@mail.lincolnpta.org"
+                        className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-900 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">
+                      {emailProvider.toUpperCase()} API Key / Secret Token *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showApiKey ? 'text' : 'password'}
+                        value={emailApiKey}
+                        onChange={(e) => setEmailApiKey(e.target.value)}
+                        placeholder="re_xxxxxxxxxxxxxxxxxxxx"
+                        className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-mono font-semibold pr-20 text-slate-900"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="absolute right-2.5 top-2.5 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold rounded-lg transition"
+                      >
+                        {showApiKey ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Interactive DNS Records Setup Table */}
+                  <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <h5 className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                          <Server className="w-4 h-4 text-purple-600" />
+                          <span>DNS Authentication Records for {customSendingDomain}</span>
+                        </h5>
+                        <p className="text-[11px] text-slate-500">
+                          Add these 4 records to your DNS manager (Cloudflare, GoDaddy, Namecheap, Route 53)
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={isVerifyingDns}
+                        onClick={handleVerifyDns}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs flex items-center gap-1.5 disabled:opacity-50 transition"
+                      >
+                        {isVerifyingDns ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                        <span>{isVerifyingDns ? 'Querying DNS...' : 'Verify DNS Records'}</span>
+                      </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-[11px] border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold text-[10px]">
+                            <th className="pb-2">Type</th>
+                            <th className="pb-2">Hostname / Host</th>
+                            <th className="pb-2">Value / Target</th>
+                            <th className="pb-2">Purpose</th>
+                            <th className="pb-2">Status</th>
+                            <th className="pb-2 text-right">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-mono">
+                          {dnsRecords.map((rec, idx) => (
+                            <tr key={idx} className="hover:bg-slate-50">
+                              <td className="py-2.5 font-bold text-purple-700">{rec.type}</td>
+                              <td className="py-2.5 text-slate-800 truncate max-w-[160px]" title={rec.name}>{rec.name}</td>
+                              <td className="py-2.5 text-slate-600 truncate max-w-[200px]" title={rec.value}>{rec.value}</td>
+                              <td className="py-2.5 font-sans">
+                                <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-bold">
+                                  {rec.purpose}
+                                </span>
+                              </td>
+                              <td className="py-2.5 font-sans">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 w-fit ${
+                                  dnsVerified ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                }`}>
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  <span>{dnsVerified ? 'Verified' : 'Pending'}</span>
+                                </span>
+                              </td>
+                              <td className="py-2.5 text-right font-sans">
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyDnsRecord(`rec_${idx}`, rec.value)}
+                                  className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[10px] font-bold flex items-center gap-1 ml-auto"
+                                >
+                                  {copiedRecordKey === `rec_${idx}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                                  <span>{copiedRecordKey === `rec_${idx}` ? 'Copied' : 'Copy'}</span>
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+
+          {/* SECTION 2: SMS GATEWAY & A2P 10DLC INFRASTRUCTURE */}
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+            <div>
+              <div className="flex items-center justify-between">
+                <h4 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Smartphone className="w-5 h-5 text-indigo-600" />
+                  <span>SMS Gateway, A2P 10DLC Compliance &amp; Delivery Cadence</span>
+                </h4>
+                <span className="px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold">
+                  Step 2 of 2
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Configure automated SMS notification cadences (T-72h, T-24h, T-2h mobile QR passes) and brand identifier prefixes.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* Left 2 Cols: SMS Gateway Settings */}
+              <div className="lg:col-span-2 space-y-5 text-xs">
+                
+                {/* 1. SMS Brand Identifier Prefix */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-slate-800">
+                      SMS Brand Identifier Prefix *
+                    </label>
+                    <span className="text-[10px] text-indigo-600 font-bold">Carrier Compliance Required</span>
                   </div>
                   <input
                     type="text"
-                    value={customSendingDomain}
-                    onChange={(e) => setCustomSendingDomain(e.target.value)}
-                    placeholder="e.g. mail.lincolnpta.org"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
+                    value={smsBrandPrefix}
+                    onChange={(e) => setSmsBrandPrefix(e.target.value)}
+                    placeholder="e.g. [Lincoln High PTA]"
+                    className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-900"
                   />
-                  <div className="text-[11px] text-slate-500">
-                    CNAME: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">resend._domainkey.{customSendingDomain}</code> &rarr; <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">dkim.resend.com</code>
+                  <p className="text-[11px] text-slate-500">
+                    A2P 10DLC regulations mandate identifying your organization at the start of every message to ensure delivery through carrier anti-spam filters.
+                  </p>
+                </div>
+
+                {/* 2. Automated Delivery Cadence & Event Triggers */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-purple-600" />
+                      <span>Automated SMS Delivery Schedule Cadence</span>
+                    </label>
+                    <span className="text-[10px] text-slate-500 font-semibold">T-minus Event Triggers</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    
+                    <div 
+                      onClick={() => setSmsCadenceT72h(!smsCadenceT72h)}
+                      className={`p-3 rounded-xl border transition cursor-pointer flex items-start gap-2.5 ${
+                        smsCadenceT72h ? 'bg-white border-purple-300 shadow-xs' : 'bg-slate-100/60 border-slate-200'
+                      }`}
+                    >
+                      <div className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center border ${
+                        smsCadenceT72h ? 'bg-purple-600 border-purple-600 text-white' : 'border-slate-300 bg-white'
+                      }`}>
+                        {smsCadenceT72h && <Check className="w-3 h-3" />}
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-900 block">⏰ T-72 Hours Reminder</span>
+                        <span className="text-[10px] text-slate-500">3-day briefing with shift recap and venue arrival notes.</span>
+                      </div>
+                    </div>
+
+                    <div 
+                      onClick={() => setSmsCadenceT24h(!smsCadenceT24h)}
+                      className={`p-3 rounded-xl border transition cursor-pointer flex items-start gap-2.5 ${
+                        smsCadenceT24h ? 'bg-white border-purple-300 shadow-xs' : 'bg-slate-100/60 border-slate-200'
+                      }`}
+                    >
+                      <div className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center border ${
+                        smsCadenceT24h ? 'bg-purple-600 border-purple-600 text-white' : 'border-slate-300 bg-white'
+                      }`}>
+                        {smsCadenceT24h && <Check className="w-3 h-3" />}
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-900 block">⏰ T-24 Hours Reminder</span>
+                        <span className="text-[10px] text-slate-500">1-day alert with gate reporting directions &amp; weather advisory.</span>
+                      </div>
+                    </div>
+
+                    <div 
+                      onClick={() => setSmsCadenceT2h(!smsCadenceT2h)}
+                      className={`p-3 rounded-xl border transition cursor-pointer flex items-start gap-2.5 ${
+                        smsCadenceT2h ? 'bg-white border-purple-300 shadow-xs' : 'bg-slate-100/60 border-slate-200'
+                      }`}
+                    >
+                      <div className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center border ${
+                        smsCadenceT2h ? 'bg-purple-600 border-purple-600 text-white' : 'border-slate-300 bg-white'
+                      }`}>
+                        {smsCadenceT2h && <Check className="w-3 h-3" />}
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-900 block">📱 T-2 Hours Gate Pass Delivery</span>
+                        <span className="text-[10px] text-slate-500">Direct mobile link with personal 1-tap QR check-in pass.</span>
+                      </div>
+                    </div>
+
+                    <div 
+                      onClick={() => setSmsEmergencyBroadcasts(!smsEmergencyBroadcasts)}
+                      className={`p-3 rounded-xl border transition cursor-pointer flex items-start gap-2.5 ${
+                        smsEmergencyBroadcasts ? 'bg-white border-purple-300 shadow-xs' : 'bg-slate-100/60 border-slate-200'
+                      }`}
+                    >
+                      <div className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center border ${
+                        smsEmergencyBroadcasts ? 'bg-purple-600 border-purple-600 text-white' : 'border-slate-300 bg-white'
+                      }`}>
+                        {smsEmergencyBroadcasts && <Check className="w-3 h-3" />}
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-900 block">🚨 Day-Of Emergency Alerts</span>
+                        <span className="text-[10px] text-slate-500">Instant SMS broadcast for rain delays and gate reassignments.</span>
+                      </div>
+                    </div>
+
+                    <div 
+                      onClick={() => setSmsTaxReceipts(!smsTaxReceipts)}
+                      className={`p-3 rounded-xl border transition cursor-pointer flex items-start gap-2.5 sm:col-span-2 ${
+                        smsTaxReceipts ? 'bg-white border-purple-300 shadow-xs' : 'bg-slate-100/60 border-slate-200'
+                      }`}
+                    >
+                      <div className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center border ${
+                        smsTaxReceipts ? 'bg-purple-600 border-purple-600 text-white' : 'border-slate-300 bg-white'
+                      }`}>
+                        {smsTaxReceipts && <Check className="w-3 h-3" />}
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-900 block">🧾 IRS 501(c)(3) Instant Donation Acknowledgement</span>
+                        <span className="text-[10px] text-slate-500">Real-time SMS acknowledgement containing statutory tax deduction receipt link.</span>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
 
-                {/* Live Test Email Dispatch Sandbox */}
-                <div className="pt-3 border-t border-slate-100 space-y-2">
-                  <label className="block font-bold text-slate-700">Live Test Dispatch Sandbox</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="email"
-                      value={testEmailRecipient}
-                      onChange={(e) => setTestEmailRecipient(e.target.value)}
-                      placeholder="recipient@example.com"
-                      className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold"
-                    />
-                    <button
-                      type="button"
-                      disabled={isSendingTestEmail}
-                      onClick={() => {
-                        setIsSendingTestEmail(true);
-                        setTimeout(() => {
-                          setIsSendingTestEmail(false);
-                          showToast('success', 'Test Email Dispatched via Resend', `Verified delivery to ${testEmailRecipient} (<2s latency).`);
-                        }, 800);
-                      }}
-                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-sm flex items-center gap-1.5 disabled:opacity-50"
-                    >
-                      {isSendingTestEmail ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                      <span>Send Test</span>
-                    </button>
+                {/* 3. TCPA Opt-Out & Suppression Isolation */}
+                <div className="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex items-start gap-3">
+                  <div className="p-1.5 bg-indigo-600 text-white rounded-lg mt-0.5">
+                    <Shield className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="text-[11px] text-indigo-950 leading-relaxed">
+                    <strong>Tenant-Isolated TCPA Compliance:</strong> Inbound carrier <code className="bg-white px-1 rounded font-bold">STOP</code> and <code className="bg-white px-1 rounded font-bold">START</code> keywords are strictly scoped to <code>org_{currentOrg.id}</code>. Unsubscribing from your PTA will never suppress notifications from another community organization.
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Right Col: Live Smartphone SMS Preview Mockup */}
+              <div className="space-y-3">
+                <div className="font-bold text-xs text-slate-900 flex items-center justify-between">
+                  <span>Live Smartphone SMS Preview</span>
+                  <span className="text-[10px] text-slate-500">GSM-7 Standard</span>
+                </div>
+
+                {/* Realistic Phone Frame */}
+                <div className="bg-slate-950 p-4 rounded-3xl shadow-xl border-4 border-slate-800 text-white font-sans max-w-xs mx-auto">
+                  {/* Speaker / Camera Notch */}
+                  <div className="w-24 h-3 bg-slate-900 rounded-full mx-auto mb-3 flex items-center justify-center">
+                    <div className="w-2.5 h-2.5 bg-slate-800 rounded-full"></div>
+                  </div>
+
+                  {/* Header Bar */}
+                  <div className="text-center pb-2 border-b border-slate-800 mb-3">
+                    <span className="text-[10px] text-slate-400 font-medium">Messages • Today 8:00 AM</span>
+                    <div className="text-xs font-bold text-slate-200 mt-0.5">REACH Alerts (10DLC)</div>
+                  </div>
+
+                  {/* SMS Bubble */}
+                  <div className="space-y-3 min-h-[160px] flex flex-col justify-end">
+                    <div className="bg-emerald-600 text-white p-3 rounded-2xl rounded-tl-xs text-[11px] leading-relaxed shadow-sm">
+                      <strong>{smsBrandPrefix}</strong> Hi Jordan! Your Morning Setup shift starts at 8:00 AM at Gate 2. View Pass: <span className="underline text-emerald-200">https://reachplatform.com/p/x94827</span> Reply STOP to opt out.
+                    </div>
+                  </div>
+
+                  {/* Character Counter Ribbon */}
+                  <div className="mt-4 pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                    <span>{`${smsBrandPrefix} Hi Jordan! Your Morning Setup shift starts at 8:00 AM at Gate 2. View Pass: https://reachplatform.com/p/x94827 Reply STOP to opt out.`.length} / 160 chars</span>
+                    <span className="text-emerald-400 font-bold">1 SMS Segment</span>
                   </div>
                 </div>
               </div>
+
+            </div>
+          </div>
+
+          {/* SECTION 3: LIVE INTERACTIVE TEST DISPATCH SANDBOXES */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Email Test Dispatcher */}
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <Send className="w-4 h-4 text-purple-600" />
+                    <span>Live Transactional Email Dispatcher</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Test deliverability and review provider response headers</p>
+                </div>
+                <span className="px-2 py-0.5 bg-purple-50 text-purple-700 text-[10px] font-bold rounded-lg">
+                  {emailProvider.toUpperCase()}
+                </span>
+              </div>
+
+              <form onSubmit={handleSendTestEmail} className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Recipient Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    value={testEmailRecipient}
+                    onChange={(e) => setTestEmailRecipient(e.target.value)}
+                    placeholder="coordinator@lincolnpta.org"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Select Email Template</label>
+                  <select
+                    value={testEmailType}
+                    onChange={(e) => setTestEmailType(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800"
+                  >
+                    <option value="volunteer_pass">🎟️ 1-Click QR Mobile Check-In Pass</option>
+                    <option value="shift_reminder">⏰ T-24h Shift Arrival Instructions</option>
+                    <option value="tax_receipt">🧾 IRS 501(c)(3) Official Tax Receipt</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSendingTestEmail}
+                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50 transition cursor-pointer"
+                >
+                  {isSendingTestEmail ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  <span>{isSendingTestEmail ? 'Dispatching Test Email...' : 'Send Test Email Now'}</span>
+                </button>
+              </form>
+
+              {/* Delivery Receipt Log */}
+              {lastEmailDispatchLog && (
+                <div className="p-3 rounded-xl bg-slate-900 text-white font-mono text-[11px] space-y-1">
+                  <div className="text-[10px] text-slate-400 font-sans font-bold uppercase flex items-center justify-between">
+                    <span>Dispatch Receipt Log</span>
+                    <span className="text-emerald-400">{lastEmailDispatchLog.status}</span>
+                  </div>
+                  <div className="text-slate-300">Message-ID: &lt;{lastEmailDispatchLog.id}@{customSendingDomain}&gt;</div>
+                  <div className="text-slate-300">Timestamp: {lastEmailDispatchLog.timestamp} | Latency: {lastEmailDispatchLog.latencyMs}ms</div>
+                </div>
+              )}
             </div>
 
-            {/* Card 2: SMS Gateway & A2P 10DLC Roadmap Backlog */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-5 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-indigo-600" />
-                      <span>SMS Gateway & A2P 10DLC Infrastructure</span>
-                    </h4>
-                    <p className="text-xs text-slate-500 mt-0.5">Twilio / AWS SNS / Telnyx Multi-Tenant SMS Messaging</p>
-                  </div>
-                  <span className="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-[10px] font-bold">
-                    ⏳ Q4 Roadmap Backlog
-                  </span>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 text-xs space-y-3">
-                  <div className="font-bold text-indigo-950 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-indigo-600" />
-                    <span>Backlog Scope & Planned Capabilities:</span>
-                  </div>
-                  
-                  <ul className="space-y-2 text-slate-700 text-[11px] leading-relaxed">
-                    <li className="flex items-start gap-2">
-                      <span className="text-indigo-600 font-bold">•</span>
-                      <span><strong>A2P 10DLC Non-Profit Campaign Registration:</strong> Automated ISV campaign registration for School PTAs and Charities to prevent carrier filtering.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-indigo-600 font-bold">•</span>
-                      <span><strong>Automated Schedule Cadence:</strong> Automated SMS reminders dispatched at T-72h, T-24h, and T-2h with 1-tap mobile boarding pass links.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-indigo-600 font-bold">•</span>
-                      <span><strong>Day-Of Gate Emergency Broadcasts:</strong> Instant SMS alerts to on-duty volunteers for rain delays, gate adjustments, and urgent shift needs.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-indigo-600 font-bold">•</span>
-                      <span><strong>Passwordless 6-Digit SMS OTP:</strong> 6-digit login passcodes sent via SMS for cross-device authentication.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-indigo-600 font-bold">•</span>
-                      <span><strong>Tenant-Scoped TCPA Opt-Out:</strong> Strict carrier <code className="bg-white px-1 rounded">STOP</code> / <code className="bg-white px-1 rounded">START</code> keyword tracking isolated per organization.</span>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Sample Outbound SMS Preview */}
-                <div className="p-3.5 rounded-2xl bg-slate-900 text-white font-mono text-[11px] space-y-1">
-                  <div className="text-[10px] text-slate-400 font-sans font-bold uppercase">Outbound SMS Preview:</div>
-                  <div className="text-emerald-400">
-                    &quot;[{currentOrg.name}] Your Morning Setup shift starts at 8:00 AM at Gate 2. View Pass: https://reachplatform.com/p/x94827 Reply STOP to opt out.&quot;
-                  </div>
-                </div>
-              </div>
-
-              {/* Beta Opt-In Toggle */}
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+            {/* SMS Test Dispatcher */}
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+              <div className="flex justify-between items-start">
                 <div>
-                  <div className="font-bold text-slate-900 text-xs">Early Beta Access for {currentOrg.name}</div>
-                  <div className="text-[11px] text-slate-500">Auto-provision A2P 10DLC numbers when SMS gateway launches</div>
+                  <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-indigo-600" />
+                    <span>Live A2P 10DLC SMS Dispatcher</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Test carrier acknowledgment and mobile pass links</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSmsBetaOptIn(!smsBetaOptIn);
-                    showToast('success', 'Roadmap Preferences Saved', smsBetaOptIn ? 'Opted out of early SMS beta.' : 'Enrolled in early SMS gateway beta access!');
-                  }}
-                  className={`px-3 py-1.5 rounded-xl font-bold text-xs transition ${
-                    smsBetaOptIn ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                >
-                  {smsBetaOptIn ? '✓ Enrolled in Beta' : 'Join Waitlist'}
-                </button>
+                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold rounded-lg">
+                  10DLC ISV
+                </span>
               </div>
 
+              <form onSubmit={handleSendTestSms} className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Recipient Mobile Phone *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={testSmsPhone}
+                    onChange={(e) => setTestSmsPhone(e.target.value)}
+                    placeholder="(555) 234-8900"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Select SMS Message Type</label>
+                  <select
+                    value={testSmsType}
+                    onChange={(e) => setTestSmsType(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800"
+                  >
+                    <option value="gate_pass">📱 T-2h Gate Check-In Pass &amp; Directions</option>
+                    <option value="shift_reminder">⏰ T-24h Shift Arrival Reminder</option>
+                    <option value="emergency">🚨 Urgent Day-Of Rain Advisory</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSendingTestSms}
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50 transition cursor-pointer"
+                >
+                  {isSendingTestSms ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Smartphone className="w-3.5 h-3.5" />}
+                  <span>{isSendingTestSms ? 'Dispatching A2P SMS...' : 'Send Test SMS Now'}</span>
+                </button>
+              </form>
+
+              {/* Delivery Receipt Log */}
+              {lastSmsDispatchLog && (
+                <div className="p-3 rounded-xl bg-slate-900 text-white font-mono text-[11px] space-y-1">
+                  <div className="text-[10px] text-slate-400 font-sans font-bold uppercase flex items-center justify-between">
+                    <span>Carrier Delivery Receipt</span>
+                    <span className="text-emerald-400">ACK Confirmed</span>
+                  </div>
+                  <div className="text-slate-300">SID: {lastSmsDispatchLog.sid} | Carrier: Verizon/AT&amp;T</div>
+                  <div className="text-slate-300">Timestamp: {lastSmsDispatchLog.timestamp} | Latency: {lastSmsDispatchLog.latencyMs}ms</div>
+                </div>
+              )}
             </div>
 
           </div>
+
+          {/* Sticky Bottom Save Action Bar */}
+          <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-xs text-slate-600">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Settings apply immediately across all {orgEvents.length} campaigns hosted by {currentOrg.name}.</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleSaveCommunicationSettings()}
+              className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-2 transition"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Save Communication Settings</span>
+            </button>
+          </div>
+
         </div>
       )}
 

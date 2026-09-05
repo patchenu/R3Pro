@@ -29,6 +29,31 @@ export const SEED_ORGANIZATIONS: Organization[] = [
       approvalThresholdBudget: 250,
       approvalThresholdSlots: 5,
       defaultReminderCadence: 'standard'
+    },
+    communicationSettings: {
+      emailDeliveryMode: 'custom_domain',
+      customSendingDomain: 'mail.lincolnpta.org',
+      customFromName: 'Lincoln High PTA Events',
+      customFromEmail: 'events@mail.lincolnpta.org',
+      customReplyTo: 'treasurer@lincolnpta.org',
+      emailProvider: 'resend',
+      emailApiKey: 're_839f28a9b1c04d5e9821',
+      dnsVerified: true,
+      dnsRecords: [
+        { type: 'CNAME', name: 'resend._domainkey.mail.lincolnpta.org', value: 'dkim.resend.com', status: 'verified', purpose: 'DKIM' },
+        { type: 'TXT', name: 'mail.lincolnpta.org', value: 'v=spf1 include:_spf.resend.com ~all', status: 'verified', purpose: 'SPF' },
+        { type: 'TXT', name: '_dmarc.mail.lincolnpta.org', value: 'v=DMARC1; p=none; rua=mailto:dmarc-reports@lincolnpta.org', status: 'verified', purpose: 'DMARC' },
+        { type: 'MX', name: 'feedback.mail.lincolnpta.org', value: 'feedback.resend.com', status: 'verified', purpose: 'Return-Path', priority: 10 }
+      ],
+      smsDeliveryMode: 'managed_10dlc',
+      smsBrandPrefix: '[Lincoln High PTA]',
+      smsDedicatedNumber: '+1 (555) 234-8900',
+      smsCadenceT72h: true,
+      smsCadenceT24h: true,
+      smsCadenceT2h: true,
+      smsEmergencyBroadcasts: true,
+      smsTaxReceipts: true,
+      smsOptInStatus: true
     }
   },
   {
@@ -52,6 +77,23 @@ export const SEED_ORGANIZATIONS: Organization[] = [
       approvalThresholdBudget: 500,
       approvalThresholdSlots: 8,
       defaultReminderCadence: 'intensive'
+    },
+    communicationSettings: {
+      emailDeliveryMode: 'managed',
+      customSendingDomain: '',
+      customFromName: 'Metro Community Foundation',
+      customFromEmail: 'notifications@mail.reachplatform.com',
+      customReplyTo: 'contact@metrohope.org',
+      emailProvider: 'managed',
+      dnsVerified: false,
+      smsDeliveryMode: 'managed_10dlc',
+      smsBrandPrefix: '[Metro Foundation]',
+      smsCadenceT72h: true,
+      smsCadenceT24h: true,
+      smsCadenceT2h: true,
+      smsEmergencyBroadcasts: true,
+      smsTaxReceipts: true,
+      smsOptInStatus: true
     }
   },
   {

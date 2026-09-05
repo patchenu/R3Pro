@@ -15,6 +15,7 @@ interface CommunityDiscoveryHubProps {
   onOpenEventBuilder: () => void;
   onOpenAuth?: (roleIntent?: 'org_admin' | 'volunteer') => void;
   onNavigateToVendorHub?: () => void;
+  onNavigateToOrgAdmin?: () => void;
 }
 
 export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
@@ -22,7 +23,8 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
   onOpenOrgWizard,
   onOpenEventBuilder,
   onOpenAuth,
-  onNavigateToVendorHub
+  onNavigateToVendorHub,
+  onNavigateToOrgAdmin
 }) => {
   const { currentUser, events, organizations, shifts, registrations, donations, switchEvent, switchOrganization, isAuthenticated } = useApp();
 
@@ -195,16 +197,16 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={onOpenEventBuilder}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition flex items-center gap-1"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition flex items-center gap-1 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>New Event</span>
                   </button>
                   <button
-                    onClick={onOpenOrgWizard}
-                    className="bg-white/15 hover:bg-white/25 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition"
+                    onClick={onNavigateToOrgAdmin || onOpenOrgWizard}
+                    className="bg-white/15 hover:bg-white/25 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition cursor-pointer"
                   >
-                    Org Settings
+                    Org Dashboard &amp; Settings
                   </button>
                 </div>
               </div>
