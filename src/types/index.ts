@@ -22,6 +22,7 @@ export interface User {
   avatarUrl?: string;
   assignedSubPartIds?: string[]; // IDs of sub-parts this lead is responsible for
   memberships?: OrgMembership[]; // Multi-tenant role memberships
+  isAppAdmin?: boolean; // Global Platform Superuser flag (distinct from organization roles)
   isRegisteredUser?: boolean;
   accountStatus?: 'active' | 'suspended' | 'pending_verification';
   lastLoginAt?: string;

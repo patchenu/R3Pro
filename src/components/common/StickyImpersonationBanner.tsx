@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Eye, ShieldAlert, ArrowLeft, UserCheck, Shield, Users, Sparkles } from 'lucide-react';
+import { Eye, ShieldAlert, ArrowLeft, UserCheck, Shield, Users, Sparkles, Lock, X } from 'lucide-react';
 
 interface StickyImpersonationBannerProps {
   onReturnToAdmin?: () => void;
@@ -9,12 +9,18 @@ interface StickyImpersonationBannerProps {
 export const StickyImpersonationBanner: React.FC<StickyImpersonationBannerProps> = ({
   onReturnToAdmin
 }) => {
-  const { isImpersonating, currentUser, currentOrg, impersonatedOriginalUser, stopImpersonation, openCommandPalette } = useApp();
+  const { 
+    isImpersonating, isReadOnlyImpersonation, currentUser, currentOrg, 
+    impersonatedOriginalUser, stopImpersonation, openCommandPalette 
+  } = useApp();
 
   if (!isImpersonating) return null;
 
   const handleExit = () => {
     stopImpersonation();
+    if (window.opener || window.history.length <= 1) {
+      window.close();
+    }
     if (onReturnToAdmin) {
       onReturnToAdmin();
     }
@@ -39,14 +45,14 @@ export const StickyImpersonationBanner: React.FC<StickyImpersonationBannerProps>
         {/* Left: Active Impersonation Context */}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/30 animate-pulse">
-            <Eye className="w-5 h-5 text-amber-200" />
+            {isReadOnlyImpersonation ? <Lock className="w-5 h-5 text-amber-200" /> : <Eye className="w-5 h-5 text-amber-200" />}
           </div>
 
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-black uppercase tracking-wider bg-black/30 px-2 py-0.5 rounded text-amber-200 border border-amber-200/30 flex items-center gap-1">
-                <ShieldAlert className="w-3 h-3" />
-                ACTIVE IMPERSONATION SESSION
+              <span className="text-[11px] font-black uppercase tracking-wider bg-black/40 px-2.5 py-0.5 rounded-md text-amber-200 border border-amber-200/30 flex items-center gap-1.5 shadow-xs">
+                {isReadOnlyImpersonation ? <Lock className="w-3 h-3 text-amber-300" /> : <ShieldAlert className="w-3 h-3 text-amber-300" />}
+                <span>{isReadOnlyImpersonation ? '🔒 READ-ONLY IMPERSONATION SANDBOX (NEW WINDOW)' : 'ACTIVE IMPERSONATION SESSION'}</span>
               </span>
               <span className="text-xs text-white/90">
                 Viewing as: <strong className="text-white font-black">{currentUser.name}</strong> ({currentUser.email})
@@ -57,10 +63,12 @@ export const StickyImpersonationBanner: React.FC<StickyImpersonationBannerProps>
             </div>
             
             <p className="text-[11px] text-amber-100/90 hidden md:block">
-              You are experiencing REACH with {currentUser.name}&apos;s exact permissions, scoped committee departments, and registrations.
+              {isReadOnlyImpersonation
+                ? `You are experiencing REACH with ${currentUser.name}'s exact permissions in strict Read-Only mode. All writes, edits, and deletions are safely intercepted and blocked.`
+                : `You are experiencing REACH with ${currentUser.name}'s exact permissions, scoped committee departments, and registrations.`}
               {impersonatedOriginalUser && (
                 <span className="text-white/80 ml-1">
-                  (Original Admin: <strong>{impersonatedOriginalUser.name}</strong>)
+                  (Initiated by: <strong>{impersonatedOriginalUser.name}</strong>)
                 </span>
               )}
             </p>
@@ -81,10 +89,10 @@ export const StickyImpersonationBanner: React.FC<StickyImpersonationBannerProps>
           <button
             onClick={handleExit}
             className="px-4 py-1.5 bg-white hover:bg-amber-50 text-slate-950 text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:scale-105 cursor-pointer"
-            title="End impersonation session and return to Admin Observability Hub"
+            title={isReadOnlyImpersonation ? "Close this sandbox window or exit impersonation" : "End impersonation session and return to Admin Hub"}
           >
-            <ArrowLeft className="w-3.5 h-3.5 text-amber-600" />
-            <span>Exit Impersonation</span>
+            {isReadOnlyImpersonation ? <X className="w-3.5 h-3.5 text-amber-600" /> : <ArrowLeft className="w-3.5 h-3.5 text-amber-600" />}
+            <span>{isReadOnlyImpersonation ? '✕ Close Sandbox Window' : 'Exit Impersonation'}</span>
           </button>
         </div>
 

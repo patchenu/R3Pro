@@ -9,6 +9,7 @@ export interface UserSessionPayload {
   role: string;
   email: string;
   name: string;
+  isAppAdmin?: boolean;
   iat?: number;
   exp?: number;
 }

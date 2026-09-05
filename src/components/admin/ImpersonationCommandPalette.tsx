@@ -15,9 +15,9 @@ const RECENTS_STORAGE_KEY = 'r3pro_impersonation_recents';
 export const ImpersonationCommandPalette: React.FC = () => {
   const { 
     isCommandPaletteOpen, closeCommandPalette,
-    users, organizations, subParts, currentOrg, currentUser, activeRole,
+    users, organizations, subParts, currentOrg, currentUser, activeRole, isAppAdmin,
     startImpersonation, stopImpersonation, isImpersonating,
-    adminPromoteToSuperAdmin, adminRevokeSuperAdmin, adminUpdateUserScope,
+    adminPromoteToSuperAdmin, adminRevokeSuperAdmin, adminToggleAppAdmin, adminUpdateUserScope,
     showToast
   } = useApp();
 
@@ -73,13 +73,15 @@ export const ImpersonationCommandPalette: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isCommandPaletteOpen, closeCommandPalette]);
 
-  // Filtered Users computation
+  // Filtered Users computation (Scoped to Org for Org Admins)
   const filteredUsers = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
     return users.filter(user => {
       // 1. Organization filter
-      if (selectedOrgFilter !== 'all' && user.orgId !== selectedOrgFilter) {
+      if (!isAppAdmin) {
+        if (user.orgId !== currentOrg.id) return false;
+      } else if (selectedOrgFilter !== 'all' && user.orgId !== selectedOrgFilter) {
         return false;
       }
 
@@ -115,7 +117,7 @@ export const ImpersonationCommandPalette: React.FC = () => {
         assignedDepts.includes(q)
       );
     });
-  }, [users, organizations, subParts, searchQuery, selectedOrgFilter, selectedRoleFilter, selectedDeptFilter]);
+  }, [users, organizations, subParts, searchQuery, isAppAdmin, currentOrg.id, selectedOrgFilter, selectedRoleFilter, selectedDeptFilter]);
 
   // Keep highlighted user in sync
   useEffect(() => {
@@ -151,7 +153,7 @@ export const ImpersonationCommandPalette: React.FC = () => {
       return;
     }
 
-    const success = startImpersonation(targetUser.id);
+    const success = startImpersonation(targetUser.id, true);
     if (success) {
       // Update recents queue
       const updatedRecents = [targetUser.id, ...recentUserIds.filter(id => id !== targetUser.id)].slice(0, 5);
@@ -319,33 +321,42 @@ export const ImpersonationCommandPalette: React.FC = () => {
                 <Building2 className="w-3 h-3 text-slate-400" />
                 Org:
               </span>
-              <button
-                onClick={() => setSelectedOrgFilter('all')}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition shrink-0 cursor-pointer ${
-                  selectedOrgFilter === 'all'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'bg-slate-800/70 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-                }`}
-              >
-                All Organizations ({users.length})
-              </button>
-              {organizations.map(org => {
-                const count = users.filter(u => u.orgId === org.id).length;
-                return (
+              {isAppAdmin ? (
+                <>
                   <button
-                    key={org.id}
-                    onClick={() => setSelectedOrgFilter(org.id)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition shrink-0 flex items-center gap-1 cursor-pointer ${
-                      selectedOrgFilter === org.id
+                    onClick={() => setSelectedOrgFilter('all')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition shrink-0 cursor-pointer ${
+                      selectedOrgFilter === 'all'
                         ? 'bg-indigo-600 text-white shadow-sm'
                         : 'bg-slate-800/70 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
                     }`}
                   >
-                    <span>{org.name}</span>
-                    <span className="text-[9px] opacity-70 px-1 py-0.2 rounded bg-black/20">({count})</span>
+                    All Organizations ({users.length})
                   </button>
-                );
-              })}
+                  {organizations.map(org => {
+                    const count = users.filter(u => u.orgId === org.id).length;
+                    return (
+                      <button
+                        key={org.id}
+                        onClick={() => setSelectedOrgFilter(org.id)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition shrink-0 flex items-center gap-1 cursor-pointer ${
+                          selectedOrgFilter === org.id
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-slate-800/70 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                        }`}
+                      >
+                        <span>{org.name}</span>
+                        <span className="text-[9px] opacity-70 px-1 py-0.2 rounded bg-black/20">({count})</span>
+                      </button>
+                    );
+                  })}
+                </>
+              ) : (
+                <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 shrink-0 flex items-center gap-1">
+                  <span>{currentOrg.name}</span>
+                  <span className="text-[9px] opacity-70 px-1 py-0.2 rounded bg-black/20">({users.filter(u => u.orgId === currentOrg.id).length})</span>
+                </span>
+              )}
             </div>
 
             {/* Dimension 2: Role Taxonomy Facet */}
@@ -568,6 +579,13 @@ export const ImpersonationCommandPalette: React.FC = () => {
                             <span>{roleConfig.label}</span>
                           </span>
 
+                          {u.isAppAdmin && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                              <Crown className="w-2.5 h-2.5 text-amber-300" />
+                              <span>App Admin</span>
+                            </span>
+                          )}
+
                           {userOrg && (
                             <span className="text-[9px] text-slate-400 font-medium truncate max-w-[110px]">
                               · {userOrg.name}
@@ -609,12 +627,22 @@ export const ImpersonationCommandPalette: React.FC = () => {
                         </div>
                       )}
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="text-base font-black text-white">{selectedUser.name}</h3>
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold border uppercase tracking-wider ${getRoleBadgeConfig(selectedUser.role).bg}`}>
                             {getRoleBadgeConfig(selectedUser.role).icon}
                             <span>{getRoleBadgeConfig(selectedUser.role).label}</span>
                           </span>
+                          {selectedUser.isAppAdmin ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                              <Crown className="w-3 h-3 text-amber-300" />
+                              App Admin: YES
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase bg-slate-800 text-slate-400 border border-slate-700">
+                              App Admin: NO
+                            </span>
+                          )}
                         </div>
                         <div className="text-xs text-slate-400 mt-0.5">
                           {selectedUser.email} {selectedUser.phone && `· ${selectedUser.phone}`}
@@ -661,7 +689,7 @@ export const ImpersonationCommandPalette: React.FC = () => {
 
                 {/* 2. Primary Launch & Action Bar */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {/* Launch Perspective CTA */}
+                  {/* Launch Perspective CTA (Opens in New Window Safe Read-Only) */}
                   <button
                     onClick={() => handleLaunchImpersonation(selectedUser)}
                     disabled={currentUser.id === selectedUser.id || selectedUser.accountStatus === 'suspended'}
@@ -679,23 +707,38 @@ export const ImpersonationCommandPalette: React.FC = () => {
                         ? 'Currently Active Perspective' 
                         : selectedUser.accountStatus === 'suspended'
                         ? 'Account Suspended'
-                        : `⚡ Launch Perspective (${selectedUser.name.split(' ')[0]})`}
+                        : `⚡ Launch Perspective in New Window (${selectedUser.name.split(' ')[0]})`}
                     </span>
                   </button>
 
-                  {/* 1-Click Super Admin Promotion / Revocation */}
-                  <button
-                    onClick={() => handleToggleAdminStatus(selectedUser)}
-                    className={`py-2.5 px-3.5 rounded-xl text-xs font-extrabold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                      selectedUser.role === 'org_admin'
-                        ? 'bg-slate-800 hover:bg-rose-900/50 text-rose-300 border-rose-500/40'
-                        : 'bg-purple-950/60 hover:bg-purple-900/80 text-purple-200 border-purple-500/50 shadow-sm'
-                    }`}
-                    title={selectedUser.role === 'org_admin' ? 'Revoke Super Admin privileges' : 'Promote to Org Super Admin'}
-                  >
-                    <Crown className="w-4 h-4 text-amber-300" />
-                    <span>{selectedUser.role === 'org_admin' ? 'Revoke Super Admin' : '👑 Grant Super Admin Status'}</span>
-                  </button>
+                  {/* 1-Click App Admin Toggle (App Admin only) or Role Promotion */}
+                  {isAppAdmin ? (
+                    <button
+                      onClick={() => adminToggleAppAdmin(selectedUser.id)}
+                      className={`py-2.5 px-3.5 rounded-xl text-xs font-extrabold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        selectedUser.isAppAdmin
+                          ? 'bg-slate-800 hover:bg-rose-900/50 text-rose-300 border-rose-500/40'
+                          : 'bg-purple-950/60 hover:bg-purple-900/80 text-purple-200 border-purple-500/50 shadow-sm'
+                      }`}
+                      title={selectedUser.isAppAdmin ? 'Revoke Platform App Admin status' : 'Grant Platform App Admin Superuser Status'}
+                    >
+                      <Crown className="w-4 h-4 text-amber-300" />
+                      <span>{selectedUser.isAppAdmin ? 'Revoke App Admin' : '👑 Make Platform App Admin'}</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleToggleAdminStatus(selectedUser)}
+                      className={`py-2.5 px-3.5 rounded-xl text-xs font-extrabold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        selectedUser.role === 'org_admin'
+                          ? 'bg-slate-800 hover:bg-rose-900/50 text-rose-300 border-rose-500/40'
+                          : 'bg-purple-950/60 hover:bg-purple-900/80 text-purple-200 border-purple-500/50 shadow-sm'
+                      }`}
+                      title={selectedUser.role === 'org_admin' ? 'Demote to Event Planner' : 'Promote to Org Super Admin'}
+                    >
+                      <Crown className="w-4 h-4 text-amber-300" />
+                      <span>{selectedUser.role === 'org_admin' ? 'Revoke Org Admin' : '👑 Grant Org Admin'}</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* 3. Role & Department Scope Customizer ("Modify on the Fly") */}

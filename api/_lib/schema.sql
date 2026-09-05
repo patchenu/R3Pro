@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS users (
     role VARCHAR(50) NOT NULL DEFAULT 'volunteer', -- org_admin, event_planner, committee_lead, vendor, volunteer, kiosk
     avatar_url TEXT,
     assigned_sub_part_ids TEXT[] DEFAULT '{}',
+    is_app_admin BOOLEAN DEFAULT FALSE,
     is_registered_user BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),

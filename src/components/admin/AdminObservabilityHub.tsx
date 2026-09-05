@@ -20,9 +20,9 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
   onNavigateToTab
 }) => {
   const { 
-    users, currentUser, currentOrg, activeRole, auditLogs, subParts,
+    users, currentUser, currentOrg, organizations, activeRole, isAppAdmin, auditLogs, subParts,
     isImpersonating, startImpersonation, stopImpersonation,
-    openCommandPalette, adminPromoteToSuperAdmin, adminRevokeSuperAdmin, adminUpdateUserScope,
+    openCommandPalette, adminPromoteToSuperAdmin, adminRevokeSuperAdmin, adminToggleAppAdmin, adminUpdateUserScope,
     adminCreateUser, adminUpdateUser, adminToggleUserSuspension, 
     adminResetUserPassword, adminDeleteUser,
     errorLogs, webVitalsMetrics, apiLatencyMetrics, healthChecks, healthSuiteStatus,
@@ -33,9 +33,11 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
   const [activeHubTab, setActiveHubTab] = useState<'accounts' | 'sentry' | 'web_vitals' | 'uptime' | 'audit'>('accounts');
 
   // Accounts & Users State
+  const [selectedOrgFilter, setSelectedOrgFilter] = useState<string>('all');
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState<'all' | UserRole>('all');
   const [userStatusFilter, setUserStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
+  const [userAppAdminFilter, setUserAppAdminFilter] = useState<'all' | 'yes' | 'no'>('all');
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [resettingUserCode, setResettingUserCode] = useState<{ user: User; code: string } | null>(null);
@@ -47,7 +49,9 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPhone, setNewUserPhone] = useState('');
+  const [newUserOrgId, setNewUserOrgId] = useState(currentOrg.id);
   const [newUserRole, setNewUserRole] = useState<UserRole>('volunteer');
+  const [newUserAppAdmin, setNewUserAppAdmin] = useState(false);
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUser2FA, setNewUser2FA] = useState(false);
 
@@ -68,9 +72,22 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
   const [auditSearchQuery, setAuditSearchQuery] = useState('');
   const [auditActionFilter, setAuditActionFilter] = useState('all');
 
+  // Scoped Users computation
+  const scopedUsers = useMemo(() => {
+    return users.filter(u => {
+      if (!isAppAdmin) {
+        return u.orgId === currentOrg.id;
+      }
+      if (selectedOrgFilter !== 'all') {
+        return u.orgId === selectedOrgFilter;
+      }
+      return true;
+    });
+  }, [users, isAppAdmin, currentOrg.id, selectedOrgFilter]);
+
   // Filtered Users List
   const filteredUsers = useMemo(() => {
-    return users.filter(u => {
+    return scopedUsers.filter(u => {
       const matchSearch = !userSearchQuery.trim() || 
         u.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
         u.email.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
@@ -78,15 +95,18 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
       const matchRole = userRoleFilter === 'all' || u.role === userRoleFilter;
       const matchStatus = userStatusFilter === 'all' || 
         (userStatusFilter === 'suspended' ? u.accountStatus === 'suspended' : u.accountStatus !== 'suspended');
-      return matchSearch && matchRole && matchStatus;
+      const matchAppAdmin = userAppAdminFilter === 'all' ||
+        (userAppAdminFilter === 'yes' ? Boolean(u.isAppAdmin) : !u.isAppAdmin);
+      return matchSearch && matchRole && matchStatus && matchAppAdmin;
     });
-  }, [users, userSearchQuery, userRoleFilter, userStatusFilter]);
+  }, [scopedUsers, userSearchQuery, userRoleFilter, userStatusFilter, userAppAdminFilter]);
 
   // Account Statistics
-  const totalUsersCount = users.length;
-  const activeUsersCount = users.filter(u => u.accountStatus !== 'suspended').length;
-  const suspendedUsersCount = users.filter(u => u.accountStatus === 'suspended').length;
-  const twoFaUsersCount = users.filter(u => u.twoFactorEnabled).length;
+  const totalUsersCount = scopedUsers.length;
+  const activeUsersCount = scopedUsers.filter(u => u.accountStatus !== 'suspended').length;
+  const suspendedUsersCount = scopedUsers.filter(u => u.accountStatus === 'suspended').length;
+  const appAdminUsersCount = scopedUsers.filter(u => u.isAppAdmin).length;
+  const twoFaUsersCount = scopedUsers.filter(u => u.twoFactorEnabled).length;
 
   // Filtered Errors List
   const filteredErrors = useMemo(() => {
@@ -101,9 +121,12 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
     });
   }, [errorLogs, sentrySeverityFilter, sentryStatusFilter, sentrySearchQuery]);
 
-  // Filtered Audit Logs
+  // Filtered Audit Logs (Scoped by Org if not App Admin)
   const filteredAuditLogs = useMemo(() => {
     return auditLogs.filter(log => {
+      if (!isAppAdmin && log.orgId && log.orgId !== currentOrg.id) {
+        return false;
+      }
       const matchSearch = !auditSearchQuery.trim() ||
         log.actorName.toLowerCase().includes(auditSearchQuery.toLowerCase()) ||
         log.action.toLowerCase().includes(auditSearchQuery.toLowerCase()) ||
@@ -111,7 +134,7 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
       const matchAction = auditActionFilter === 'all' || log.action.includes(auditActionFilter);
       return matchSearch && matchAction;
     });
-  }, [auditLogs, auditSearchQuery, auditActionFilter]);
+  }, [auditLogs, isAppAdmin, currentOrg.id, auditSearchQuery, auditActionFilter]);
 
   // Handlers
   const handleCreateUserSubmit = (e: React.FormEvent) => {
@@ -125,7 +148,8 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
       email: newUserEmail.trim(),
       phone: newUserPhone.trim() || undefined,
       role: newUserRole,
-      orgId: currentOrg.id,
+      orgId: isAppAdmin ? newUserOrgId : currentOrg.id,
+      isAppAdmin: isAppAdmin ? newUserAppAdmin : false,
       twoFactorEnabled: newUser2FA,
       initialPassword: newUserPassword || undefined
     });
@@ -133,7 +157,9 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
     setNewUserName('');
     setNewUserEmail('');
     setNewUserPhone('');
+    setNewUserOrgId(currentOrg.id);
     setNewUserRole('volunteer');
+    setNewUserAppAdmin(false);
     setNewUserPassword('');
     setNewUser2FA(false);
     setIsCreateUserModalOpen(false);
@@ -147,6 +173,8 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
       email: editingUser.email,
       phone: editingUser.phone,
       role: editingUser.role,
+      orgId: editingUser.orgId,
+      isAppAdmin: editingUser.isAppAdmin,
       assignedSubPartIds: editingUser.assignedSubPartIds || [],
       twoFactorEnabled: editingUser.twoFactorEnabled
     });
@@ -172,15 +200,7 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
   };
 
   const handleImpersonateClick = (user: User) => {
-    const success = startImpersonation(user.id);
-    if (success && onNavigateToTab) {
-      if (user.role === 'committee_lead') onNavigateToTab('lead_portal');
-      else if (user.role === 'event_planner') onNavigateToTab('planner_dashboard');
-      else if (user.role === 'vendor') onNavigateToTab('vendor_portal');
-      else if (user.role === 'volunteer') onNavigateToTab('public_landing');
-      else if (user.role === 'org_admin') onNavigateToTab('org_admin_view');
-      else if (user.role === 'kiosk') onNavigateToTab('kiosk_mode');
-    }
+    startImpersonation(user.id, true);
   };
 
   const exportAuditLogsToCsv = () => {
@@ -237,11 +257,18 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
 
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="px-3 py-1 bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
-                <Shield className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Enterprise Command &amp; Control</span>
-              </span>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              {isAppAdmin ? (
+                <span className="px-3 py-1 bg-purple-500/20 border border-purple-400/30 text-purple-300 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
+                  <Crown className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Platform Superuser Mode · All Orgs Visible</span>
+                </span>
+              ) : (
+                <span className="px-3 py-1 bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
+                  <Shield className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Org Admin Mode · {currentOrg.name}</span>
+                </span>
+              )}
               <span className="px-3 py-1 bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 rounded-full text-xs font-bold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 <span>Production Health: 100% SLA</span>
@@ -249,10 +276,12 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
-              <span>Admin Observability, Accounts &amp; Diagnostics Hub</span>
+              <span>{isAppAdmin ? 'Platform Observability, Accounts & Diagnostics Hub' : `${currentOrg.name} — Accounts & Team Hub`}</span>
             </h1>
             <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
-              Full-spectrum real-time administrative command: User account lifecycle control, live user impersonation (&quot;See What They See&quot;), Sentry exception diagnostics, Core Web Vitals telemetry, and infrastructure heartbeat monitors.
+              {isAppAdmin
+                ? 'Full-spectrum administrative command across all organizations: User account lifecycle control, App Admin permissions, read-only impersonation in new windows, Sentry exception diagnostics, and heartbeat monitors.'
+                : `Administrative command for ${currentOrg.name}: Manage staff, planners, committee leads, and supporters scoped strictly to your organization.`}
             </p>
           </div>
 
@@ -289,11 +318,20 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mt-6 pt-6 border-t border-slate-800/80">
           <div className="bg-white/5 backdrop-blur-xs p-3.5 rounded-2xl border border-white/10">
             <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span>Total Accounts</span>
+              <span>{isAppAdmin ? 'Total Accounts' : 'Org Accounts'}</span>
               <Users className="w-3.5 h-3.5 text-indigo-400" />
             </div>
             <div className="text-xl font-black text-white mt-1">{totalUsersCount}</div>
             <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">{activeUsersCount} Active · {suspendedUsersCount} Suspended</div>
+          </div>
+
+          <div className="bg-white/5 backdrop-blur-xs p-3.5 rounded-2xl border border-white/10">
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <span>{isAppAdmin ? 'Platform App Admins' : '2FA Protection'}</span>
+              {isAppAdmin ? <Crown className="w-3.5 h-3.5 text-amber-400" /> : <Shield className="w-3.5 h-3.5 text-emerald-400" />}
+            </div>
+            <div className="text-xl font-black text-amber-300 mt-1">{isAppAdmin ? appAdminUsersCount : `${twoFaUsersCount}/${totalUsersCount}`}</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">{isAppAdmin ? 'Cross-Tenant Superusers' : 'Multi-Factor Enforced'}</div>
           </div>
 
           <div className="bg-white/5 backdrop-blur-xs p-3.5 rounded-2xl border border-white/10">
@@ -314,15 +352,6 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
               {errorLogs.filter(e => e.status !== 'resolved').length}
             </div>
             <div className="text-[10px] text-slate-400 mt-0.5">{errorLogs.length} Total Logged</div>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-xs p-3.5 rounded-2xl border border-white/10">
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span>Largest Contentful Paint</span>
-              <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-            </div>
-            <div className="text-xl font-black text-cyan-300 mt-1">{webVitalsMetrics.lcp.value}s</div>
-            <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">Rating: Good (&lt;2.5s)</div>
           </div>
 
           <div className="bg-white/5 backdrop-blur-xs p-3.5 rounded-2xl border border-white/10 col-span-2 sm:col-span-1">
@@ -475,8 +504,8 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
 
           {/* User Filter & Search Controls */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
-            <div className="flex flex-1 items-center gap-2 w-full">
-              <div className="relative flex-1">
+            <div className="flex flex-1 items-center gap-2 w-full flex-wrap">
+              <div className="relative flex-1 min-w-[200px]">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
@@ -487,6 +516,28 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                 />
               </div>
 
+              {/* Organization Filter (App Admin only) */}
+              {isAppAdmin ? (
+                <div className="relative">
+                  <select
+                    value={selectedOrgFilter}
+                    onChange={(e) => setSelectedOrgFilter(e.target.value)}
+                    className="appearance-none bg-purple-50 border border-purple-200 rounded-xl py-2 pl-3 pr-8 text-xs font-bold text-purple-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                  >
+                    <option value="all">🏢 All Organizations ({organizations.length})</option>
+                    {organizations.map(org => (
+                      <option key={org.id} value={org.id}>{org.name}</option>
+                    ))}
+                  </select>
+                  <Filter className="w-3 h-3 text-purple-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              ) : (
+                <div className="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-extrabold text-indigo-900 flex items-center gap-1.5 shrink-0">
+                  <Shield className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Org: {currentOrg.name}</span>
+                </div>
+              )}
+
               {/* Role Filter */}
               <div className="relative">
                 <select
@@ -494,13 +545,27 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                   onChange={(e) => setUserRoleFilter(e.target.value as any)}
                   className="appearance-none bg-slate-50 border border-slate-200 rounded-xl py-2 pl-3 pr-8 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 >
-                  <option value="all">All Roles ({users.length})</option>
+                  <option value="all">All Roles ({scopedUsers.length})</option>
                   <option value="org_admin">Org Super Admin</option>
                   <option value="event_planner">Event Planner</option>
                   <option value="committee_lead">Committee Lead</option>
                   <option value="vendor">Vendor / Sponsor</option>
                   <option value="volunteer">Volunteer / Donor</option>
                   <option value="kiosk">Kiosk Station</option>
+                </select>
+                <Filter className="w-3 h-3 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+
+              {/* App Admin Filter */}
+              <div className="relative">
+                <select
+                  value={userAppAdminFilter}
+                  onChange={(e) => setUserAppAdminFilter(e.target.value as any)}
+                  className="appearance-none bg-slate-50 border border-slate-200 rounded-xl py-2 pl-3 pr-8 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  <option value="all">All App Admin Status</option>
+                  <option value="yes">👑 App Admin: YES ({appAdminUsersCount})</option>
+                  <option value="no">Standard Users: NO</option>
                 </select>
                 <Filter className="w-3 h-3 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -521,7 +586,7 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
             </div>
 
             <div className="text-xs text-slate-500 font-semibold shrink-0">
-              Showing <strong>{filteredUsers.length}</strong> of <strong>{users.length}</strong> accounts
+              Showing <strong>{filteredUsers.length}</strong> of <strong>{scopedUsers.length}</strong> accounts
             </div>
           </div>
 
@@ -532,7 +597,9 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                 <thead className="bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="px-5 py-3.5">User &amp; Identity</th>
+                    {isAppAdmin && <th className="px-4 py-3.5">Organization</th>}
                     <th className="px-4 py-3.5">Role &amp; Scope</th>
+                    <th className="px-4 py-3.5">App Admin (Y/N)</th>
                     <th className="px-4 py-3.5">Account Status</th>
                     <th className="px-4 py-3.5">Last Active / IP</th>
                     <th className="px-4 py-3.5">Security / 2FA</th>
@@ -542,7 +609,7 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                 <tbody className="divide-y divide-slate-100">
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center py-12 text-slate-400">
+                      <td colSpan={isAppAdmin ? 8 : 7} className="text-center py-12 text-slate-400">
                         <Users className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                         <p className="font-bold">No user accounts matched your search criteria.</p>
                       </td>
@@ -551,6 +618,7 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                     filteredUsers.map(u => {
                       const isSuspended = u.accountStatus === 'suspended';
                       const isCurrent = currentUser.id === u.id;
+                      const userOrg = organizations.find(o => o.id === u.orgId);
 
                       return (
                         <tr key={u.id} className={`hover:bg-slate-50/80 transition ${isSuspended ? 'bg-rose-50/30' : ''}`}>
@@ -579,6 +647,15 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                             </div>
                           </td>
 
+                          {/* Organization (App Admin only) */}
+                          {isAppAdmin && (
+                            <td className="px-4 py-3.5">
+                              <span className="font-semibold text-slate-800 text-[11px]">
+                                {userOrg ? userOrg.name : u.orgId}
+                              </span>
+                            </td>
+                          )}
+
                           {/* Role & Scope */}
                           <td className="px-4 py-3.5">
                             <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-extrabold border uppercase tracking-wider ${getRoleBadgeClass(u.role)}`}>
@@ -589,6 +666,32 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                                 Scoped: {u.assignedSubPartIds.length} Department(s)
                               </div>
                             )}
+                          </td>
+
+                          {/* App Admin Status (Y/N) */}
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-2">
+                              {u.isAppAdmin ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-900 border border-purple-300 text-[10px] font-black uppercase shadow-xs">
+                                  <Crown className="w-3 h-3 text-purple-600" />
+                                  <span>YES</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold uppercase">
+                                  <span>NO</span>
+                                </span>
+                              )}
+                              {isAppAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={() => adminToggleAppAdmin(u.id)}
+                                  className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+                                  title={u.isAppAdmin ? 'Revoke Platform App Admin status' : 'Grant Platform App Admin status'}
+                                >
+                                  {u.isAppAdmin ? 'Revoke' : 'Make App Admin'}
+                                </button>
+                              )}
+                            </div>
                           </td>
 
                           {/* Status */}
@@ -651,13 +754,13 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                     : 'bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 cursor-pointer'
                                 }`}
-                                title={isSuspended ? 'Cannot impersonate suspended account' : `Impersonate ${u.name}`}
+                                title={isSuspended ? 'Cannot impersonate suspended account' : `Impersonate ${u.name} (Read-Only in New Window)`}
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 <span className="hidden sm:inline">Impersonate</span>
                               </button>
 
-                              {/* Grant / Revoke Super Admin */}
+                              {/* Grant / Revoke Org Admin */}
                               <button
                                 onClick={() => {
                                   if (u.role === 'org_admin') {
@@ -671,7 +774,7 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                                     ? 'bg-purple-100 hover:bg-rose-100 text-purple-700 hover:text-rose-700'
                                     : 'bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-700'
                                 }`}
-                                title={u.role === 'org_admin' ? 'Revoke Super Admin privileges' : '👑 Grant App Super Admin Status'}
+                                title={u.role === 'org_admin' ? 'Demote to Event Planner' : 'Promote to Org Super Admin'}
                               >
                                 <Crown className="w-3.5 h-3.5" />
                               </button>
@@ -1301,6 +1404,26 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                 />
               </div>
 
+              {/* Organization Selection (App Admin only) */}
+              {isAppAdmin ? (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Assigned Organization *</label>
+                  <select
+                    value={newUserOrgId}
+                    onChange={(e) => setNewUserOrgId(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+                  >
+                    {organizations.map(org => (
+                      <option key={org.id} value={org.id}>{org.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700">
+                  <span className="font-bold">Organization:</span> {currentOrg.name}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Phone</label>
@@ -1329,6 +1452,22 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                   </select>
                 </div>
               </div>
+
+              {/* App Admin Toggle (App Admin only) */}
+              {isAppAdmin && (
+                <div className="flex items-center gap-2 p-3 bg-purple-50 border border-purple-200 rounded-2xl">
+                  <input
+                    type="checkbox"
+                    id="newUserAppAdmin"
+                    checked={newUserAppAdmin}
+                    onChange={(e) => setNewUserAppAdmin(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                  />
+                  <label htmlFor="newUserAppAdmin" className="text-xs font-extrabold text-purple-950 cursor-pointer">
+                    👑 Grant Platform App Admin Status (Superuser across all organizations)
+                  </label>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Initial Password (Optional / Defaults to Passwordless OTP)</label>
@@ -1421,6 +1560,22 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                 />
               </div>
 
+              {/* Organization Selection (App Admin only) */}
+              {isAppAdmin && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Assigned Organization</label>
+                  <select
+                    value={editingUser.orgId || currentOrg.id}
+                    onChange={(e) => setEditingUser({ ...editingUser, orgId: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+                  >
+                    {organizations.map(org => (
+                      <option key={org.id} value={org.id}>{org.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Phone</label>
@@ -1448,6 +1603,22 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
                   </select>
                 </div>
               </div>
+
+              {/* App Admin Status Checkbox (App Admin only) */}
+              {isAppAdmin && (
+                <div className="flex items-center gap-2 p-3 bg-purple-50 border border-purple-200 rounded-2xl">
+                  <input
+                    type="checkbox"
+                    id="editUserAppAdmin"
+                    checked={Boolean(editingUser.isAppAdmin)}
+                    onChange={(e) => setEditingUser({ ...editingUser, isAppAdmin: e.target.checked })}
+                    className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                  />
+                  <label htmlFor="editUserAppAdmin" className="text-xs font-extrabold text-purple-950 cursor-pointer">
+                    👑 Platform-Wide App Admin Status (Superuser)
+                  </label>
+                </div>
+              )}
 
               {/* Committee Department Scoping (if Lead) */}
               {editingUser.role === 'committee_lead' && (

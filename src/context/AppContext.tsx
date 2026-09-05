@@ -184,9 +184,11 @@ interface AppContextType {
 
   // User Impersonation & Administrative Account Control
   isImpersonating: boolean;
+  isReadOnlyImpersonation: boolean;
+  isAppAdmin: boolean;
   impersonatedOriginalUser: User | null;
   impersonatedOriginalRole: UserRole | null;
-  startImpersonation: (targetUserId: string) => boolean;
+  startImpersonation: (targetUserId: string, openInNewWindow?: boolean) => boolean;
   stopImpersonation: () => void;
 
   // Command Palette & Global Persona Switcher
@@ -203,7 +205,8 @@ interface AppContextType {
   adminDeleteUser: (userId: string) => void;
   adminPromoteToSuperAdmin: (userId: string) => void;
   adminRevokeSuperAdmin: (userId: string, fallbackRole?: UserRole) => void;
-  adminUpdateUserScope: (userId: string, role: UserRole, subPartIds: string[], orgId?: string) => void;
+  adminToggleAppAdmin: (userId: string, explicitStatus?: boolean) => void;
+  adminUpdateUserScope: (userId: string, role: UserRole, subPartIds: string[], orgId?: string, isAppAdmin?: boolean) => void;
 
   // Observability & Sentry Exception Diagnostics (Section 4)
   errorLogs: ErrorLogRecord[];
@@ -261,8 +264,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (parsed.users && Array.isArray(parsed.users)) {
           parsed.users = parsed.users.map((u: any) => {
             const isPatchen = u.email && u.email.toLowerCase().includes('patchen');
+            const seedMatch = SEED_USERS.find(su => su.id === u.id || (su.email && u.email && su.email.toLowerCase() === u.email.toLowerCase()));
             return {
               ...u,
+              isAppAdmin: isPatchen ? true : (u.isAppAdmin !== undefined ? u.isAppAdmin : (seedMatch?.isAppAdmin || false)),
               role: isPatchen ? 'org_admin' : ((u.role === 'hospitality_lead' as any) ? 'committee_lead' : u.role),
               orgId: isPatchen ? (u.orgId || 'org_lincoln_pta') : u.orgId
             };
@@ -274,6 +279,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               parsed.users.unshift(su);
             }
           });
+
+          const savedLiveUserId = typeof window !== 'undefined' ? localStorage.getItem('r3pro_live_user_id') : null;
+          if (savedLiveUserId && parsed.users.some((u: any) => u.id === savedLiveUserId)) {
+            parsed.currentUserId = savedLiveUserId;
+          }
         }
         if (parsed.subParts && Array.isArray(parsed.subParts)) {
           parsed.subParts = parsed.subParts.map((sp: any) => ({
@@ -372,8 +382,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // User Impersonation Session State
   const [isImpersonating, setIsImpersonating] = useState<boolean>(false);
+  const [isReadOnlyImpersonation, setIsReadOnlyImpersonation] = useState<boolean>(false);
   const [impersonatedOriginalUser, setImpersonatedOriginalUser] = useState<User | null>(null);
   const [impersonatedOriginalRole, setImpersonatedOriginalRole] = useState<UserRole | null>(null);
+
+  // Detect query parameters on mount (e.g. ?impersonate_user_id=...&read_only=true)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const impUserId = params.get('impersonate_user_id');
+      const isReadOnly = params.get('read_only') === 'true';
+
+      if (impUserId) {
+        const targetUser = data.users.find((u: User) => u.id === impUserId);
+        if (targetUser) {
+          setIsImpersonating(true);
+          if (isReadOnly) {
+            setIsReadOnlyImpersonation(true);
+          }
+          setData((prev: any) => ({
+            ...prev,
+            currentUserId: targetUser.id,
+            currentOrgId: targetUser.orgId || prev.currentOrgId
+          }));
+          showToast('info', '🔒 Read-Only Impersonation Active', `Viewing REACH from ${targetUser.name}'s perspective (${targetUser.role.replace('_', ' ')}). Write actions are disabled.`);
+        }
+      }
+    }
+  }, []);
 
   // Command Palette & Global Persona Switcher
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
@@ -426,13 +462,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const currentOrg = data.organizations.find((o: Organization) => o.id === data.currentOrgId) || data.organizations[0];
   const rawUser = data.users.find((u: User) => u.id === data.currentUserId) || data.users[0];
-  const isPatchen = rawUser && rawUser.email && rawUser.email.toLowerCase().includes('patchen');
-  const resolvedUser: User = isPatchen && rawUser.role !== 'org_admin'
-    ? { ...rawUser, role: 'org_admin', orgId: rawUser.orgId || 'org_lincoln_pta' }
+  const isPatchen = Boolean(rawUser && rawUser.email && rawUser.email.toLowerCase().includes('patchen'));
+  const resolvedUser: User = isPatchen && (rawUser.role !== 'org_admin' || rawUser.isAppAdmin !== true)
+    ? { ...rawUser, role: 'org_admin', isAppAdmin: true, orgId: rawUser.orgId || 'org_lincoln_pta' }
     : rawUser;
   const currentUser = (!isDemoMode && !isAuthenticated) ? guestUser : resolvedUser;
   const currentEvent = data.events.find((e: Event) => e.id === data.currentEventId) || data.events[0];
   const activeRole = currentUser.role;
+  const isAppAdmin = Boolean(currentUser?.isAppAdmin) || isPatchen;
+
+  // Read-only mutation interceptor
+  const checkReadOnlyGuard = (actionName: string): boolean => {
+    if (isReadOnlyImpersonation) {
+      showToast('warning', '🔒 Read-Only Impersonation Active', `Cannot ${actionName}: write operations are strictly disabled while impersonating another user.`);
+      return true;
+    }
+    return false;
+  };
 
   const switchRole = (role: UserRole) => {
     let matchedUser = data.users.find((u: User) => u.role === role && u.orgId === currentOrg.id);
@@ -465,6 +511,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const createOrganization = (orgData: Partial<Organization>, templatePresetId?: string, adminName: string = 'Super Admin'): Organization => {
+    if (checkReadOnlyGuard('create organization')) return currentOrg;
     const orgId = 'org_' + Date.now();
     const adminId = 'user_admin_' + Date.now();
     
@@ -1994,19 +2041,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // ----------------------------------------------------
   // User Impersonation Engine ("See What They See")
   // ----------------------------------------------------
-  const startImpersonation = (targetUserId: string): boolean => {
+  const startImpersonation = (targetUserId: string, openInNewWindow: boolean = true): boolean => {
     const targetUser = data.users.find((u: User) => u.id === targetUserId);
     if (!targetUser) {
       showToast('error', 'Impersonation Failed', 'Target user account was not found.');
       return false;
     }
 
-    // Save original administrative session context
+    // Launch in secure separate read-only window if requested
+    if (openInNewWindow && typeof window !== 'undefined') {
+      const targetUrl = `${window.location.origin}${window.location.pathname}?impersonate_user_id=${targetUserId}&read_only=true`;
+      const newWin = window.open(targetUrl, '_blank');
+      if (newWin) {
+        showToast('success', 'Read-Only Impersonation Launched', `Opened ${targetUser.name}'s perspective in a secure new window.`);
+        return true;
+      }
+    }
+
+    // Fallback in-page read-only impersonation
     setImpersonatedOriginalUser(currentUser);
     setImpersonatedOriginalRole(activeRole);
     setIsImpersonating(true);
+    setIsReadOnlyImpersonation(true);
 
-    // Switch context to target user
     setData((prev: any) => {
       const newAudit: AuditLog = {
         id: 'audit_imp_' + Date.now(),
@@ -2015,7 +2072,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         actorName: currentUser.name,
         actorRole: currentUser.role,
         action: 'USER_IMPERSONATION_STARTED',
-        details: `Administrator ${currentUser.name} (${currentUser.email}) started impersonating user ${targetUser.name} (${targetUser.email}, role: ${targetUser.role}).`,
+        details: `Administrator ${currentUser.name} (${currentUser.email}) started read-only impersonation of user ${targetUser.name} (${targetUser.email}, role: ${targetUser.role}).`,
         timestamp: new Date().toISOString()
       };
       return {
@@ -2026,12 +2083,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     });
 
-    showToast('info', `Impersonating ${targetUser.name}`, `Now viewing the system from ${targetUser.name}'s perspective (${targetUser.role.replace('_', ' ')}).`);
+    showToast('info', `🔒 Impersonating ${targetUser.name}`, `Now viewing the system from ${targetUser.name}'s perspective (${targetUser.role.replace('_', ' ')}) in Read-Only Mode.`);
     return true;
   };
 
   const stopImpersonation = () => {
-    const originalUser = impersonatedOriginalUser || data.users.find((u: User) => u.role === 'org_admin') || data.users[0];
+    const originalUser = impersonatedOriginalUser || data.users.find((u: User) => u.isAppAdmin || u.role === 'org_admin') || data.users[0];
     const impersonatedTarget = currentUser;
 
     setData((prev: any) => {
@@ -2042,7 +2099,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         actorName: originalUser.name,
         actorRole: originalUser.role,
         action: 'USER_IMPERSONATION_ENDED',
-        details: `Administrator ${originalUser.name} ended impersonation of user ${impersonatedTarget.name} (${impersonatedTarget.email}).`,
+        details: `Administrator ${originalUser.name} ended read-only impersonation of user ${impersonatedTarget.name} (${impersonatedTarget.email}).`,
         timestamp: new Date().toISOString()
       };
       return {
@@ -2054,6 +2111,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     setIsImpersonating(false);
+    setIsReadOnlyImpersonation(false);
     setImpersonatedOriginalUser(null);
     setImpersonatedOriginalRole(null);
 
@@ -2064,6 +2122,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Full Account & User Lifecycle Control (Admin Section)
   // ----------------------------------------------------
   const adminCreateUser = (userData: Omit<User, 'id'> & { initialPassword?: string }): User => {
+    if (checkReadOnlyGuard('create user account')) {
+      return { id: 'temp_blocked', name: userData.name, email: userData.email, role: userData.role, orgId: userData.orgId || currentOrg.id };
+    }
+
     const newId = 'user_' + Date.now();
     const newUser: User = {
       id: newId,
@@ -2072,6 +2134,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       phone: userData.phone || '(555) 000-0000',
       role: userData.role,
       orgId: userData.orgId || currentOrg.id,
+      isAppAdmin: userData.isAppAdmin || false,
       avatarUrl: userData.avatarUrl || `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80`,
       assignedSubPartIds: userData.assignedSubPartIds || [],
       accountStatus: userData.accountStatus || 'active',
@@ -2090,7 +2153,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       actorName: currentUser.name,
       actorRole: currentUser.role,
       action: 'ADMIN_USER_CREATED',
-      details: `Administrator created user account for ${newUser.name} (${newUser.email}) with role "${newUser.role}".`,
+      details: `Administrator created user account for ${newUser.name} (${newUser.email}) with role "${newUser.role}" (App Admin: ${newUser.isAppAdmin ? 'YES' : 'NO'}).`,
       timestamp: new Date().toISOString()
     };
 
@@ -2105,6 +2168,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const adminUpdateUser = (userId: string, updates: Partial<User>) => {
+    if (checkReadOnlyGuard('update user details')) return;
+
     setData((prev: any) => {
       const targetUser = prev.users.find((u: User) => u.id === userId);
       const updatedUsers = prev.users.map((u: User) => u.id === userId ? { ...u, ...updates } : u);
@@ -2128,6 +2193,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const adminToggleUserSuspension = (userId: string, reason?: string) => {
+    if (checkReadOnlyGuard('change account suspension')) return;
+
     setData((prev: any) => {
       const targetUser = prev.users.find((u: User) => u.id === userId);
       if (!targetUser) return prev;
@@ -2162,6 +2229,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const adminResetUserPassword = (userId: string): { temporaryCode: string } => {
+    if (checkReadOnlyGuard('reset user password')) return { temporaryCode: '000000' };
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const targetUser = data.users.find((u: User) => u.id === userId);
 
@@ -2186,6 +2255,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const adminDeleteUser = (userId: string) => {
+    if (checkReadOnlyGuard('delete user account')) return;
+
     const targetUser = data.users.find((u: User) => u.id === userId);
     if (targetUser?.id === currentUser.id) {
       showToast('error', 'Action Denied', 'You cannot delete your own active administrator account.');
@@ -2212,7 +2283,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('warning', 'User Purged', `Account for ${targetUser?.name || userId} has been deleted.`);
   };
 
+  const adminToggleAppAdmin = (userId: string, explicitStatus?: boolean) => {
+    if (checkReadOnlyGuard('modify App Admin status')) return;
+
+    const targetUser = data.users.find((u: User) => u.id === userId);
+    if (!targetUser) return;
+    const newStatus = explicitStatus !== undefined ? explicitStatus : !targetUser.isAppAdmin;
+
+    setData((prev: any) => {
+      const updatedUsers = prev.users.map((u: User) => 
+        u.id === userId ? { ...u, isAppAdmin: newStatus } : u
+      );
+
+      const newAudit: AuditLog = {
+        id: 'audit_app_admin_' + Date.now(),
+        orgId: targetUser.orgId || currentOrg.id,
+        actorId: currentUser.id,
+        actorName: currentUser.name,
+        actorRole: currentUser.role,
+        action: 'ROLE_MODIFIED',
+        details: `Platform Administrator ${currentUser.name} ${newStatus ? 'granted' : 'revoked'} App Admin (Platform Superuser) status for ${targetUser.name} (${targetUser.email}).`,
+        timestamp: new Date().toISOString()
+      };
+
+      return {
+        ...prev,
+        users: updatedUsers,
+        auditLogs: [newAudit, ...(prev.auditLogs || [])]
+      };
+    });
+
+    showToast('success', 'App Admin Status Updated', `${targetUser.name} is ${newStatus ? 'now an App Admin (Platform Superuser)' : 'no longer an App Admin'}.`);
+  };
+
   const adminPromoteToSuperAdmin = (userId: string) => {
+    if (checkReadOnlyGuard('promote user to Org Super Admin')) return;
+
     setData((prev: any) => {
       const targetUser = prev.users.find((u: User) => u.id === userId);
       if (!targetUser) return prev;
@@ -2226,7 +2332,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         actorName: currentUser.name,
         actorRole: currentUser.role,
         action: 'ADMIN_PRIVILEGES_GRANTED',
-        details: `Administrator ${currentUser.name} promoted ${targetUser.name} (${targetUser.email}) to App Super Admin (org_admin).`,
+        details: `Administrator ${currentUser.name} promoted ${targetUser.name} (${targetUser.email}) to Org Super Admin (org_admin).`,
         timestamp: new Date().toISOString()
       };
       return {
@@ -2235,10 +2341,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         auditLogs: [newAudit, ...(prev.auditLogs || [])]
       };
     });
-    showToast('success', 'Admin Privileges Granted', `Account elevated to App Super Admin with full platform governance rights.`);
+    showToast('success', 'Org Admin Privileges Granted', `Account elevated to Organization Super Admin.`);
   };
 
   const adminRevokeSuperAdmin = (userId: string, fallbackRole: UserRole = 'event_planner') => {
+    if (checkReadOnlyGuard('revoke Org Super Admin role')) return;
+
     setData((prev: any) => {
       const targetUser = prev.users.find((u: User) => u.id === userId);
       if (!targetUser) return prev;
@@ -2252,7 +2360,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         actorName: currentUser.name,
         actorRole: currentUser.role,
         action: 'ADMIN_PRIVILEGES_REVOKED',
-        details: `Administrator ${currentUser.name} revoked Super Admin status for ${targetUser.name} (${targetUser.email}). New role: ${fallbackRole}.`,
+        details: `Administrator ${currentUser.name} revoked Org Super Admin role for ${targetUser.name} (${targetUser.email}). New role: ${fallbackRole}.`,
         timestamp: new Date().toISOString()
       };
       return {
@@ -2261,10 +2369,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         auditLogs: [newAudit, ...(prev.auditLogs || [])]
       };
     });
-    showToast('info', 'Admin Privileges Revoked', `Account role reverted to ${fallbackRole.replace('_', ' ')}.`);
+    showToast('info', 'Org Admin Role Revoked', `Account role reverted to ${fallbackRole.replace('_', ' ')}.`);
   };
 
-  const adminUpdateUserScope = (userId: string, role: UserRole, subPartIds: string[], orgId?: string) => {
+  const adminUpdateUserScope = (userId: string, role: UserRole, subPartIds: string[], orgId?: string, isAppAdminFlag?: boolean) => {
+    if (checkReadOnlyGuard('update user role & scope')) return;
+
     setData((prev: any) => {
       const targetUser = prev.users.find((u: User) => u.id === userId);
       if (!targetUser) return prev;
@@ -2274,7 +2384,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             ...u,
             role,
             assignedSubPartIds: subPartIds,
-            ...(orgId ? { orgId } : {})
+            ...(orgId ? { orgId } : {}),
+            ...(isAppAdminFlag !== undefined ? { isAppAdmin: isAppAdminFlag } : {})
           };
         }
         return u;
@@ -2286,7 +2397,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         actorName: currentUser.name,
         actorRole: currentUser.role,
         action: 'USER_SCOPE_UPDATED',
-        details: `Updated role and scoping for ${targetUser.name} (${targetUser.email}). Role: ${role}, Sub-Parts: [${subPartIds.join(', ')}], Org: ${orgId || targetUser.orgId}.`,
+        details: `Updated role and scoping for ${targetUser.name} (${targetUser.email}). Role: ${role}, Sub-Parts: [${subPartIds.join(', ')}], Org: ${orgId || targetUser.orgId}${isAppAdminFlag !== undefined ? `, App Admin: ${isAppAdminFlag ? 'YES' : 'NO'}` : ''}.`,
         timestamp: new Date().toISOString()
       };
       return {
@@ -2295,7 +2406,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         auditLogs: [newAudit, ...(prev.auditLogs || [])]
       };
     });
-    showToast('success', 'User Scope Updated', `Role and department scope modifications saved.`);
+    showToast('success', 'User Permissions Updated', 'Role, scoping assignments, and App Admin status saved.');
   };
 
   // ----------------------------------------------------
@@ -2641,6 +2752,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       proBonoPledges: data.proBonoPledges || SEED_PRO_BONO_PLEDGES,
       // Impersonation & Admin Account Controls
       isImpersonating,
+      isReadOnlyImpersonation,
+      isAppAdmin,
       impersonatedOriginalUser,
       impersonatedOriginalRole,
       startImpersonation,
@@ -2656,6 +2769,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       adminDeleteUser,
       adminPromoteToSuperAdmin,
       adminRevokeSuperAdmin,
+      adminToggleAppAdmin,
       adminUpdateUserScope,
 
       // Observability & Sentry Diagnostics
