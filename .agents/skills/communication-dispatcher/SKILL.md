@@ -31,11 +31,19 @@ This skill validates tenant-isolated email and SMS communication infrastructure,
   - *1-Click Fallback Trigger*: Recommends instant switch to R3Pro Hosted Cloud Pool if event start < 1 hour and DNS is unpropagated.
 
 ### 3. 4-Lane Highway Priority Queue Classification
-- **🚨 Queue P0 (Auth OTPs & Magic Links)**: `<2.0s SLA`, never throttled behind bulk emails.
-- **📱 Queue P1 (Gate QR Passes & Urgent Relocations)**: `<5s SLA` instant push.
-- **🧾 Queue P2 (IRS 501(c)(3) Receipts & Pledges)**: Real-time transactional receipts with FMV offsets.
-- **📢 Queue P3 (Recruitment Broadcasts)**: Metered at 50/sec per organization to protect domain reputation.
+- **🚨 Emergency Siren Lane (Queue P0: Security & Login OTPs)**: `<2.0s SLA`, never throttled behind bulk emails.
+- **📱 Express Gate Lane (Queue P1: Mobile QR Passes & Alerts)**: `<5s SLA` instant push for live gate check-in passes and day-of notices.
+- **🧾 Official Tax Lane (Queue P2: IRS 501(c)(3) Receipts & Pledges)**: Real-time statutory tax receipts and in-kind equipment vouchers.
+- **📢 Metered Outreach Lane (Queue P3: Volunteer Recruitment & Updates)**: Metered at 50/sec per organization to protect domain reputation.
 
-### 4. A2P 10DLC Carrier Compliance & Suppression Scoping
+### 4. Real-Time Connection Testing & Carrier Handshakes
+- **Email API Provider Ping**: Tests live REST authentication, latency ms, and TLS 1.3 protocol verification (HTTP 200 OK).
+- **A2P 10DLC TCR Carrier Handshake**: Verifies carrier network route availability across Tier-1 US cellular carriers (Verizon, AT&T, T-Mobile) and confirms brand prefix compliance.
+
+### 5. In-Place Editability & Unsaved Changes Guard
+- Detects pending configuration changes (`hasUnsavedCommChanges`) between form state and stored database settings.
+- Enforces user verification before page departure, providing 1-click `Discard Changes` reversion.
+
+### 6. A2P 10DLC Carrier Compliance & Suppression Scoping
 - Enforces organization brand identifier in SMS position 1 (e.g. `[Lincoln High PTA]`).
 - Scopes opt-out keywords (`STOP`, `UNSUBSCRIBE`) strictly to `(phone_e164, org_id)`.

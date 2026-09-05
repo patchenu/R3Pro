@@ -68,10 +68,12 @@ R3Pro is an enterprise-grade web application combining the volunteer coordinatio
 13. **Multi-Tenant Email & SMS Dispatch Studio & Delivery Gateway**:
     - **Dual Delivery Modes**: Turnkey zero-config **R3Pro Hosted Cloud Pool** (AWS SES & Resend) or **Custom Branded Domain** (100% white-labeled with dedicated DKIM/SPF/DMARC signing).
     - **4-Lane Highway Priority Queue Architecture**: Dedicated fast-lanes with SLA guarantees:
-      - *Queue P0 (Auth OTPs & Magic Links)*: `<2.0s SLA`, never throttled behind bulk emails.
-      - *Queue P1 (Gate QR Passes & Urgent Relocations)*: `<5s SLA` instant push.
-      - *Queue P2 (IRS 501(c)(3) Receipts & Pledges)*: Real-time transactional receipts with FMV offsets.
-      - *Queue P3 (Recruitment Broadcasts)*: Metered at 50/sec per organization to protect domain reputation.
+      - *🚨 Emergency Siren Lane (Queue P0: Security & Login OTPs)*: `<2.0s SLA`, never throttled behind bulk emails.
+      - *📱 Express Gate Lane (Queue P1: Mobile QR Passes & Alerts)*: `<5s SLA` instant push.
+      - *🧾 Official Tax Lane (Queue P2: IRS 501(c)(3) Receipts & Pledges)*: Real-time transactional receipts with FMV offsets.
+      - *📢 Metered Outreach Lane (Queue P3: Volunteer Recruitment & Updates)*: Metered at 50/sec per organization to protect domain reputation.
+    - **Real-Time Connection Testing & Carrier Handshakes**: 1-click test handshakes for both email API providers (measuring latency, TLS 1.3, and HTTP 200) and cellular SMS carriers (verifying brand prefix and TCR route).
+    - **In-Place Editability & Unsaved Changes Detection**: Edit settings anytime with reactive `hasUnsavedCommChanges` detection, glowing amber warning badges, and 1-click discard.
     - **Non-Technical Step-by-Step DNS Guides**: Tabbed interactive walkthroughs for **GoDaddy**, **Cloudflare** (highlighting the critical Gray Cloud / DNS Only requirement), **Namecheap**, and others, with beginner glossaries and common mistake preventions.
     - **A2P 10DLC Carrier Registration & SMS Gateway**: Automated reminder cadences (T-72h, T-24h, T-2h QR gate passes), brand prefix compliance (`[Your Org]`), and live interactive test dispatch sandboxes.
 

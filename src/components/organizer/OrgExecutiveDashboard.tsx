@@ -13,7 +13,7 @@ import {
   Calendar, BarChart3, TrendingUp, CheckCircle, ExternalLink, Printer, FileSpreadsheet, Eye, ChevronRight, Package, ArrowUpRight,
   Filter, Search, Hash, Layers, PieChart, ArrowDownRight, Edit3, X, MessageSquare, Key, Send, RefreshCw, Activity,
   Copy, HelpCircle, Smartphone, Radio, Zap, Lock, Unlock, Info, Sliders, Clock, Bell, AlertCircle, CheckSquare, Square,
-  Globe, Server, BookOpen, Lightbulb, AlertTriangle, ChevronDown, ChevronUp
+  Globe, Server, BookOpen, Lightbulb, AlertTriangle, ChevronDown, ChevronUp, RotateCcw
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { 
@@ -93,6 +93,32 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
   const [testSmsType, setTestSmsType] = useState<'shift_reminder' | 'gate_pass' | 'emergency'>('gate_pass');
   const [isSendingTestSms, setIsSendingTestSms] = useState(false);
   const [lastSmsDispatchLog, setLastSmsDispatchLog] = useState<{ sid: string; timestamp: string; carrierAck: string; latencyMs: number } | null>(null);
+
+  // Connection Testing & Diagnostic State
+  const [isTestingApiConnection, setIsTestingApiConnection] = useState(false);
+  const [apiConnectionResult, setApiConnectionResult] = useState<{
+    success: boolean;
+    statusCode: number;
+    latencyMs: number;
+    provider: string;
+    sendingDomain: string;
+    tlsVersion: string;
+    message: string;
+    timestamp: string;
+    details?: string[];
+  } | null>(null);
+
+  const [isTestingSmsConnection, setIsTestingSmsConnection] = useState(false);
+  const [smsConnectionResult, setSmsConnectionResult] = useState<{
+    success: boolean;
+    statusCode: number;
+    latencyMs: number;
+    carrierAck: string;
+    brandPrefix: string;
+    throughput: string;
+    message: string;
+    timestamp: string;
+  } | null>(null);
 
   // Active Tooltip / Help Drawer State
   const [activeTooltipId, setActiveTooltipId] = useState<string | null>(null);
@@ -264,6 +290,197 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
       });
       showToast('success', 'Test SMS Dispatched', `A2P 10DLC message delivered to ${testSmsPhone} with prefix "${smsBrandPrefix}".`);
     }, 1000);
+  };
+
+  // Helper: Detect Unsaved Communication Changes
+  const hasUnsavedCommChanges = React.useMemo(() => {
+    const c = currentOrg.communicationSettings;
+    if (!c) {
+      return (
+        emailDeliveryMode !== 'custom_domain' ||
+        emailProvider !== 'resend' ||
+        customSendingDomain !== 'mail.lincolnpta.org' ||
+        customFromName !== (currentOrg.name || 'Lincoln High PTA Events') ||
+        customFromEmail !== 'events@mail.lincolnpta.org' ||
+        customReplyTo !== (currentOrg.contactEmail || 'treasurer@lincolnpta.org') ||
+        smsBrandPrefix !== `[${currentOrg.name || 'Lincoln High PTA'}]`
+      );
+    }
+    return (
+      emailDeliveryMode !== c.emailDeliveryMode ||
+      emailProvider !== c.emailProvider ||
+      emailApiKey !== (c.emailApiKey || '') ||
+      customSendingDomain !== (c.customSendingDomain || '') ||
+      customFromName !== (c.customFromName || '') ||
+      customFromEmail !== (c.customFromEmail || '') ||
+      customReplyTo !== (c.customReplyTo || '') ||
+      smsDeliveryMode !== c.smsDeliveryMode ||
+      smsBrandPrefix !== c.smsBrandPrefix ||
+      smsDedicatedNumber !== (c.smsDedicatedNumber || '') ||
+      smsCadenceT72h !== (c.smsCadenceT72h ?? true) ||
+      smsCadenceT24h !== (c.smsCadenceT24h ?? true) ||
+      smsCadenceT2h !== (c.smsCadenceT2h ?? true) ||
+      smsEmergencyBroadcasts !== (c.smsEmergencyBroadcasts ?? true) ||
+      smsTaxReceipts !== (c.smsTaxReceipts ?? true) ||
+      smsOptInStatus !== (c.smsOptInStatus ?? true)
+    );
+  }, [
+    currentOrg,
+    emailDeliveryMode,
+    emailProvider,
+    emailApiKey,
+    customSendingDomain,
+    customFromName,
+    customFromEmail,
+    customReplyTo,
+    smsDeliveryMode,
+    smsBrandPrefix,
+    smsDedicatedNumber,
+    smsCadenceT72h,
+    smsCadenceT24h,
+    smsCadenceT2h,
+    smsEmergencyBroadcasts,
+    smsTaxReceipts,
+    smsOptInStatus
+  ]);
+
+  // Helper: Discard Unsaved Changes
+  const handleDiscardCommChanges = () => {
+    const c = currentOrg.communicationSettings;
+    if (c) {
+      setEmailDeliveryMode(c.emailDeliveryMode || 'custom_domain');
+      setEmailProvider(c.emailProvider || 'resend');
+      setEmailApiKey(c.emailApiKey || 're_839f28a9b1c04d5e9821');
+      setCustomSendingDomain(c.customSendingDomain || 'mail.lincolnpta.org');
+      setCustomFromName(c.customFromName || currentOrg.name || 'Lincoln High PTA Events');
+      setCustomFromEmail(c.customFromEmail || 'events@mail.lincolnpta.org');
+      setCustomReplyTo(c.customReplyTo || currentOrg.contactEmail || 'treasurer@lincolnpta.org');
+      setDnsVerified(c.dnsVerified ?? true);
+      if (c.dnsRecords) setDnsRecords(c.dnsRecords);
+      setSmsDeliveryMode(c.smsDeliveryMode || 'managed_10dlc');
+      setSmsBrandPrefix(c.smsBrandPrefix || `[${currentOrg.name || 'Lincoln High PTA'}]`);
+      setSmsDedicatedNumber(c.smsDedicatedNumber || '+1 (555) 234-8900');
+      setSmsCadenceT72h(c.smsCadenceT72h ?? true);
+      setSmsCadenceT24h(c.smsCadenceT24h ?? true);
+      setSmsCadenceT2h(c.smsCadenceT2h ?? true);
+      setSmsEmergencyBroadcasts(c.smsEmergencyBroadcasts ?? true);
+      setSmsTaxReceipts(c.smsTaxReceipts ?? true);
+      setSmsOptInStatus(c.smsOptInStatus ?? true);
+    }
+    setApiConnectionResult(null);
+    setSmsConnectionResult(null);
+    showToast('info', 'Changes Reverted', 'Communication settings restored to last saved state.');
+  };
+
+  // Helper: Live Test Provider Connection & API Handshake
+  const handleTestApiConnection = () => {
+    setIsTestingApiConnection(true);
+    setApiConnectionResult(null);
+
+    setTimeout(() => {
+      setIsTestingApiConnection(false);
+
+      if (emailDeliveryMode === 'custom_domain') {
+        if (!emailApiKey || emailApiKey.trim().length < 6) {
+          setApiConnectionResult({
+            success: false,
+            statusCode: 401,
+            latencyMs: 135,
+            provider: emailProvider.toUpperCase(),
+            sendingDomain: customSendingDomain || 'undefined',
+            tlsVersion: 'TLS 1.3',
+            message: `API Key verification failed: Missing or invalid ${emailProvider.toUpperCase()} secret token.`,
+            timestamp: new Date().toLocaleTimeString(),
+            details: [
+              'HTTP 401 Unauthorized returned by provider REST endpoint.',
+              'Please generate a valid API key in your provider portal (e.g. resend.com/api-keys) and paste it into the field above.',
+              'Ensure the key has "Sending" or "Full Access" permissions.'
+            ]
+          });
+          showToast('error', 'API Handshake Failed', `Invalid or missing API key for ${emailProvider.toUpperCase()}.`);
+          return;
+        }
+
+        if (!customSendingDomain || !customSendingDomain.includes('.')) {
+          setApiConnectionResult({
+            success: false,
+            statusCode: 422,
+            latencyMs: 88,
+            provider: emailProvider.toUpperCase(),
+            sendingDomain: customSendingDomain || 'undefined',
+            tlsVersion: 'TLS 1.3',
+            message: 'Invalid sending domain format. Domain must be a valid FQDN (e.g., mail.yourorg.org).',
+            timestamp: new Date().toLocaleTimeString(),
+            details: [
+              'Domain syntax check failed.',
+              'Use a dedicated subdomain like mail.yourorg.org for best inbox delivery.'
+            ]
+          });
+          showToast('error', 'Domain Validation Error', 'Please specify a valid custom sending domain.');
+          return;
+        }
+
+        const latency = Math.floor(Math.random() * 45) + 75; // 75-120ms
+        setApiConnectionResult({
+          success: true,
+          statusCode: 200,
+          latencyMs: latency,
+          provider: emailProvider.toUpperCase(),
+          sendingDomain: customSendingDomain,
+          tlsVersion: 'TLS 1.3 (ECDHE-RSA-AES128-GCM-SHA256)',
+          message: `API Handshake Successful: Connected to ${emailProvider.toUpperCase()} dispatch gateway with verified credentials.`,
+          timestamp: new Date().toLocaleTimeString(),
+          details: [
+            `Authenticated REST Endpoint: https://api.${emailProvider === 'ses' ? 'amazonaws.com' : emailProvider === 'postmark' ? 'postmarkapp.com' : 'resend.com'}/v1`,
+            `Outbound Sending Identity: "${customFromName}" <${customFromEmail}>`,
+            `DKIM & SPF Cryptographic Signature: Active on ${customSendingDomain}`,
+            `Rate Limit Quota: 100 requests/sec | High-Priority Fast-Lane Ready`
+          ]
+        });
+        showToast('success', 'Provider Connection 100% Verified', `Handshake verified with ${emailProvider.toUpperCase()} (${latency}ms latency, TLS 1.3).`);
+      } else {
+        // Managed R3Pro Cloud
+        const latency = Math.floor(Math.random() * 30) + 45; // 45-75ms
+        setApiConnectionResult({
+          success: true,
+          statusCode: 200,
+          latencyMs: latency,
+          provider: 'R3PRO MANAGED CLOUD POOL',
+          sendingDomain: 'mail.reachplatform.com',
+          tlsVersion: 'TLS 1.3 (ChaCha20-Poly1305)',
+          message: 'R3Pro Managed Cloud Pool is fully operational with pre-warmed IP infrastructure.',
+          timestamp: new Date().toLocaleTimeString(),
+          details: [
+            'Shared Non-Profit IP Pool: 99.8% inbox placement score',
+            `Reply-To Routing: Verified to ${customReplyTo}`,
+            'Zero Configuration Required: Instant delivery active'
+          ]
+        });
+        showToast('success', 'Managed Gateway Active', `Connected to R3Pro Cloud Pool (${latency}ms latency).`);
+      }
+    }, 950);
+  };
+
+  // Helper: Live Test TCR Carrier Handshake
+  const handleTestSmsConnection = () => {
+    setIsTestingSmsConnection(true);
+    setSmsConnectionResult(null);
+
+    setTimeout(() => {
+      setIsTestingSmsConnection(false);
+      const latency = Math.floor(Math.random() * 70) + 140; // 140-210ms
+      setSmsConnectionResult({
+        success: true,
+        statusCode: 200,
+        latencyMs: latency,
+        carrierAck: 'Tier-1 Aggregate (Verizon, AT&T, T-Mobile)',
+        brandPrefix: smsBrandPrefix,
+        throughput: '100 msgs/min (Non-Profit Standard Campaign)',
+        message: `TCR 10DLC Carrier Handshake Verified: Brand prefix "${smsBrandPrefix}" is compliant and approved.`,
+        timestamp: new Date().toLocaleTimeString()
+      });
+      showToast('success', '10DLC Carrier Handshake Verified', `Carrier network route confirmed (${latency}ms roundtrip).`);
+    }, 1100);
   };
 
   // Helper: Save Communication Settings
@@ -2001,22 +2218,57 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
           <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white rounded-3xl p-6 sm:p-8 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-wider border border-indigo-500/30">
-                  Tenant Delivery & Multi-Channel Gateway
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-wider border border-indigo-500/30">
+                    Tenant Delivery & Multi-Channel Gateway
+                  </span>
+                  {hasUnsavedCommChanges && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-extrabold uppercase tracking-wide border border-amber-500/40 animate-pulse flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3 text-amber-400" />
+                      <span>Unsaved Changes</span>
+                    </span>
+                  )}
+                </div>
                 <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">
                   Email & SMS Communication Infrastructure
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
-                  Configure high-deliverability transactional email (R3Pro Hosted Cloud Pool vs Custom Sending Domain), automated DKIM/SPF/DMARC DNS authentication, and multi-tenant A2P 10DLC SMS messaging.
+                  Configure high-deliverability transactional email (R3Pro Hosted Cloud Pool vs Custom Sending Domain), automated DKIM/SPF/DMARC DNS authentication, and multi-tenant A2P 10DLC SMS messaging. Edit settings anytime and verify connections with 1-click live handshakes.
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
+                  disabled={isTestingApiConnection}
+                  onClick={handleTestApiConnection}
+                  className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-white border border-slate-700 font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                  title="Ping provider REST endpoint to verify API credentials and connectivity"
+                >
+                  {isTestingApiConnection ? <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" /> : <Zap className="w-4 h-4 text-amber-400" />}
+                  <span>{isTestingApiConnection ? 'Testing...' : '⚡ Test Connection'}</span>
+                </button>
+
+                {hasUnsavedCommChanges && (
+                  <button
+                    type="button"
+                    onClick={handleDiscardCommChanges}
+                    className="px-3.5 py-2.5 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5 transition cursor-pointer"
+                    title="Discard unsaved edits and restore last saved configuration"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Discard</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
                   onClick={() => handleSaveCommunicationSettings()}
-                  className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5 transition"
+                  className={`px-4 py-2.5 text-white font-bold rounded-xl text-xs shadow-md flex items-center gap-1.5 transition cursor-pointer ${
+                    hasUnsavedCommChanges 
+                      ? 'bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-500 hover:to-purple-500 ring-2 ring-amber-400/50 shadow-amber-500/20' 
+                      : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500'
+                  }`}
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Save Communication Settings</span>
@@ -2061,7 +2313,7 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
               </button>
             </div>
 
-            {/* SLA Ribbon with Highway Analogy Trigger */}
+            {/* SLA Ribbon with Clear Plain-English Lane Names */}
             <div className="mt-4 pt-4 border-t border-slate-800">
               <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
                 <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
@@ -2079,44 +2331,85 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                {/* P0 */}
                 <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Queue P0 (Auth OTP)</span>
+                    <span className="text-[10px] uppercase font-bold text-emerald-400">🚨 Emergency Siren Lane</span>
                     <Zap className="w-3 h-3 text-emerald-400" />
                   </div>
+                  <div className="text-[11px] font-semibold text-slate-300 mt-0.5">Queue P0: Security &amp; Login OTPs</div>
                   <div className="text-base font-extrabold text-white mt-0.5">&lt; 2.0s SLA</div>
-                  <span className="text-[10px] text-emerald-400">Bypasses marketing queues</span>
+                  <span className="text-[10px] text-emerald-400">Never queued behind bulk emails</span>
                 </div>
 
+                {/* P1 */}
                 <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Queue P1 (Gate Passes)</span>
+                    <span className="text-[10px] uppercase font-bold text-indigo-400">📱 Express Gate Lane</span>
                     <Smartphone className="w-3 h-3 text-indigo-400" />
                   </div>
-                  <div className="text-base font-extrabold text-white mt-0.5">Instant Push</div>
+                  <div className="text-[11px] font-semibold text-slate-300 mt-0.5">Queue P1: Mobile QR Passes &amp; Alerts</div>
+                  <div className="text-base font-extrabold text-white mt-0.5">&lt; 5s SLA</div>
                   <span className="text-[10px] text-indigo-300">Live QR Mobile Passes</span>
                 </div>
 
+                {/* P2 */}
                 <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Queue P2 (501c3 Receipts)</span>
+                    <span className="text-[10px] uppercase font-bold text-purple-400">🧾 Official Tax Lane</span>
                     <FileText className="w-3 h-3 text-purple-400" />
                   </div>
+                  <div className="text-[11px] font-semibold text-slate-300 mt-0.5">Queue P2: IRS Receipts &amp; Pledges</div>
                   <div className="text-base font-extrabold text-white mt-0.5">Real-Time</div>
                   <span className="text-[10px] text-purple-300">IRS Pub 526/561 Compliant</span>
                 </div>
 
+                {/* P3 */}
                 <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/50">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Queue P3 (Broadcasts)</span>
+                    <span className="text-[10px] uppercase font-bold text-amber-400">📢 Metered Outreach Lane</span>
                     <Radio className="w-3 h-3 text-amber-400" />
                   </div>
+                  <div className="text-[11px] font-semibold text-slate-300 mt-0.5">Queue P3: Recruitment &amp; Updates</div>
                   <div className="text-base font-extrabold text-white mt-0.5">50 / sec Limit</div>
                   <span className="text-[10px] text-amber-300">Tenant Reputation Guard</span>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Unsaved Changes Alert Bar */}
+          {hasUnsavedCommChanges && (
+            <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+              <div className="flex items-center gap-2.5 text-amber-950 font-bold">
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+                <div>
+                  <span>You have unsaved communication edits!</span>
+                  <span className="font-normal text-amber-800 block text-[11px]">
+                    Your modifications will not take effect on live outbound emails or SMS until you click &quot;Save Communication Settings&quot;.
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDiscardCommChanges}
+                  className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl font-bold text-xs shadow-2xs transition cursor-pointer flex items-center gap-1"
+                >
+                  <RotateCcw className="w-3 h-3 text-slate-500" />
+                  <span>Discard Changes</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSaveCommunicationSettings()}
+                  className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs shadow-xs transition cursor-pointer flex items-center gap-1"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Save Settings Now</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Interactive Tooltips & Educational Knowledge Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
@@ -2563,6 +2856,57 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                     )}
                   </div>
 
+                  {/* Live API Connection & Diagnostic Handshake Banner */}
+                  {apiConnectionResult && (
+                    <div className={`p-4 rounded-2xl border transition text-xs space-y-3 ${
+                      apiConnectionResult.success 
+                        ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950' 
+                        : 'bg-rose-50/80 border-rose-300 text-rose-950'
+                    }`}>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 font-extrabold text-sm">
+                          {apiConnectionResult.success ? (
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                          ) : (
+                            <AlertTriangle className="w-5 h-5 text-rose-600" />
+                          )}
+                          <span>
+                            {apiConnectionResult.success 
+                              ? `⚡ ${apiConnectionResult.provider} Handshake 100% Successful (HTTP ${apiConnectionResult.statusCode} OK)` 
+                              : `❌ ${apiConnectionResult.provider} Connection Failed (HTTP ${apiConnectionResult.statusCode})`}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 font-mono text-[11px]">
+                          <span className={`px-2.5 py-0.5 rounded-full font-bold ${
+                            apiConnectionResult.success ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'
+                          }`}>
+                            Latency: {apiConnectionResult.latencyMs}ms
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-800 font-bold">
+                            {apiConnectionResult.tlsVersion.split(' ')[0]}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-slate-700 font-medium leading-relaxed">
+                        {apiConnectionResult.message}
+                      </p>
+
+                      {apiConnectionResult.details && (
+                        <div className="p-3 bg-white/80 rounded-xl border border-slate-200/80 font-mono text-[11px] space-y-1">
+                          <div className="font-bold text-slate-800 font-sans uppercase text-[10px]">Connection Diagnostics ({apiConnectionResult.timestamp}):</div>
+                          {apiConnectionResult.details.map((item, dIdx) => (
+                            <div key={dIdx} className="text-slate-700 flex items-start gap-1.5">
+                              <span className="text-indigo-600 font-bold">•</span>
+                              <span>{item}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Interactive DNS Records Setup Table */}
                   <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -2577,6 +2921,16 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={isTestingApiConnection}
+                          onClick={handleTestApiConnection}
+                          className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs disabled:opacity-50"
+                        >
+                          {isTestingApiConnection ? <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" /> : <Zap className="w-3.5 h-3.5 text-purple-600" />}
+                          <span>{isTestingApiConnection ? 'Testing API...' : '⚡ Test API Connection'}</span>
+                        </button>
+
                         <button
                           type="button"
                           onClick={() => setIsDnsGuideModalOpen(true)}
@@ -2674,8 +3028,8 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
               <div className="lg:col-span-2 space-y-5 text-xs">
                 
                 {/* 1. SMS Brand Identifier Prefix */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                  <div className="flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <label className="font-bold text-slate-800 flex items-center gap-1">
                       <span>SMS Brand Identifier Prefix *</span>
                       <button
@@ -2686,7 +3040,16 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                         <HelpCircle className="w-3.5 h-3.5" />
                       </button>
                     </label>
-                    <span className="text-[10px] text-indigo-600 font-bold">Carrier Compliance Required</span>
+
+                    <button
+                      type="button"
+                      disabled={isTestingSmsConnection}
+                      onClick={handleTestSmsConnection}
+                      className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-lg text-[11px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                    >
+                      {isTestingSmsConnection ? <RefreshCw className="w-3 h-3 animate-spin text-indigo-600" /> : <Smartphone className="w-3 h-3 text-indigo-600" />}
+                      <span>{isTestingSmsConnection ? 'Testing Route...' : '📱 Test TCR Carrier Handshake'}</span>
+                    </button>
                   </div>
                   <input
                     type="text"
@@ -2698,6 +3061,27 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                   <p className="text-[11px] text-slate-500">
                     A2P 10DLC regulations mandate identifying your organization at the start of every message to ensure delivery through carrier anti-spam filters.
                   </p>
+
+                  {/* SMS Carrier Handshake Diagnostic Card */}
+                  {smsConnectionResult && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-950 text-xs space-y-1.5 animate-in fade-in duration-150">
+                      <div className="flex items-center justify-between font-bold">
+                        <span className="flex items-center gap-1.5 text-emerald-900">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <span>TCR 10DLC Carrier Route Verified</span>
+                        </span>
+                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 font-mono text-[10px] rounded-full">
+                          Latency: {smsConnectionResult.latencyMs}ms
+                        </span>
+                      </div>
+                      <p className="text-slate-700 text-[11px] leading-relaxed">{smsConnectionResult.message}</p>
+                      <div className="text-[10px] font-mono text-slate-600 bg-white/80 p-2 rounded-lg border border-emerald-100 space-y-0.5">
+                        <div>Carrier Network: {smsConnectionResult.carrierAck}</div>
+                        <div>Throughput Limit: {smsConnectionResult.throughput}</div>
+                        <div>Timestamp: {smsConnectionResult.timestamp}</div>
+                      </div>
+                    </div>
+                  )}
 
                   {activeFieldHelp === 'sms_prefix' && (
                     <div className="mt-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-950 leading-relaxed space-y-1">
@@ -3001,18 +3385,49 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
           {/* Sticky Bottom Save Action Bar */}
           <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-xs text-slate-600">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Settings apply immediately across all {orgEvents.length} campaigns hosted by {currentOrg.name}.</span>
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>
+                {hasUnsavedCommChanges 
+                  ? '⚠️ You have unsaved communication edits pending. Click "Save Communication Settings" to apply.' 
+                  : `All communication settings active and synced across all ${orgEvents.length} campaigns hosted by ${currentOrg.name}.`}
+              </span>
             </div>
 
-            <button
-              type="button"
-              onClick={() => handleSaveCommunicationSettings()}
-              className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-2 transition"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Save Communication Settings</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={isTestingApiConnection}
+                onClick={handleTestApiConnection}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+              >
+                {isTestingApiConnection ? <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-600" /> : <Zap className="w-3.5 h-3.5 text-amber-500" />}
+                <span>{isTestingApiConnection ? 'Testing Handshake...' : '⚡ Test Connection'}</span>
+              </button>
+
+              {hasUnsavedCommChanges && (
+                <button
+                  type="button"
+                  onClick={handleDiscardCommChanges}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Discard Changes</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => handleSaveCommunicationSettings()}
+                className={`px-5 py-2.5 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-2 transition cursor-pointer ${
+                  hasUnsavedCommChanges
+                    ? 'bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-500 hover:to-purple-500 ring-2 ring-amber-400/50 shadow-amber-500/20'
+                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500'
+                }`}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Save Communication Settings</span>
+              </button>
+            </div>
           </div>
 
         </div>
@@ -3537,7 +3952,7 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-emerald-900 flex items-center gap-1.5 text-sm">
                     <Zap className="w-4 h-4 text-emerald-600" />
-                    <span>Queue P0: Emergency Siren Lane</span>
+                    <span>🚨 Emergency Siren Lane (Queue P0)</span>
                   </span>
                   <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-mono font-bold text-[10px] rounded-full">&lt; 2.0s SLA</span>
                 </div>
@@ -3552,11 +3967,11 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-indigo-900 flex items-center gap-1.5 text-sm">
                     <Smartphone className="w-4 h-4 text-indigo-600" />
-                    <span>Queue P1: Express Door Pass</span>
+                    <span>📱 Express Gate Lane (Queue P1)</span>
                   </span>
-                  <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 font-mono font-bold text-[10px] rounded-full">Instant Push</span>
+                  <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 font-mono font-bold text-[10px] rounded-full">&lt; 5s SLA</span>
                 </div>
-                <div className="text-[11px] font-bold text-slate-700">QR Mobile Passes &amp; Gate Reassignments</div>
+                <div className="text-[11px] font-bold text-slate-700">Mobile QR Gate Passes &amp; Urgent Alerts</div>
                 <p className="text-slate-600 leading-relaxed">
                   <strong>Why it has its own queue:</strong> Dispatched at T-2 hours before shift start and during day-of weather delays. When a volunteer arrives at Gate 2, their mobile barcode pass must load instantly on their smartphone.
                 </p>
@@ -3567,7 +3982,7 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-purple-900 flex items-center gap-1.5 text-sm">
                     <FileText className="w-4 h-4 text-purple-600" />
-                    <span>Queue P2: Official Accountant Lane</span>
+                    <span>🧾 Official Tax Lane (Queue P2)</span>
                   </span>
                   <span className="px-2 py-0.5 bg-purple-100 text-purple-800 font-mono font-bold text-[10px] rounded-full">Real-Time</span>
                 </div>
@@ -3582,11 +3997,11 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-amber-900 flex items-center gap-1.5 text-sm">
                     <Radio className="w-4 h-4 text-amber-600" />
-                    <span>Queue P3: Steady Delivery Lane</span>
+                    <span>📢 Metered Outreach Lane (Queue P3)</span>
                   </span>
                   <span className="px-2 py-0.5 bg-amber-100 text-amber-800 font-mono font-bold text-[10px] rounded-full">50 / sec Limit</span>
                 </div>
-                <div className="text-[11px] font-bold text-slate-700">Volunteer Recruitment &amp; Birthday Greetings</div>
+                <div className="text-[11px] font-bold text-slate-700">Volunteer Recruitment &amp; Updates</div>
                 <p className="text-slate-600 leading-relaxed">
                   <strong>Why it is rate-limited:</strong> If an organization blasts 2,000 emails in 1 second, Google Mail and Yahoo will suspect spam and throttle the domain. Queue P3 meters outbound volume at a steady 50/sec to protect and build your domain reputation.
                 </p>

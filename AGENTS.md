@@ -791,27 +791,27 @@ To ensure critical security codes and gate check-in passes are never delayed beh
 ```mermaid
 graph TD
     subgraph Gateway["Multi-Tenant Communication Gateway"]
-        P0["🚨 Queue P0: The Emergency Siren Lane<br/><b>Auth & Security OTPs (&lt; 2.0s SLA)</b><br/><i>Never queued behind newsletters</i>"]
-        P1["📱 Queue P1: The Express Door Pass<br/><b>Gate QR Mobile Passes (&lt; 5s SLA)</b><br/><i>Instant gate arrival passes</i>"]
-        P2["🧾 Queue P2: The Official Accountant Lane<br/><b>IRS 501(c)(3) Receipts &amp; Drop-Off Vouchers</b><br/><i>Real-time statutory tax receipts</i>"]
-        P3["📢 Queue P3: The Steady Delivery Lane<br/><b>Volunteer Recruitment Broadcasts</b><br/><i>Throttled at 50/sec to protect domain reputation</i>"]
+        P0["🚨 Emergency Siren Lane (Queue P0)<br/><b>Security &amp; Login OTPs (&lt; 2.0s SLA)</b><br/><i>Never queued behind bulk emails</i>"]
+        P1["📱 Express Gate Lane (Queue P1)<br/><b>Mobile QR Passes &amp; Urgent Alerts (&lt; 5s SLA)</b><br/><i>Instant gate arrival passes</i>"]
+        P2["🧾 Official Tax Lane (Queue P2)<br/><b>IRS 501(c)(3) Receipts &amp; Pledges</b><br/><i>Real-time statutory tax receipts</i>"]
+        P3["📢 Metered Outreach Lane (Queue P3)<br/><b>Volunteer Recruitment &amp; Updates</b><br/><i>Throttled at 50/sec to protect domain reputation</i>"]
     end
 ```
 
 ### 37.1 Queue Breakdown & SLAs
-1. **🚨 Queue P0: Emergency Siren Lane (Auth OTPs & Magic Links)**:
+1. **🚨 Emergency Siren Lane (Queue P0: Security & Login OTPs)**:
    - **SLA**: `< 2.0s Delivery`
    - **Payload**: 6-digit login verification codes and passwordless magic tokens.
    - **Rationale**: When a volunteer or admin logs in, they are waiting on screen. Queue P0 has instant priority and completely bypasses bulk traffic.
-2. **📱 Queue P1: Express Door Pass (Gate Operations & Mobile Passes)**:
+2. **📱 Express Gate Lane (Queue P1: Mobile QR Passes & Day-Of Alerts)**:
    - **SLA**: `Instant Push (< 5s)`
    - **Payload**: Live QR mobile check-in passes (dispatched at T-2h) and day-of emergency gate/weather reassignments.
    - **Rationale**: Volunteers arriving at Gate 2 need immediate pass access without waiting in line.
-3. **🧾 Queue P2: Official Accountant Lane (IRS 501(c)(3) Receipts & Pledges)**:
+3. **🧾 Official Tax Lane (Queue P2: IRS 501(c)(3) Receipts & Pledges)**:
    - **SLA**: `Real-Time Transactional (< 15s)`
    - **Payload**: IRS Publication 526/561 tax deductible donation receipts, in-kind equipment drop-off vouchers, and sponsor invoices.
    - **Rationale**: Donors expect immediate contemporaneous tax substantiation after making a financial contribution or physical item drop-off.
-4. **📢 Queue P3: Steady Delivery Lane (Recruitment Broadcasts & Updates)**:
+4. **📢 Metered Outreach Lane (Queue P3: Volunteer Recruitment & Updates)**:
    - **SLA**: `Throttled at 50 / second per Organization`
    - **Payload**: Volunteer recruitment announcements, committee updates, and annual birthday milestone greetings.
    - **Rationale**: Blasting thousands of emails in 1 second causes mailbox providers (Gmail, Yahoo) to flag spam. Queue P3 meters output volume to protect tenant IP and domain reputation.
@@ -853,3 +853,28 @@ Provides tabbed, step-by-step instructions for non-technical PTA coordinators an
   - **Custom Sending Domain**: Recommends using subdomains (`mail.yourorg.org`) to protect primary office Google Workspace / Office 365 email accounts.
   - **API Key**: Directs users to provider dashboards and reassures 256-bit encryption.
   - **SMS Brand Prefix**: Explains US carrier A2P 10DLC compliance rules requiring `[Your Org]` at the start of text messages.
+
+---
+
+## 40. Connection Testing Handshakes, Unsaved Changes State & In-Place Editability
+
+### 40.1 Real-Time Connection & API Handshake Verification (`handleTestApiConnection`)
+- **Interactive Verification**: Rather than saving settings blindly, coordinators can test their credentials and domain routing with 1 click before launching an event.
+- **Diagnostic Feedback**:
+  - Validates API key formatting and provider REST authentication (Resend, Postmark, AWS SES, SMTP, Managed Pool).
+  - Measures real-time latency (e.g. `94ms`), verifies TLS 1.3 protocol encryption, checks sending identity matching, and displays copyable timestamped audit trails.
+  - Actionable error diagnostics: If an API key is missing or unauthorized (HTTP 401), displays specific instructions on how to regenerate keys in provider dashboards.
+
+### 40.2 A2P 10DLC TCR Carrier Handshake Verification (`handleTestSmsConnection`)
+- **Carrier Routing Test**: Validates the organization's brand prefix against Tier-1 US cellular carrier rules (Verizon, AT&T, T-Mobile).
+- **Compliance Confirmation**: Confirms 100 msgs/min throughput allocation and GSM-7 compliance.
+
+### 40.3 In-Place Editability & Reactive Unsaved Changes Detection (`hasUnsavedCommChanges`)
+- **Continuous Modification**: Organizers can edit sender identities, change providers, or toggle SMS cadences at any point during the organization's lifecycle.
+- **State Change Detection**: Compares active form state with stored database configuration to identify pending modifications.
+- **Unsaved Changes Visual Alerts**:
+  - Glowing amber badge in the header banner.
+  - Full-width warning banner above settings: *"You have unsaved communication edits! Your modifications will not take effect on live outbound emails or SMS until you click 'Save Communication Settings'"*.
+  - `Discard Changes` (`handleDiscardCommChanges`) button restores configuration to the last saved state with 1 click.
+  - Pulsing amber accent on `Save Communication Settings` button ensures coordinators never leave without persisting updates.
+

@@ -599,12 +599,20 @@ Full PostgreSQL DDL schema with 100% Row-Level Security (RLS) policies is provis
 - **Custom Branded Domain (100% White-Labeled)**: Direct dispatch from `@mail.yourorg.org` via Resend API, Postmark, AWS SES, or Custom SMTP with dedicated DKIM (2048-bit key), SPF (`include:_spf.resend.com`), DMARC (`v=DMARC1`), and MX return-path records.
 
 ### 9.2 4-Lane Highway Priority Queue Architecture
-- **Queue P0 (Emergency Siren Lane)**: Security OTP passcodes and magic links (`< 2.0s SLA`, never throttled behind bulk emails).
-- **Queue P1 (Express Door Pass)**: T-2h mobile QR check-in passes and emergency day-of gate notices (`< 5s SLA`).
-- **Queue P2 (Official Accountant Lane)**: IRS Publication 526/561 tax deductible receipts and in-kind equipment vouchers (`< 15s Real-Time`).
-- **Queue P3 (Steady Delivery Lane)**: Volunteer recruitment campaigns and annual milestone greetings (`Throttled at 50/sec per Organization`).
+- **🚨 Emergency Siren Lane (Queue P0: Security & Login OTPs)**: Security OTP passcodes and magic links (`< 2.0s SLA`, never throttled behind bulk emails).
+- **📱 Express Gate Lane (Queue P1: Mobile QR Passes & Day-Of Alerts)**: T-2h mobile QR check-in passes and emergency day-of gate notices (`< 5s SLA`).
+- **🧾 Official Tax Lane (Queue P2: IRS 501(c)(3) Receipts & Pledges)**: IRS Publication 526/561 tax deductible receipts and in-kind equipment vouchers (`< 15s Real-Time`).
+- **📢 Metered Outreach Lane (Queue P3: Volunteer Recruitment & Updates)**: Volunteer recruitment campaigns and annual milestone greetings (`Throttled at 50/sec per Organization`).
 
 ### 9.3 Non-Technical Step-by-Step DNS Walkthroughs & Glossary
 - Dedicated interactive modal guides for **GoDaddy**, **Cloudflare** (with mandatory Gray Cloud / DNS Only proxy warning), **Namecheap**, and general registrars.
 - Plain-English glossary defining CNAME, TXT, SPF, DKIM, and DNS propagation.
 - 1-Click emergency fallback to R3Pro Hosted Cloud Pool ensuring zero event disruption.
+
+### 9.4 Real-Time Connection Testing & Carrier Handshakes
+- **Email API Provider Handshake**: Tests live REST authentication, evaluates latency (ms), verifies TLS 1.3 protocol encryption, and confirms sending identity matching with HTTP 200 verification.
+- **SMS TCR Carrier Handshake**: Verifies carrier route availability across Tier-1 US networks (Verizon, AT&T, T-Mobile) and confirms GSM-7 prefix formatting.
+
+### 9.5 In-Place Editability & Reactive Unsaved Changes Detection
+- Organizers can modify any sender information, provider credentials, or SMS cadences at any point during event operations.
+- Real-time comparison between active form inputs and stored database settings triggers an unsaved modifications banner, glowing header badges, and a 1-click `Discard Changes` option.

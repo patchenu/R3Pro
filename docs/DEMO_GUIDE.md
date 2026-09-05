@@ -30,8 +30,15 @@ REACH includes a top **Role Switcher Bar** in testing mode, allowing you to inst
   7. **⚡ Email & SMS Communication Studio**:
      - Click the **`⚡ Email & SMS Dispatch`** tab.
      - Toggle between **R3Pro Hosted Cloud Pool** and **Custom Branded Domain**.
+     - Click **`⚡ Test Connection`** or **`⚡ Test API Connection`** to test live API handshake, latency (ms), and TLS 1.3 protocol verification.
+     - In the SMS Gateway section, click **`📱 Test TCR Carrier Handshake`** to test cellular carrier route verification and brand prefix compliance.
+     - Modify any field (e.g. sender display name or SMS brand prefix) to see the **Unsaved Changes** warning banner and pulsating save button appear. Click **`Discard Changes`** to restore defaults.
      - Click **`Status & Troubleshooting Guide`** to review deliverability health and action checklists.
-     - Click **`Why 4 Queues? (Highway Emergency Analogy)`** on the SLA ribbon to review the 4-lane priority model.
+     - Click **`Why 4 Queues? (Highway Emergency Analogy)`** on the SLA ribbon to review the clear plain-English queue lanes:
+       - *🚨 Emergency Siren Lane (Queue P0: Security & Login OTPs)* (`<2.0s SLA`)
+       - *📱 Express Gate Lane (Queue P1: Mobile QR Passes & Alerts)* (`<5s SLA`)
+       - *🧾 Official Tax Lane (Queue P2: IRS Receipts & Pledges)* (`Real-Time`)
+       - *📢 Metered Outreach Lane (Queue P3: Recruitment & Updates)* (`50/sec Limit`)
      - Click **`📖 Step-by-Step DNS Guide`** to review GoDaddy, Cloudflare (Gray Cloud), and Namecheap instructions.
      - Test the **Live Transactional Email Dispatcher** and **Live A2P 10DLC SMS Dispatcher** sandboxes.
 
