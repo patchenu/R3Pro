@@ -356,14 +356,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block text-center mb-2">
                 Quick Demo Profile Logins
               </span>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin('patchenu@yahoo.com')}
+                  className="p-2 rounded-xl border-2 border-purple-300 bg-purple-50/60 hover:bg-purple-100 text-left text-xs font-semibold text-slate-700 shadow-xs"
+                >
+                  <span className="block font-black text-purple-950">Patchen Uchiyama</span>
+                  <span className="text-[10px] text-purple-700 font-bold">👑 Org Super Admin</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => handleQuickLogin('elena@lincolnpta.org')}
                   className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-left text-xs font-semibold text-slate-700"
                 >
                   <span className="block font-bold text-slate-900">Elena Rostova</span>
-                  <span className="text-[10px] text-indigo-600">Org Super Admin</span>
+                  <span className="text-[10px] text-indigo-600 font-bold">Org Super Admin</span>
                 </button>
 
                 <button
@@ -372,7 +381,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-left text-xs font-semibold text-slate-700"
                 >
                   <span className="block font-bold text-slate-900">Marcus Vance</span>
-                  <span className="text-[10px] text-indigo-600">Event Planner / Chair</span>
+                  <span className="text-[10px] text-indigo-600 font-bold">Event Planner</span>
                 </button>
 
                 <button
@@ -381,7 +390,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-left text-xs font-semibold text-slate-700"
                 >
                   <span className="block font-bold text-slate-900">Sarah Jenkins</span>
-                  <span className="text-[10px] text-indigo-600">Committee Lead</span>
+                  <span className="text-[10px] text-amber-700 font-bold">Committee Lead</span>
                 </button>
 
                 <button
@@ -390,7 +399,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-left text-xs font-semibold text-slate-700"
                 >
                   <span className="block font-bold text-slate-900">David Miller</span>
-                  <span className="text-[10px] text-emerald-600">Parent / Volunteer</span>
+                  <span className="text-[10px] text-emerald-700 font-bold">Parent / Volunteer</span>
                 </button>
               </div>
             </div>
