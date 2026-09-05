@@ -207,8 +207,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
                       />
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-1.5">
+                    <p className="text-[11px] text-slate-500 mt-1.5 leading-tight">
                       No password required. We'll send a 6-digit one-time passcode to sign in immediately on this device.
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      For SMS logins: Msg & data rates may apply. Msg frequency: 1 msg/login. Reply STOP to cancel, HELP for help. Mobile data is never sold.
                     </p>
                   </div>
 

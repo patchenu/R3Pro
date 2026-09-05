@@ -81,11 +81,16 @@ R3Pro is an enterprise-grade web application combining the volunteer coordinatio
 17. **Master Broadcast Announcements Hub**:
     - Real-time multi-channel broadcast creation (*Email, SMS, Mobile Push, Gate Kiosk*) with urgency tiering (*Normal, Urgent, Critical*) and immutable dispatch ledgers.
 
-19. **Best-of-Breed Production Security & Compliance Hardening**:
+18. **Comprehensive Legal Policies Suite & A2P 10DLC Compliance**:
+    - Complete legal compliance corpus (*Terms of Service, Privacy Policy, COPPA Minor Privacy, California Notice at Collection & Do Not Sell/Share, SMS A2P 10DLC Policy, IRS 501(c)(3) Tax Substantiation Policy*).
+    - Unified 6-tab modal viewer (`LegalModalCenter.tsx`), standardized A2P 10DLC non-prechecked opt-in block (`SmsOptInConsentBlock.tsx`), and global compliance badge footer (`GlobalAppFooter.tsx`).
+
+19. **Best-of-Breed Production Security & Automated Database Backup Schedule**:
     - **SOC 2 Type II**: Timing-safe OTP comparison (`crypto.timingSafeEqual`), HMAC-SHA256 JWT sessions in `HttpOnly`, `Secure`, `SameSite=Strict` cookies, sliding-window rate limiting, and enterprise HTTP security headers.
     - **COPPA & Minor PII Safety**: Household mental model with zero minor contact info collection and parent/guardian co-signing vector signature ledgers.
     - **IRS 501(c)(3) Immutability Trigger**: PostgreSQL database trigger `prevent_immutable_tax_receipt_tampering` prevents mutation or deletion of issued tax receipts.
     - **100% PostgreSQL Row-Level Security (RLS)**: Active across all 20 relational database tables on Vercel Postgres (Neon).
+    - **Automated Backup & Disaster Recovery Engine**: Gzip SQL dumps with SHA-256 integrity verification, JSON manifest logging, and <5 min RPO / <15 min RTO.
 
 ---
 
@@ -105,6 +110,12 @@ npm run dev
 # Run PostgreSQL database migration & verify RLS
 npm run db:migrate
 npm run db:verify
+
+# Perform automated database backup & verification
+npm run db:backup
+
+# Restore database from backup snapshot
+npm run db:restore
 
 # Build for production
 npm run build

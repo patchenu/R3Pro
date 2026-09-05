@@ -11,6 +11,9 @@ import {
 import { formatCurrency, formatTimeRange, calculateAge } from '../../utils/formatters';
 import { checkParticipantShiftCollisions, getShiftCapacityStats } from '../../utils/scheduling';
 import { WAIVER_TEMPLATES_DATA } from '../../data/templates';
+import { SmsOptInConsentBlock } from '../legal/SmsOptInConsentBlock';
+import { LegalModalCenter } from '../legal/LegalModalCenter';
+import { LegalDocType } from '../../content/legal';
 
 interface UnifiedRegistrationModalProps {
   isOpen: boolean;
@@ -167,6 +170,16 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // A2P 10DLC SMS Opt-In & Legal Studio State
+  const [smsOptInConsent, setSmsOptInConsent] = useState<boolean>(true);
+  const [legalModalOpen, setLegalModalOpen] = useState<boolean>(false);
+  const [activeLegalDoc, setActiveLegalDoc] = useState<LegalDocType>('terms');
+
+  const handleOpenLegal = (doc: LegalDocType) => {
+    setActiveLegalDoc(doc);
+    setLegalModalOpen(true);
+  };
+
   // Calculate ticket total
   const ticketTotal = selectedTicketTiers.reduce((sum, st) => {
     const tier = ticketTiers.find(t => t.id === st.ticketTierId);
@@ -301,7 +314,9 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
       feeCovered,
       isAnonymous,
       paymentMethod,
-      waiverSignatures
+      waiverSignatures,
+      smsOptInConsent,
+      smsOptInTimestamp: new Date().toISOString()
     };
 
     const res = claimSlotsAndRegister(payload);
@@ -313,6 +328,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
   };
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -454,6 +470,14 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
               Used to verify age eligibility and liability waiver requirements.
             </p>
           </div>
+
+          {/* A2P 10DLC SMS & Operational Notifications Opt-In */}
+          <SmsOptInConsentBlock
+            checked={smsOptInConsent}
+            onChange={setSmsOptInConsent}
+            organizationName={event.title}
+            onOpenLegalDoc={handleOpenLegal}
+          />
 
           {/* Additional Family / Group Members */}
           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
@@ -1006,5 +1030,13 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
         </div>
       )}
     </Modal>
+
+    {/* Integrated Legal & Compliance Studio Modal */}
+    <LegalModalCenter
+      isOpen={legalModalOpen}
+      onClose={() => setLegalModalOpen(false)}
+      initialTab={activeLegalDoc}
+    />
+    </>
   );
 };

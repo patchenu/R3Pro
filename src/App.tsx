@@ -16,6 +16,9 @@ import { KioskSelfCheckIn } from './components/checkin/KioskSelfCheckIn';
 import { EventBuilderWizard } from './components/organizer/EventBuilderWizard';
 import { OrgOnboardingModal } from './components/organizer/OrgOnboardingModal';
 import { AuthModal } from './components/auth/AuthModal';
+import { GlobalAppFooter } from './components/common/GlobalAppFooter';
+import { LegalModalCenter } from './components/legal/LegalModalCenter';
+import { LegalDocType } from './content/legal';
 
 const MainLayout: React.FC = () => {
   const { activeRole, switchEvent, switchOrganization, isAuthenticated } = useApp();
@@ -25,6 +28,13 @@ const MainLayout: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authRoleIntent, setAuthRoleIntent] = useState<'org_admin' | 'volunteer'>('org_admin');
   const [showRoleSimulator, setShowRoleSimulator] = useState(true);
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [activeLegalTab, setActiveLegalTab] = useState<LegalDocType>('terms');
+
+  const handleOpenLegal = (doc: LegalDocType) => {
+    setActiveLegalTab(doc);
+    setIsLegalModalOpen(true);
+  };
 
   const handleOpenOrgWizard = () => {
     if (!isAuthenticated) {
@@ -162,6 +172,16 @@ const MainLayout: React.FC = () => {
           onClose={() => setIsOrgWizardOpen(false)}
         />
       )}
+
+      {/* Global Regulatory & Legal Footer */}
+      <GlobalAppFooter onOpenLegalDoc={handleOpenLegal} />
+
+      {/* Global Legal & Compliance Studio Modal */}
+      <LegalModalCenter
+        isOpen={isLegalModalOpen}
+        onClose={() => setIsLegalModalOpen(false)}
+        initialTab={activeLegalTab}
+      />
 
       {/* Toast Notifications */}
       <ToastContainer />

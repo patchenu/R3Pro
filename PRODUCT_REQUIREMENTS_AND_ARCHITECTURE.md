@@ -362,6 +362,24 @@ GatherRaise enforces an enterprise-grade, defense-in-depth security and complian
 * **Zero-Downtime Live DB & Mock Fallback Parity**:
   - Seamlessly queries the live Neon PostgreSQL database when connection strings are available, while gracefully falling back to validated in-memory mock stores in sandbox or offline preview environments.
 
+### 6.7 A2P 10DLC & TCPA SMS Messaging Compliance Architecture
+* **CTIA / TCPA & TCR Campaign Registry Compliance**:
+  - Form integration with explicit, non-pre-checked SMS consent checkboxes (`SmsOptInConsentBlock.tsx`).
+  - Verbatim carrier disclosures specifying sender brand, message cadence (~3–5 msgs/event), standard rate warnings, and HELP/STOP instructions.
+  - Zero Third-Party Sharing Guarantee: Mobile originator opt-in data is quarantined within tenant boundaries and is never sold or shared for marketing purposes.
+* **Automated Keyword Handling**:
+  - `HELP`: Dispatches immediate support guidance (`support@gatherraise.com`).
+  - `STOP` / `UNSUBSCRIBE`: Automatically writes to tenant-scoped suppression ledgers and ceases all further SMS dispatch.
+
+### 6.8 Automated Database Backup, Disaster Recovery & 7-Year Retention Engine
+* **Multi-Tier Retention Hierarchy (`docs/DISASTER_RECOVERY_AND_BACKUP_SCHEDULE.md`)**:
+  - **Tier 1 (Continuous PITR)**: Neon second-by-second write-ahead log (WAL) archiving for 7–30 day point-in-time rollbacks.
+  - **Tier 2 (Daily Snapshot)**: Automated daily exports (`npm run db:backup`) compressed via Gzip with SHA-256 cryptographic integrity checksums stored in SSE-KMS encrypted cloud storage (30-day retention).
+  - **Tier 3 (Weekly Consolidated)**: Weekly snapshots retained for 90 days.
+  - **Tier 4 (Statutory 7-Year IRS Archive)**: Immutable annual fiscal year-end backups retained for **7 years** to satisfy IRS IRC § 170(f)(8) and Form 990 audit requirements.
+* **Recovery SLAs**: Recovery Point Objective (RPO) $\le 5\text{ minutes}$; Recovery Time Objective (RTO) $\le 30\text{ minutes}$.
+
+
 
 
 

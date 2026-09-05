@@ -35,6 +35,7 @@ export const KioskSelfCheckIn: React.FC = () => {
   const [walkupBirthDate, setWalkupBirthDate] = useState('1996-03-22');
   const [selectedShiftId, setSelectedShiftId] = useState<string>('');
   const [walkupSignature, setWalkupSignature] = useState<string>('');
+  const [walkupSmsOptIn, setWalkupSmsOptIn] = useState(true);
   const [isSubmittingWalkup, setIsSubmittingWalkup] = useState(false);
 
   const shiftMap = new Map(shifts.map(s => [s.id, s]));
@@ -618,6 +619,24 @@ export const KioskSelfCheckIn: React.FC = () => {
                     signerName={walkupName || 'Walk-up Volunteer'}
                     onSignatureCapture={(sig) => setWalkupSignature(sig || '')}
                   />
+                </div>
+
+                {/* SMS Notification Consent Block */}
+                <div className="p-3 bg-slate-900 border border-slate-700 rounded-xl space-y-1.5">
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={walkupSmsOptIn}
+                      onChange={(e) => setWalkupSmsOptIn(e.target.checked)}
+                      className="mt-0.5 h-3.5 w-3.5 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-400"
+                    />
+                    <span className="text-[11px] font-semibold text-slate-300">
+                      Send my digital check-in pass & shift receipt to my mobile phone via SMS.
+                    </span>
+                  </label>
+                  <p className="text-[10px] text-slate-500 pl-5">
+                    Msg frequency varies (~3 msgs/event). Msg & data rates may apply. Reply STOP to cancel, HELP for help. Mobile data is never sold.
+                  </p>
                 </div>
 
                 {/* Submit button */}

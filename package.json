@@ -8,7 +8,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "db:migrate": "node scripts/migrate.mjs",
-    "db:verify": "node scripts/verify-db.mjs"
+    "db:verify": "node scripts/verify-db.mjs",
+    "db:backup": "node scripts/backup-db.mjs",
+    "db:restore": "node scripts/restore-db.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

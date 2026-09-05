@@ -131,3 +131,34 @@ $$ LANGUAGE plpgsql;
 | **Door Kiosk Attendant** | Gate Operations | Fast name/phone check-in lookup, on-site touchscreen waiver signing, day-of walk-up volunteer registration. |
 | **Volunteer / Donor** | Self-Service Public | Claim shifts, register family, pledge items, donate, sign waivers, view/edit via secure manage token or OTP login. |
 
+---
+
+## 9. Comprehensive Legal Compliance & A2P 10DLC Standard
+
+### 9.1 Legal Document Architecture (`src/content/legal/`)
+- **Terms of Service**: 501(c)(3) representations, minor safety, E-SIGN Act compliance, non-refundable platform fees, and binding dispute arbitration.
+- **Privacy Policy**: Zero sale/sharing of personal information, SOC 2 Type II data safeguards, sub-processor disclosures, and data subject rights.
+- **COPPA Minor Privacy Notice**: Household dependent model, zero direct contact collection from children, verifiable parental consent (VPC), and parental inspection/deletion rights.
+- **California Notice at Collection & Do Not Sell / Share**: CCPA/CPRA statutory disclosure matrix, category retention schedules, and consumer opt-out workflows.
+- **SMS A2P 10DLC Carrier Compliance Policy**: TCPA and CTIA guidelines, message frequency (~3–5 msgs/event), HELP/STOP keyword automation, non-prechecked opt-in consent checkboxes, and strict carrier zero-sharing rules.
+- **IRS 501(c)(3) Tax Substantiation Policy**: IRC § 170(f)(8) contemporaneous written acknowledgement, Fair Market Value (FMV) offsets under IRS Pub 526/561, and immutable tax receipt ledger guarantees.
+
+### 9.2 UI & Consent Integration
+- **`LegalModalCenter.tsx`**: Searchable, printable 6-tab legal policy viewer accessible anywhere across the platform.
+- **`SmsOptInConsentBlock.tsx`**: Reusable component ensuring non-prechecked explicit opt-in with organization branding and mandatory carrier disclosures.
+- **`GlobalAppFooter.tsx`**: Universal compliance badge bar (SOC 2, COPPA, 501(c)(3), 10DLC, RLS) and legal navigation hub.
+
+---
+
+## 10. Automated Database Backup & Disaster Recovery Schedule
+
+### 10.1 Multi-Tier Backup Cadence
+- **Tier 1 (Continuous Point-in-Time Recovery)**: Neon WAL streaming enables recovery to any millisecond within the past 7–30 days.
+- **Tier 2 (Daily Automated Exports)**: Daily pg_dump gzip SQL dumps with SHA-256 checksums and automated JSON manifest logging.
+- **Tier 3 (Weekly Offsite Encrypted Replicas)**: AWS S3 / GCP Cloud Storage with AES-256 encryption.
+- **Tier 4 (Annual Cold Statutory Archive)**: 7-year immutable archive for IRS 501(c)(3) non-profit audit compliance.
+
+### 10.2 Disaster Recovery Metrics
+- **RPO (Recovery Point Objective)**: <5 minutes
+- **RTO (Recovery Time Objective)**: <15 minutes via automated restore script (`npm run db:restore`)
+

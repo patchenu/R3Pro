@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 .vercel
 .env*
+backups/*.sql*
+!backups/backup_manifest.json

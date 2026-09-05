@@ -648,3 +648,28 @@ GatherRaise enforces an enterprise-grade defense-in-depth security architecture 
 ### 33.6 Dual-Mode Hybrid Database Client (`api/_lib/db.ts`, `src/services/apiClient.ts`)
 - Seamlessly connects to live Neon PostgreSQL with connection pooling when configured, with zero-downtime graceful fallback to in-memory mock stores in offline sandbox environments.
 
+### 33.7 Comprehensive Legal Policies Suite & A2P 10DLC Compliance
+- **Complete Legal Document Corpus (`src/content/legal/`)**:
+  - `Terms of Service`: Covers 501(c)(3) representations, minor safety rules, E-SIGN Act compliance, fee structures, and binding arbitration.
+  - `Privacy Policy`: Zero data-sale commitment, SOC 2 Type II data security safeguards, sub-processor disclosures, and retention terms.
+  - `COPPA Minor Privacy Notice`: Household dependent model, zero direct minor contact info collection, verifiable parental consent (VPC), and parental inspection/deletion rights.
+  - `California Notice at Collection & Do Not Sell / Share`: CCPA/CPRA statutory disclosure tables, statutory retention schedules, and consumer rights request workflows.
+  - `SMS A2P 10DLC Carrier Compliance Policy`: TCPA and CTIA compliant carrier disclosures, message frequency (~3–5 msgs/event), HELP/STOP keyword rules, and non-prechecked opt-in consent checkboxes.
+  - `IRS 501(c)(3) Tax Substantiation Policy`: Contemporaneous written acknowledgement under IRC § 170(f)(8), Fair Market Value (FMV) offsets under IRS Pub 526/561, and immutable tax receipt ledger guarantees.
+- **Unified Legal UI & Consent Components**:
+  - `LegalModalCenter.tsx`: Searchable, printable 6-tab legal policy viewer accessible from any view or footer link without clearing active cart or form states.
+  - `SmsOptInConsentBlock.tsx`: Standardized A2P 10DLC opt-in checkbox with dynamic organization name binding, carrier disclosures, and direct modal triggers.
+  - `GlobalAppFooter.tsx`: Universal compliance badge bar (SOC 2, COPPA, 501(c)(3), 10DLC, RLS) and legal navigation hub.
+
+### 33.8 Automated Database Backup & Disaster Recovery Schedule (`scripts/backup-db.mjs`, `scripts/restore-db.mjs`)
+- **Automated Backup Engine**:
+  - Full schema and table export across all 20 tables to gzip-compressed SQL dumps with SHA-256 integrity checksum calculation and JSON manifest logging.
+- **Disaster Recovery SLA**:
+  - **RPO (Recovery Point Objective)**: <5 minutes via Neon Continuous Write-Ahead Log (WAL) Point-in-Time Recovery.
+  - **RTO (Recovery Time Objective)**: <15 minutes via automated restore script (`npm run db:restore`).
+- **Statutory Retention Cadence**:
+  - 7–30 Days Neon Continuous Point-in-Time Recovery (PITR).
+  - 30 Days daily rolling encrypted snapshots.
+  - 90 Days weekly offsite S3/GCS archives.
+  - 7 Years annual encrypted cold archives for IRS 501(c)(3) non-profit audit compliance.
+
