@@ -878,3 +878,34 @@ Provides tabbed, step-by-step instructions for non-technical PTA coordinators an
   - `Discard Changes` (`handleDiscardCommChanges`) button restores configuration to the last saved state with 1 click.
   - Pulsing amber accent on `Save Communication Settings` button ensures coordinators never leave without persisting updates.
 
+---
+
+## 41. Interactive CTA State Management, Zero-Friction Shift Picking & Comprehensive App-Wide Button Audit
+
+### 41.1 Context-Aware Hero Sign-Up CTA (`PublicEventLanding.tsx`)
+- **Dual-State Dynamic Behavior**:
+  - **State A (0 Shifts / Items Selected)**: Displays `Pick Shift & Sign Up →`. Clicking automatically sets `slotTypeFilter = 'volunteer'`, ensures the sub-parts container (`id="shifts-container"`) is in view, and smoothly scrolls the user directly to the shift time slots.
+  - **State B (≥1 Shift Selected)**: Dynamically transforms into `Complete Sign-Up (N Shifts Selected) →`. Clicking directly launches `UnifiedRegistrationModal`, enabling frictionless 1-click checkout without having to scroll or navigate to the floating timeline bar.
+- **DOM Container Anchor**: Ensures `<div id="shifts-container">` is consistently mounted in the DOM to prevent unhandled scroll errors.
+
+### 41.2 Comprehensive Interactive Button & Modal Audit Ledger
+- **Shift & Item Selection Buttons**:
+  - Individual shift cards support whole-card click and `+` / `✓` buttons, toggling selection state and surfacing `VisualScheduleTimelineBar`.
+  - Supply wishlist item cards toggle `Pledge` / `Pledged` states with instantaneous progress bar updates.
+  - Commercial vendor booths support `Apply for Vendor Booth` and ticket quantities support `+` / `-` incremental adjustments.
+- **Floating Cart & Schedule Timeline Bar (`VisualScheduleTimelineBar.tsx`)**:
+  - `Complete Sign-Up & Claim Passes` launches `UnifiedRegistrationModal`.
+  - `Clear` / `Clear All` empties cart selections across shifts, wishlist pledges, and ticket tiers.
+  - `✕` removes specific shifts from the chronological timeline.
+  - `Hide Details` / `Show Schedule` toggles visual timeline collapse with collision warning badges.
+- **3-Step Unified Registration Modal (`UnifiedRegistrationModal.tsx`)**:
+  - Step 1: `+ Add Household Dependent`, `Quick-Add Saved Family Dependents`, and `Continue to Legal Waivers / Checkout`.
+  - Step 2: `Draw` vs `Type Name` digital signature pad mode switcher, `Clear Signature`, `Back to Contact`, and `Accept & Continue to Checkout`.
+  - Step 3: Voluntary donation preset chips (`$0`, `$25`, `$50`, `$100`), payment method selector (`Credit Card`, `Apple Pay`, `PayPal`), and `Complete Sign-Up` / `Pay & Confirm` button executing `claimSlotsAndRegister`.
+- **Confirmation & Digital Pass (`ConfirmationCard.tsx`)**:
+  - `Download Apple / .iCal File` dispatches standard RFC 5545 `.ics` payload.
+  - `Add to Google Calendar` opens formatted Google Calendar deep link with reporting gate notes.
+  - `Save Password` saves volunteer profile and syncs service history.
+  - `Return to Event Page` dismisses confirmation view and restores landing exploration.
+
+

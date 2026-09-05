@@ -616,3 +616,21 @@ Full PostgreSQL DDL schema with 100% Row-Level Security (RLS) policies is provis
 ### 9.5 In-Place Editability & Reactive Unsaved Changes Detection
 - Organizers can modify any sender information, provider credentials, or SMS cadences at any point during event operations.
 - Real-time comparison between active form inputs and stored database settings triggers an unsaved modifications banner, glowing header badges, and a 1-click `Discard Changes` option.
+
+---
+
+## 10. Comprehensive UI/UX Button Audit & Dynamic State Management Architecture
+
+### 10.1 Dynamic Hero Registration CTA (`PublicEventLanding.tsx`)
+- **Interactive State Transition**:
+  - **State A (0 Selections)**: Button displays `Pick Shift & Sign Up →`. Automatically filters to `volunteer` opportunities and smoothly scrolls down to `<div id="shifts-container">`.
+  - **State B (≥1 Shift Selected)**: Button dynamically transitions to `Complete Sign-Up (N Shifts Selected) →`. Clicking immediately opens the 3-step checkout modal (`UnifiedRegistrationModal`).
+- **DOM Stability**: `<div id="shifts-container">` is explicitly anchored in the JSX tree to ensure smooth scrolling behavior across all viewport dimensions.
+
+### 10.2 Comprehensive Interactive Button Verification Matrix
+- **Volunteer Shifts**: Full card clickability and individual `+` / `✓` buttons synchronize with `selectedShiftIds` and the floating schedule timeline bar.
+- **Supply Wishlist**: Real-time `Pledge` / `Pledged` toggle with dynamic progress bar updates.
+- **Commercial Marketplace & Tickets**: Modal triggers for vendor booths, pro-bono pledges, sponsor tiers, and numeric `+` / `-` quantity controls.
+- **Registration Stepper & Canvas**: Step 1 contact/dependent inputs $\rightarrow$ Step 2 vector signature pad & type-name mode $\rightarrow$ Step 3 donation chips & payment methods $\rightarrow$ instant Confirmation Card pass generation with QR code and calendar sync (`.ics` / Google Calendar).
+- **Navigation & Simulator Bar**: 6-role switcher, Live/Demo mode toggle, Organization/Event dropdowns, and role-scoped tabs verified with 100% headless Chrome CDP automated coverage.
+

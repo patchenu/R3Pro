@@ -78,10 +78,13 @@ REACH includes a top **Role Switcher Bar** in testing mode, allowing you to inst
 
 ### 🙋 Persona 6: David Chen (Parent / Volunteer / Donor)
 * **What to Test**:
-  1. Open the **Event Showcase & Shifts**: Pick a 9:00 AM Setup shift + register his daughter Emma as a helper.
+  1. Open the **Event Showcase & Shifts**:
+     - Tap **"Pick Shift & Sign Up"** in the top hero callout to smoothly scroll down to open opportunities.
+     - Select a morning shift (*e.g., Obstacle Course Marshall or Face Painting Artist*): notice the hero button instantly changes to **"Complete Sign-Up (1 Shift Selected)"** and the floating timeline bar appears.
+     - Add a household dependent (*e.g., Lucas Miller*) in Step 1.
   2. Pledge 2 boxes of cookies + donate $50 (with 2.9% fee cover).
-  3. Sign the digital **Minor Parental Consent Waiver** using the touch signature pad.
-  4. Receive instant booking confirmation with exact reporting gate, Lead phone number, what to bring, and `.ics` calendar download.
+  3. Sign the digital **Minor Parental Consent Waiver** using the touch signature pad (Draw or Type mode).
+  4. Receive instant booking confirmation with QR check-in pass, exact reporting gate, Lead phone number, what to bring, and 1-click `.ics` / Google Calendar download.
 
 ### 📱 Persona 7: Door & Gate Kiosk Station (Dual-Mode Operations)
 * **What to Test**:
@@ -96,3 +99,4 @@ REACH includes a top **Role Switcher Bar** in testing mode, allowing you to inst
 
 ### 🔄 Live Testing Mode (Exit Demo)
 * Click **"Exit Demo (Live Mode)"** in the top simulator bar to log out and experience the real unauthenticated landing page, register a new user account, and create a brand-new organization.
+

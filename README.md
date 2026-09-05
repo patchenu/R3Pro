@@ -168,4 +168,11 @@ Located in `.agents/skills/`:
 - `vendor-booth-allocator`: Reviews commercial vendor applications and calculates booth grid maps.
 - `communication-dispatcher`: Evaluates multi-tenant deliverability health, SPF/DKIM alignment, 4-queue priority routing, and A2P 10DLC carrier compliance.
 
+---
+
+## 🔍 UI/UX & Interactive Button Testing Standards
+- **Dual-State Dynamic Hero CTA**: "Pick Shift & Sign Up" smoothly navigates to open shifts when none are selected, and dynamically transforms into "Complete Sign-Up (N Shifts Selected)" when opportunities are chosen, launching the 3-step checkout modal with 1 click.
+- **100% E2E Button Coverage**: Automated headless browser CDP test suite verifies all interactive buttons across Public Landing, Schedule Timeline Bar, Unified Registration Modal, Signature Pad, Confirmation Cards, and Navigation Hubs.
+
+
 

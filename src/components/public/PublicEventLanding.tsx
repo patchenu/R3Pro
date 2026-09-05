@@ -254,13 +254,29 @@ export const PublicEventLanding: React.FC = () => {
           </div>
 
           <button
+            type="button"
             onClick={() => {
-              const el = document.getElementById('shifts-container');
-              el?.scrollIntoView({ behavior: 'smooth' });
+              if (selectedShiftIds.length > 0 || selectedItemPledges.length > 0 || selectedTicketTiers.length > 0 || directDonationAmount > 0) {
+                setIsRegModalOpen(true);
+              } else {
+                setSlotTypeFilter('volunteer');
+                const el = document.getElementById('shifts-container');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                  setIsRegModalOpen(true);
+                }
+              }
             }}
-            className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold py-3 px-6 rounded-xl text-xs sm:text-sm shadow-md transition shrink-0 flex items-center gap-2"
+            className="bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-slate-950 font-extrabold py-3 px-6 rounded-xl text-xs sm:text-sm shadow-md hover:shadow-lg transition shrink-0 flex items-center gap-2 cursor-pointer"
           >
-            <span>Pick Shift & Sign Up</span>
+            <span>
+              {selectedShiftIds.length > 0 
+                ? `Complete Sign-Up (${selectedShiftIds.length} Shift${selectedShiftIds.length > 1 ? 's' : ''} Selected)`
+                : totalSelectionsCount > 0
+                ? `Complete Sign-Up (${totalSelectionsCount} Selected)`
+                : 'Pick Shift & Sign Up'}
+            </span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -386,7 +402,7 @@ export const PublicEventLanding: React.FC = () => {
         </div>
 
         {/* SUB-PART DEPARTMENTS & SLOTS SECTION */}
-        <div className="space-y-8">
+        <div id="shifts-container" className="space-y-8">
           {filteredSubParts.map((subPart) => {
             const subPartShifts = shifts.filter(s => {
               if (s.subPartId !== subPart.id) return false;
