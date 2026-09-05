@@ -667,9 +667,53 @@ GatherRaise enforces an enterprise-grade defense-in-depth security architecture 
 - **Disaster Recovery SLA**:
   - **RPO (Recovery Point Objective)**: <5 minutes via Neon Continuous Write-Ahead Log (WAL) Point-in-Time Recovery.
   - **RTO (Recovery Time Objective)**: <15 minutes via automated restore script (`npm run db:restore`).
-- **Statutory Retention Cadence**:
-  - 7–30 Days Neon Continuous Point-in-Time Recovery (PITR).
-  - 30 Days daily rolling encrypted snapshots.
-  - 90 Days weekly offsite S3/GCS archives.
-  - 7 Years annual encrypted cold archives for IRS 501(c)(3) non-profit audit compliance.
+### 33.9 Admin Observability Hub, User Impersonation & Full Account Lifecycle Management
+
+GatherRaise includes an enterprise-grade **Admin Observability, Accounts & Diagnostics Hub** (`AdminObservabilityHub.tsx`) and **User Impersonation Engine** (`StickyImpersonationBanner.tsx`) accessible to Org Super Admins.
+
+#### 1. Full User Account Lifecycle Management (`AdminObservabilityHub.tsx` - Tab 1)
+- **Comprehensive Account Directory**: Displays all organization and platform users with active roles, scoped committee departments, account status (`active` vs `suspended`), last login timestamp, last seen IP address, total login counts, and 2FA status.
+- **Account Actions**:
+  - **Create User Account**: Create verified staff, coordinators, leads, or volunteers with assigned roles and committee scopes.
+  - **Edit User Profile**: Modify contact info, phone numbers, assigned roles, and scoped committee departments.
+  - **Account Suspension & Enforcement**: Admins can suspend accounts with a required reason. The authentication gate (`login` and `loginWithCode` in `AppContext.tsx`) strictly blocks suspended accounts with informative suspension messages. Accounts can be reactivated with 1 click.
+  - **Emergency Password Reset (6-Digit OTP)**: Issues cryptographically secure, single-use 6-digit verification passcodes for locked-out coordinators or staff.
+  - **Account Deletion**: Safely removes obsolete accounts with confirmation safeguards (prevents self-deletion of active admin session).
+
+#### 2. User Impersonation ("See What They See") (`StickyImpersonationBanner.tsx`)
+- **Non-Destructive Identity Swapping**:
+  - Super Admins can select any user to experience the entire application from their exact perspective (e.g. Scoped Committee Lead with restricted department visibility, artisan Vendor with booth selection, or Volunteer with private self-service pass).
+  - Preserves original admin credentials in `impersonatedOriginalUser` and `impersonatedOriginalRole` so terminating impersonation immediately restores administrative credentials without re-authenticating.
+- **Sticky Top Impersonation Banner**:
+  - Renders a prominent amber/indigo header alerting the operator of active impersonation mode with target user name, email, role, and organization.
+  - Features 1-click `🛑 Exit Impersonation & Return to Admin` to instantly return to the Admin Observability Hub.
+- **Immutable SOC 2 Audit Trail**:
+  - Starting and terminating an impersonation session automatically writes immutable `USER_IMPERSONATION_STARTED` and `USER_IMPERSONATION_ENDED` audit records with operator ID, target user ID, and timestamps.
+
+#### 3. Real-Time Exception Diagnostics & Sentry Simulator (Tab 2)
+- **Live Error Stream**: Real-time tracking of platform runtime exceptions, component crashes, and API failures with severity levels (`fatal`, `error`, `warning`, `info`), source component tags, full formatted stack traces, and 1-click resolution workflows.
+- **Interactive Exception Simulator**: Allows engineers and admins to simulate critical production errors (*Stripe Payment Timeout*, *Database Deadlock*, *Waiver Canvas Out of Memory*, *Custom Message/Component*) to verify resilience and telemetry capture.
+
+#### 4. Core Web Vitals & API Latency Telemetry (Tab 3)
+- **Live CWV Metrics**: Tracks real-time performance indicators against Google Core Web Vitals thresholds:
+  - **LCP (Largest Contentful Paint)**: Target < 2.5s (Good).
+  - **INP (Interaction to Next Paint)**: Target < 200ms (Good).
+  - **CLS (Cumulative Layout Shift)**: Target < 0.1 (Good).
+  - **FCP (First Contentful Paint)**: Target < 1.8s (Good).
+  - **TTFB (Time to First Byte)**: Target < 800ms (Good).
+- **API Latency Distribution**: Visual latency meters across critical backend endpoints (`/api/v1/auth/verify-otp`, `/api/v1/registrations/checkout`, `/api/v1/events/manifest`, `/api/v1/donations/record`).
+
+#### 5. Uptime Heartbeat & Infrastructure Probes (Tab 4)
+- **Infrastructure Health Suite**: Monitored health checks across critical infrastructure subsystems:
+  - Neon PostgreSQL Serverless Cluster (Database Ping & Query Latency)
+  - Distributed Redis Cache & BullMQ Dispatch Queue (Latency & Memory)
+  - AWS SES / Resend Multi-Tenant Email Gateway (DKIM/SPF & SLA)
+  - A2P 10DLC Carrier Registry SMS Gateway (Throughput & Delivery)
+  - Storage Bucket & Asset CDN (Media Latency)
+- **On-Demand Health Audit**: 1-click button to trigger a live re-evaluation of all infrastructure probes.
+
+#### 6. SOC 2 Security Audit Log Stream (Tab 5)
+- **Immutable Security Ledger**: Real-time chronological audit trail of all governance, auth, impersonation, suspension, and financial mutations.
+- **Search, Filter & 1-Click CSV Export**: Instant filtering by action type, actor, or date range, with statutory CSV audit ledger export for SOC 2 Type II compliance reviews.
+
 

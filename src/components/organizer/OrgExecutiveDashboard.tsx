@@ -4,13 +4,14 @@ import { ORG_TEMPLATES } from '../../data/templates';
 import { Event, User, OrganizationType } from '../../types';
 import { VolunteerCrm } from './VolunteerCrm';
 import { LegalComplianceStudio } from './LegalComplianceStudio';
+import { AdminObservabilityHub } from '../admin/AdminObservabilityHub';
 import { Modal } from '../common/Modal';
 import { 
   Building2, Users, Shield, Award, DollarSign, 
   History, Plus, Check, Settings, Sparkles, Image, Palette, 
   Upload, FileText, CheckCircle2, ShieldCheck, UserPlus, Trash2, Mail, Phone, Briefcase,
   Calendar, BarChart3, TrendingUp, CheckCircle, ExternalLink, Printer, FileSpreadsheet, Eye, ChevronRight, Package, ArrowUpRight,
-  Filter, Search, Hash, Layers, PieChart, ArrowDownRight, Edit3, X, MessageSquare, Key, Send, RefreshCw
+  Filter, Search, Hash, Layers, PieChart, ArrowDownRight, Edit3, X, MessageSquare, Key, Send, RefreshCw, Activity
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { 
@@ -35,7 +36,7 @@ export const OrgExecutiveDashboard: React.FC = () => {
     switchEvent, switchRole, showToast 
   } = useApp();
   
-  const [activeAdminTab, setActiveAdminTab] = useState<'events' | 'crm' | 'branding' | 'legal' | 'team' | 'templates' | 'audit' | 'integrations'>('events');
+  const [activeAdminTab, setActiveAdminTab] = useState<'events' | 'crm' | 'branding' | 'legal' | 'team' | 'templates' | 'audit' | 'integrations' | 'observability'>('events');
 
   // Email & SMS Integration Studio State
   const [emailProvider, setEmailProvider] = useState<'resend' | 'postmark' | 'ses' | 'managed'>('resend');
@@ -397,7 +398,17 @@ export const OrgExecutiveDashboard: React.FC = () => {
           }`}
         >
           <Mail className="w-4 h-4" />
-          <span>⚡ Email, SMS & Security Logs</span>
+          <span>⚡ Email & SMS Dispatch</span>
+        </button>
+
+        <button
+          onClick={() => setActiveAdminTab('observability')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            activeAdminTab === 'observability' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <Activity className="w-4 h-4" />
+          <span>🔍 Observability & Accounts</span>
         </button>
       </div>
 
@@ -2040,6 +2051,11 @@ export const OrgExecutiveDashboard: React.FC = () => {
 
           </div>
         </div>
+      )}
+
+      {/* TAB 9: ADMIN OBSERVABILITY, ACCOUNTS & IMPERSONATION HUB */}
+      {activeAdminTab === 'observability' && (
+        <AdminObservabilityHub />
       )}
 
       {/* MODAL: EDIT EVENT DETAILS */}

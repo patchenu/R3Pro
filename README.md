@@ -92,6 +92,13 @@ R3Pro is an enterprise-grade web application combining the volunteer coordinatio
     - **100% PostgreSQL Row-Level Security (RLS)**: Active across all 20 relational database tables on Vercel Postgres (Neon).
     - **Automated Backup & Disaster Recovery Engine**: Gzip SQL dumps with SHA-256 integrity verification, JSON manifest logging, and <5 min RPO / <15 min RTO.
 
+20. **Admin Observability, User Impersonation & Account Lifecycle Management**:
+    - **User Impersonation ("See What They See")**: Super Admins can safely step into any user's exact perspective with a sticky top banner and 1-click session exit, backed by immutable SOC 2 audit logs.
+    - **Full Account Management & Telemetry**: Create, edit, suspend (with authentication blocking), issue 6-digit emergency OTP resets, and track login counts, last seen IPs, and 2FA status.
+    - **Sentry Exception Tracking & Diagnostics**: Live error stream with severity tagging, stack traces, issue resolution, and interactive error simulation.
+    - **Core Web Vitals & Latency Metrics**: Real-time tracking of LCP, INP, CLS, FCP, TTFB, and backend API latency distributions.
+    - **Infrastructure Uptime Probes**: Live health checks for Neon PostgreSQL, Redis, AWS SES / Resend, and 10DLC SMS endpoints with 1-click on-demand audits.
+
 ---
 
 ## 🛠️ Local Development & Database Operations

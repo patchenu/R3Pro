@@ -19,9 +19,11 @@ import { AuthModal } from './components/auth/AuthModal';
 import { GlobalAppFooter } from './components/common/GlobalAppFooter';
 import { LegalModalCenter } from './components/legal/LegalModalCenter';
 import { LegalDocType } from './content/legal';
+import { StickyImpersonationBanner } from './components/common/StickyImpersonationBanner';
+import { AdminObservabilityHub } from './components/admin/AdminObservabilityHub';
 
 const MainLayout: React.FC = () => {
-  const { activeRole, switchEvent, switchOrganization, isAuthenticated } = useApp();
+  const { activeRole, switchEvent, switchOrganization, isAuthenticated, isImpersonating } = useApp();
   const [activeTab, setActiveTab] = useState<string>('discovery_hub');
   const [isEventBuilderOpen, setIsEventBuilderOpen] = useState(false);
   const [isOrgWizardOpen, setIsOrgWizardOpen] = useState(false);
@@ -78,11 +80,12 @@ const MainLayout: React.FC = () => {
   if (activeRole === 'kiosk' || activeTab === 'kiosk_mode') {
     return (
       <div className="min-h-screen bg-slate-900">
+        <StickyImpersonationBanner onReturnToAdmin={() => setActiveTab('admin_observability')} />
         <RoleSwitcherBar setActiveTab={setActiveTab} />
         <div className="p-2 bg-slate-950 text-right">
           <button
             onClick={() => setActiveTab('discovery_hub')}
-            className="text-xs text-slate-400 hover:text-white px-3 py-1 bg-slate-800 rounded-lg"
+            className="text-xs text-slate-400 hover:text-white px-3 py-1 bg-slate-800 rounded-lg cursor-pointer"
           >
             Exit Kiosk Fullscreen
           </button>
@@ -95,6 +98,9 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-indigo-500 selection:text-white">
+      {/* Sticky Active Impersonation Top Banner */}
+      <StickyImpersonationBanner onReturnToAdmin={() => setActiveTab('admin_observability')} />
+
       {/* Top Role Simulator Switcher Bar */}
       {showRoleSimulator && <RoleSwitcherBar setActiveTab={setActiveTab} />}
 
@@ -132,6 +138,10 @@ const MainLayout: React.FC = () => {
         {activeTab === 'lead_portal' && <LeadPortal />}
         
         {activeTab === 'org_admin_view' && <OrgExecutiveDashboard />}
+
+        {activeTab === 'admin_observability' && (
+          <AdminObservabilityHub onNavigateToTab={(tab) => setActiveTab(tab)} />
+        )}
 
         {activeTab === 'vendor_portal' && <VendorSponsorDashboard />}
         

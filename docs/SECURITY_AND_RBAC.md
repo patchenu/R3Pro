@@ -162,3 +162,40 @@ $$ LANGUAGE plpgsql;
 - **RPO (Recovery Point Objective)**: <5 minutes
 - **RTO (Recovery Time Objective)**: <15 minutes via automated restore script (`npm run db:restore`)
 
+---
+
+## 11. Admin Observability, User Impersonation & Account Lifecycle Management
+
+### 11.1 User Impersonation ("See What They See") Architecture
+- **Super Admin Exclusive Capability**: Only authenticated users with the `org_admin` role can initiate user impersonation sessions.
+- **Session Swapping with Safe Context Preservation**:
+  - The administrator's primary session is preserved in `impersonatedOriginalUser` and `impersonatedOriginalRole`.
+  - The active user ID and organization ID switch seamlessly to the target user's context, instantly restricting view permissions to that user's exact scope (e.g. Scoped Committee Lead with access only to their designated department, or Volunteer with private check-in pass).
+- **Sticky Impersonation Banner**:
+  - A prominent amber/indigo top banner informs the operator that impersonation is active, showing the target user's legal name, email, role, and organization.
+  - A prominent 1-click button (`🛑 Exit Impersonation & Return to Admin`) terminates the impersonation and immediately restores the admin's original credentials.
+- **SOC 2 Type II Audit Trail**:
+  - Every impersonation activation emits an immutable `USER_IMPERSONATION_STARTED` audit log containing the admin operator's ID, target user's ID, and timestamp.
+  - Exiting the session emits `USER_IMPERSONATION_ENDED`.
+
+### 11.2 Account Lifecycle Management & Suspension Enforcement
+- **Centralized Account Control**: Org Super Admins can manage all accounts via `AdminObservabilityHub.tsx`:
+  - **Account Creation**: Issue verified staff, lead, and coordinator credentials.
+  - **Account Profile Updates**: Modify contact details, role elevations, and department scoping.
+  - **Account Suspension Gate**: Admins can suspend accounts with a mandatory audit reason. The core authentication handlers (`login` and `loginWithCode` in `AppContext.tsx`) strictly enforce account status:
+    ```ts
+    if (user.accountStatus === 'suspended') {
+      showToast('error', 'Account Suspended', user.suspensionReason || 'Your account has been suspended by an administrator.');
+      return false;
+    }
+    ```
+  - **Emergency Password Reset (6-Digit OTP)**: Generates a single-use 6-digit emergency passcode for account recovery without requiring direct database access.
+  - **Account Deletion Safeguards**: Protects against accidental deletion of the active administrator session.
+
+### 11.3 Real-Time Diagnostics & Infrastructure Telemetry
+- **Sentry Exception Diagnostics & Simulator**: Real-time error stream with severity filters (`fatal`, `error`, `warning`, `info`), component origin tags, stack trace inspection, and 1-click error resolution.
+- **Core Web Vitals & Latency Distribution**: Tracks production metrics (LCP, INP, CLS, FCP, TTFB) against Google Core Web Vitals targets alongside API latency distributions.
+- **Infrastructure Uptime Probes**: Monitors live health of Neon PostgreSQL, Redis BullMQ queues, AWS SES / Resend gateways, and 10DLC SMS endpoints with on-demand health auditing.
+- **Immutable SOC 2 Security Audit Stream**: Real-time stream of all platform security, authentication, and governance operations with 1-click statutory CSV export.
+
+

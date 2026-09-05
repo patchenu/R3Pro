@@ -3,7 +3,8 @@ import {
   Registration, Donation, VendorApplication, ApprovalRequest, 
   VolunteerCrmRecord, Announcement, AuditLog, PaidContractor, ProBonoPledge,
   VendorInquiry, VendorLead, VendorAddOn, VendorAddOnOrder, 
-  CorporateSeasonPass, EventImpactMetrics 
+  CorporateSeasonPass, EventImpactMetrics, ErrorLogRecord, WebVitalsMetrics,
+  ApiLatencyMetric, HealthCheckItem 
 } from '../types';
 
 export const SEED_ORGANIZATIONS: Organization[] = [
@@ -86,7 +87,13 @@ export const SEED_USERS: User[] = [
     phone: '(555) 234-8901',
     role: 'org_admin',
     orgId: 'org_lincoln_pta',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+    accountStatus: 'active',
+    lastLoginAt: '2026-09-05T08:35:12',
+    lastIpAddress: '192.168.1.140',
+    loginCount: 142,
+    twoFactorEnabled: true,
+    createdAt: '2026-01-10T09:00:00'
   },
   {
     id: 'user_marcus',
@@ -95,7 +102,13 @@ export const SEED_USERS: User[] = [
     phone: '(555) 234-8902',
     role: 'event_planner',
     orgId: 'org_lincoln_pta',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80'
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
+    accountStatus: 'active',
+    lastLoginAt: '2026-09-05T07:14:20',
+    lastIpAddress: '192.168.1.188',
+    loginCount: 98,
+    twoFactorEnabled: true,
+    createdAt: '2026-01-15T10:30:00'
   },
   {
     id: 'user_sarah',
@@ -105,7 +118,13 @@ export const SEED_USERS: User[] = [
     role: 'committee_lead',
     orgId: 'org_lincoln_pta',
     assignedSubPartIds: ['subpart_carnival_food'],
-    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80'
+    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80',
+    accountStatus: 'active',
+    lastLoginAt: '2026-09-04T18:22:45',
+    lastIpAddress: '73.189.44.12',
+    loginCount: 47,
+    twoFactorEnabled: false,
+    createdAt: '2026-02-01T14:15:00'
   },
   {
     id: 'user_mike',
@@ -115,7 +134,13 @@ export const SEED_USERS: User[] = [
     role: 'committee_lead',
     orgId: 'org_lincoln_pta',
     assignedSubPartIds: ['subpart_carnival_labor'],
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80'
+    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
+    accountStatus: 'active',
+    lastLoginAt: '2026-09-03T11:40:10',
+    lastIpAddress: '73.189.44.15',
+    loginCount: 31,
+    twoFactorEnabled: false,
+    createdAt: '2026-02-10T11:00:00'
   },
   {
     id: 'user_artisan_vendor',
@@ -124,7 +149,13 @@ export const SEED_USERS: User[] = [
     phone: '(555) 890-1234',
     role: 'vendor',
     orgId: 'org_lincoln_pta',
-    avatarUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=100&auto=format&fit=crop&q=80'
+    avatarUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=100&auto=format&fit=crop&q=80',
+    accountStatus: 'active',
+    lastLoginAt: '2026-09-04T09:12:00',
+    lastIpAddress: '98.210.15.80',
+    loginCount: 19,
+    twoFactorEnabled: true,
+    createdAt: '2026-03-05T16:20:00'
   },
   {
     id: 'user_david_volunteer',
@@ -133,7 +164,45 @@ export const SEED_USERS: User[] = [
     phone: '(555) 456-7890',
     role: 'volunteer',
     orgId: 'org_lincoln_pta',
-    avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&auto=format&fit=crop&q=80'
+    avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&auto=format&fit=crop&q=80',
+    accountStatus: 'active',
+    lastLoginAt: '2026-09-05T08:10:00',
+    lastIpAddress: '67.180.201.5',
+    loginCount: 12,
+    twoFactorEnabled: false,
+    createdAt: '2026-04-12T13:45:00'
+  },
+  {
+    id: 'user_jennifer_auction',
+    name: 'Jennifer Taylor',
+    email: 'jennifer.auction@lincolnpta.org',
+    phone: '(555) 234-8905',
+    role: 'committee_lead',
+    orgId: 'org_lincoln_pta',
+    assignedSubPartIds: ['subpart_carnival_games'],
+    avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80',
+    accountStatus: 'active',
+    lastLoginAt: '2026-09-02T16:05:30',
+    lastIpAddress: '73.189.44.20',
+    loginCount: 26,
+    twoFactorEnabled: false,
+    createdAt: '2026-03-01T10:00:00'
+  },
+  {
+    id: 'user_robert_suspended',
+    name: 'Robert Martinez (Suspended)',
+    email: 'robert.m@martinezfoods.com',
+    phone: '(555) 678-9012',
+    role: 'vendor',
+    orgId: 'org_lincoln_pta',
+    avatarUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&auto=format&fit=crop&q=80',
+    accountStatus: 'suspended',
+    suspensionReason: 'Expired health permit & unverified Certificate of Insurance (COI)',
+    lastLoginAt: '2026-08-15T14:20:00',
+    lastIpAddress: '50.112.98.4',
+    loginCount: 8,
+    twoFactorEnabled: false,
+    createdAt: '2026-05-01T09:30:00'
   },
   {
     id: 'user_kiosk',
@@ -141,7 +210,13 @@ export const SEED_USERS: User[] = [
     email: 'kiosk1@lincolnpta.org',
     phone: '',
     role: 'kiosk',
-    orgId: 'org_lincoln_pta'
+    orgId: 'org_lincoln_pta',
+    accountStatus: 'active',
+    lastLoginAt: '2026-09-05T08:00:00',
+    lastIpAddress: '192.168.1.100',
+    loginCount: 310,
+    twoFactorEnabled: false,
+    createdAt: '2026-01-01T00:00:00'
   }
 ];
 
@@ -1883,6 +1958,211 @@ export const SEED_PRO_BONO_PLEDGES: ProBonoPledge[] = [
     status: 'pledged',
     sponsorPerksGranted: true,
     createdAt: '2026-08-16T15:45:00'
+  }
+];
+
+export const SEED_ERROR_LOGS: ErrorLogRecord[] = [
+  {
+    id: 'err_sentry_001',
+    severity: 'error',
+    message: 'TypeError: Cannot read properties of undefined (reading calculateTaxReceiptDeduction)',
+    component: 'ReportsExportCenter.tsx',
+    timestamp: '2026-09-05T08:12:44',
+    status: 'investigating',
+    userContext: {
+      userId: 'user_elena',
+      userName: 'Elena Rostova',
+      role: 'org_admin',
+      orgId: 'org_lincoln_pta'
+    },
+    deviceContext: {
+      browser: 'Chrome 128.0 (macOS)',
+      os: 'macOS 15.1 Sequoia',
+      screenResolution: '2560x1440',
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'
+    },
+    breadcrumbs: [
+      { timestamp: '2026-09-05T08:12:40', category: 'navigation', message: 'User navigated to tab: reports_center' },
+      { timestamp: '2026-09-05T08:12:42', category: 'ui_click', message: 'Clicked button: "Generate 990 Annual Ledger"' },
+      { timestamp: '2026-09-05T08:12:44', category: 'api_request', message: 'POST /api/reports/annual-ledger (200 OK)' }
+    ],
+    stackTrace: `TypeError: Cannot read properties of undefined (reading calculateTaxReceiptDeduction)
+    at generateAnnualSummary (ReportsExportCenter.tsx:312:18)
+    at handleExportClick (ReportsExportCenter.tsx:445:22)
+    at HTMLButtonElement.dispatch (react-dom.production.min.js:244:11)`,
+    occurrencesCount: 4,
+    lastSeenAt: '2026-09-05T08:14:10'
+  },
+  {
+    id: 'err_sentry_002',
+    severity: 'warning',
+    message: 'RateLimitExceededException: IP 198.51.100.42 triggered sliding-window auth throttle (5 requests / 60s)',
+    component: 'api/_lib/rateLimiter.ts',
+    timestamp: '2026-09-05T07:45:18',
+    status: 'unresolved',
+    userContext: {
+      userId: 'anonymous_visitor',
+      userName: 'Public Web Visitor',
+      role: 'volunteer',
+      orgId: 'org_lincoln_pta'
+    },
+    deviceContext: {
+      browser: 'Safari 18.0 (iOS)',
+      os: 'iOS 18.0 (iPhone 16 Pro)',
+      screenResolution: '393x852',
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)'
+    },
+    breadcrumbs: [
+      { timestamp: '2026-09-05T07:45:10', category: 'api_request', message: 'POST /api/auth/otp (200 OK)' },
+      { timestamp: '2026-09-05T07:45:12', category: 'api_request', message: 'POST /api/auth/otp (200 OK)' },
+      { timestamp: '2026-09-05T07:45:15', category: 'api_request', message: 'POST /api/auth/otp (200 OK)' },
+      { timestamp: '2026-09-05T07:45:18', category: 'api_request', message: 'POST /api/auth/otp (429 Too Many Requests)' }
+    ],
+    stackTrace: `RateLimitExceededException: 429 Too Many Requests
+    at evaluateSlidingWindow (api/_lib/rateLimiter.ts:48:15)
+    at handleAuthOtp (api/auth/otp.ts:24:9)`,
+    occurrencesCount: 12,
+    lastSeenAt: '2026-09-05T07:48:02'
+  },
+  {
+    id: 'err_sentry_003',
+    severity: 'info',
+    message: 'PostgreSQL Connection Re-established after idle timeout (Neon AWS us-east-1)',
+    component: 'api/_lib/db.ts',
+    timestamp: '2026-09-05T06:00:15',
+    status: 'resolved',
+    occurrencesCount: 1,
+    lastSeenAt: '2026-09-05T06:00:15'
+  }
+];
+
+export const SEED_WEB_VITALS: WebVitalsMetrics = {
+  lcp: { value: 1.12, unit: 's', rating: 'good', threshold: 2.5 },
+  inp: { value: 18, unit: 'ms', rating: 'good', threshold: 200 },
+  cls: { value: 0.002, unit: '', rating: 'good', threshold: 0.1 },
+  fcp: { value: 0.64, unit: 's', rating: 'good', threshold: 1.8 },
+  ttfb: { value: 82, unit: 'ms', rating: 'good', threshold: 800 }
+};
+
+export const SEED_API_LATENCY: ApiLatencyMetric[] = [
+  {
+    endpoint: '/api/auth/otp',
+    method: 'POST',
+    p50Ms: 24,
+    p95Ms: 65,
+    p99Ms: 110,
+    requestsPerSec: 14.8,
+    errorRatePercent: 0.0,
+    status: 'healthy'
+  },
+  {
+    endpoint: '/api/registrations',
+    method: 'POST',
+    p50Ms: 38,
+    p95Ms: 82,
+    p99Ms: 145,
+    requestsPerSec: 28.4,
+    errorRatePercent: 0.0,
+    status: 'healthy'
+  },
+  {
+    endpoint: '/api/events',
+    method: 'GET',
+    p50Ms: 12,
+    p95Ms: 29,
+    p99Ms: 48,
+    requestsPerSec: 64.2,
+    errorRatePercent: 0.0,
+    status: 'healthy'
+  },
+  {
+    endpoint: '/api/health',
+    method: 'GET',
+    p50Ms: 8,
+    p95Ms: 16,
+    p99Ms: 22,
+    requestsPerSec: 8.5,
+    errorRatePercent: 0.0,
+    status: 'healthy'
+  },
+  {
+    endpoint: '/api/reports/export',
+    method: 'GET',
+    p50Ms: 52,
+    p95Ms: 120,
+    p99Ms: 210,
+    requestsPerSec: 4.1,
+    errorRatePercent: 0.0,
+    status: 'healthy'
+  }
+];
+
+export const SEED_HEALTH_CHECKS: HealthCheckItem[] = [
+  {
+    id: 'chk_db_neon',
+    name: 'Neon PostgreSQL Serverless (AWS us-east-1)',
+    category: 'database',
+    status: 'operational',
+    latencyMs: 14,
+    uptimePercent: 99.99,
+    lastCheckedAt: '2026-09-05T09:00:00',
+    details: '20/20 Tables active with Row-Level Security (RLS) enabled. Pooler active with SSL encryption.',
+    region: 'us-east-1 (N. Virginia)'
+  },
+  {
+    id: 'chk_edge_runtime',
+    name: 'Vercel Serverless Edge Runtime',
+    category: 'edge_runtime',
+    status: 'operational',
+    latencyMs: 9,
+    uptimePercent: 100.0,
+    lastCheckedAt: '2026-09-05T09:00:00',
+    details: 'Global CDN and Edge middleware operational across all 18 edge regions.',
+    region: 'Global Edge Anycast'
+  },
+  {
+    id: 'chk_email_gateway',
+    name: 'Resend / AWS SES Email Delivery Gateway',
+    category: 'email_gateway',
+    status: 'operational',
+    latencyMs: 42,
+    uptimePercent: 99.98,
+    lastCheckedAt: '2026-09-05T09:00:00',
+    details: 'DKIM, SPF & DMARC DNS aligned. Transactional OTP deliverability SLA: 99.8%.',
+    region: 'us-east-1'
+  },
+  {
+    id: 'chk_sms_gateway',
+    name: 'Twilio / Telnyx A2P 10DLC SMS Gateway',
+    category: 'sms_gateway',
+    status: 'operational',
+    latencyMs: 68,
+    uptimePercent: 99.95,
+    lastCheckedAt: '2026-09-05T09:00:00',
+    details: 'The Campaign Registry (TCR) Brand ID: #TCR-94821. Carrier routing operational.',
+    region: 'US Tier 1 Carriers'
+  },
+  {
+    id: 'chk_queue_worker',
+    name: 'Redis BullMQ Background Workers',
+    category: 'queue_worker',
+    status: 'operational',
+    latencyMs: 6,
+    uptimePercent: 100.0,
+    lastCheckedAt: '2026-09-05T09:00:00',
+    details: 'P0 Auth (0 waiting), P1 Gate Passes (0 waiting), P2 Tax Receipts (0 waiting), P3 Broadcasts (0 waiting).',
+    region: 'us-east-1'
+  },
+  {
+    id: 'chk_backup_storage',
+    name: 'Automated Snapshot & Disaster Recovery Archive',
+    category: 'backup_storage',
+    status: 'operational',
+    latencyMs: 18,
+    uptimePercent: 100.0,
+    lastCheckedAt: '2026-09-05T08:55:00',
+    details: 'Latest SHA-256 verified snapshot archived. RPO: <5 min (WAL PITR) | RTO: <15 min.',
+    region: 'Offsite Multi-Region Cold S3'
   }
 ];
 

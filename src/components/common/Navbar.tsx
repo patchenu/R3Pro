@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { 
   Sparkles, Calendar, Users, BarChart3, 
   Building2, CheckCircle2, Share2, Plus, 
-  ChevronDown, User as UserIcon, LogIn, HeartHandshake, Store
+  ChevronDown, User as UserIcon, LogIn, HeartHandshake, Store, Shield
 } from 'lucide-react';
 import { UserProfileModal } from '../auth/UserProfileModal';
 import { OrgOnboardingModal } from '../organizer/OrgOnboardingModal';
@@ -258,6 +258,22 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Building2 className="w-3.5 h-3.5" />
                 <span>Org Super Admin</span>
+              </button>
+            )}
+
+            {/* 6. Admin Observability, Accounts & Impersonation Hub */}
+            {activeRole === 'org_admin' && (
+              <button
+                onClick={() => setActiveTab('admin_observability')}
+                className={`px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === 'admin_observability'
+                    ? 'bg-purple-700 text-white font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold'
+                }`}
+                title="Manage User Accounts, User Impersonation, Sentry Diagnostics & Web Vitals Telemetry"
+              >
+                <Shield className="w-3.5 h-3.5 text-purple-400" />
+                <span>Accounts &amp; Observability</span>
               </button>
             )}
 

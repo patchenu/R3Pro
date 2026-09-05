@@ -379,6 +379,26 @@ GatherRaise enforces an enterprise-grade, defense-in-depth security and complian
   - **Tier 4 (Statutory 7-Year IRS Archive)**: Immutable annual fiscal year-end backups retained for **7 years** to satisfy IRS IRC § 170(f)(8) and Form 990 audit requirements.
 * **Recovery SLAs**: Recovery Point Objective (RPO) $\le 5\text{ minutes}$; Recovery Time Objective (RTO) $\le 30\text{ minutes}$.
 
+### 6.9 Admin Observability Hub, User Impersonation & Account Lifecycle Management
+* **Single-Pane Command & Observability Hub (`AdminObservabilityHub.tsx`)**:
+  - Centralized administrative console for Super Admins providing deep system observability, account management, and diagnostics.
+* **Full Account Lifecycle Control & Session Telemetry**:
+  - Live account directory tracking roles, scoped committee departments, account status (`active` / `suspended`), last login timestamps, last seen IP addresses, login count metrics, and 2FA status.
+  - Complete account operations: Create verified user accounts, edit roles/scopes, suspend accounts with mandatory reason tracking, issue emergency 6-digit OTP password resets, and delete accounts safely.
+  - Suspended account enforcement strictly blocks authentication attempts at both `login` and `loginWithCode` gates.
+* **User Impersonation ("See What They See") (`StickyImpersonationBanner.tsx`)**:
+  - Allows Super Admins to instantly step into the exact perspective of any user or role (Committee Lead, Vendor, Volunteer, Planner) with non-destructive session context preservation.
+  - Prominent sticky top banner displays active impersonation status with 1-click `🛑 Exit Impersonation & Return to Admin` to immediately restore administrative privileges.
+  - All impersonation events emit immutable `USER_IMPERSONATION_STARTED` and `USER_IMPERSONATION_ENDED` audit records for SOC 2 Type II compliance.
+* **Sentry Exception Tracking & Live Diagnostics Simulator**:
+  - Live exception stream with severity tagging (`fatal`, `error`, `warning`, `info`), source component attribution, formatted stack traces, and 1-click issue resolution.
+  - Interactive simulator to test error boundaries against Stripe timeouts, database deadlocks, and canvas memory exceptions.
+* **Core Web Vitals & API Latency Distribution**:
+  - Real-time telemetry monitoring LCP (<2.5s), INP (<200ms), CLS (<0.1), FCP (<1.8s), and TTFB (<800ms) alongside endpoint latency distributions.
+* **Uptime Heartbeat & Infrastructure Probes**:
+  - Proactive health probes monitoring Neon PostgreSQL, Redis BullMQ queues, AWS SES / Resend gateways, and 10DLC SMS endpoints with 1-click on-demand re-auditing.
+
+
 
 
 

@@ -23,6 +23,13 @@ export interface User {
   assignedSubPartIds?: string[]; // IDs of sub-parts this lead is responsible for
   memberships?: OrgMembership[]; // Multi-tenant role memberships
   isRegisteredUser?: boolean;
+  accountStatus?: 'active' | 'suspended' | 'pending_verification';
+  lastLoginAt?: string;
+  lastIpAddress?: string;
+  loginCount?: number;
+  twoFactorEnabled?: boolean;
+  suspensionReason?: string;
+  createdAt?: string;
 }
 
 export interface Organization {
@@ -501,4 +508,81 @@ export interface ProBonoPledge {
   status: 'pledged' | 'verified_delivered';
   sponsorPerksGranted: boolean;
   createdAt: string;
+}
+
+// ----------------------------------------------------
+// Observability, Sentry Diagnostics & Performance Types
+// ----------------------------------------------------
+
+export type ErrorSeverity = 'fatal' | 'error' | 'warning' | 'info';
+export type ErrorResolutionStatus = 'unresolved' | 'investigating' | 'resolved' | 'ignored';
+
+export interface ErrorBreadcrumb {
+  timestamp: string;
+  category: 'ui_click' | 'navigation' | 'api_request' | 'state_change' | 'console';
+  message: string;
+  level?: string;
+  data?: Record<string, any>;
+}
+
+export interface ErrorLogRecord {
+  id: string;
+  severity: ErrorSeverity;
+  message: string;
+  timestamp: string;
+  component?: string;
+  stackTrace?: string;
+  status: ErrorResolutionStatus;
+  userContext?: {
+    userId: string;
+    userName: string;
+    role: UserRole;
+    orgId: string;
+  };
+  deviceContext?: {
+    browser: string;
+    os: string;
+    screenResolution: string;
+    userAgent: string;
+  };
+  breadcrumbs?: ErrorBreadcrumb[];
+  occurrencesCount: number;
+  lastSeenAt: string;
+}
+
+export interface WebVitalsMetrics {
+  lcp: { value: number; unit: string; rating: 'good' | 'needs-improvement' | 'poor'; threshold: number };
+  inp: { value: number; unit: string; rating: 'good' | 'needs-improvement' | 'poor'; threshold: number };
+  cls: { value: number; unit: string; rating: 'good' | 'needs-improvement' | 'poor'; threshold: number };
+  fcp: { value: number; unit: string; rating: 'good' | 'needs-improvement' | 'poor'; threshold: number };
+  ttfb: { value: number; unit: string; rating: 'good' | 'needs-improvement' | 'poor'; threshold: number };
+}
+
+export interface ApiLatencyMetric {
+  endpoint: string;
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  p50Ms: number;
+  p95Ms: number;
+  p99Ms: number;
+  requestsPerSec: number;
+  errorRatePercent: number;
+  status: 'healthy' | 'degraded' | 'down';
+}
+
+export interface HealthCheckItem {
+  id: string;
+  name: string;
+  category: 'database' | 'edge_runtime' | 'email_gateway' | 'sms_gateway' | 'queue_worker' | 'backup_storage';
+  status: 'operational' | 'degraded' | 'maintenance' | 'offline';
+  latencyMs: number;
+  uptimePercent: number;
+  lastCheckedAt: string;
+  details: string;
+  region?: string;
+}
+
+export interface HealthCheckSuiteStatus {
+  overallStatus: 'all_systems_operational' | 'degraded_performance' | 'partial_outage' | 'major_outage';
+  lastCheckedAt: string;
+  checks: HealthCheckItem[];
 }
