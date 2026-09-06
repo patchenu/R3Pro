@@ -100,3 +100,26 @@ REACH includes a top **Role Switcher Bar** in testing mode, allowing you to inst
 ### 🔄 Live Testing Mode (Exit Demo)
 * Click **"Exit Demo (Live Mode)"** in the top simulator bar to log out and experience the real unauthenticated landing page, register a new user account, and create a brand-new organization.
 
+---
+
+## 2. Scroll UX & Viewport Orientation Testing Checklist
+
+1. **Modal Step Progression Scroll Reset**:
+   - Open `UnifiedRegistrationModal` (by selecting a shift and clicking *Complete Sign-Up*).
+   - Scroll down to the bottom of **Step 1** (e.g. adding a family dependent or filling notes).
+   - Click **`Continue to Legal Waivers →`**.
+   - **Verification**: The modal instantly and smoothly resets its scroll position to the very top of **Step 2**, displaying the gold legal notice and waiver text without stranding the user at the bottom.
+   - Scroll down in **Step 2** to the signature pad and click **`Continue to Final Review →`**.
+   - **Verification**: **Step 3** opens positioned cleanly at the top with the order summary and donation chips in view.
+
+2. **Sticky-Header Offset Hero Button Navigation**:
+   - On the public event landing page, scroll to the top hero banner.
+   - Click **`Pick Shift & Sign Up →`**.
+   - **Verification**: The window smoothly scrolls down to the Volunteer Shifts section with an exact **80px breathing room margin**, ensuring the section header is never concealed underneath the sticky navbar.
+
+3. **Global Tab Navigation Scroll Reset**:
+   - Scroll halfway down any dashboard (e.g. *Planner Command Hub* or *Org Super Admin*).
+   - Click a different tab in the navbar (e.g. *Community Calendar* or *Vendors & Sponsors*).
+   - **Verification**: The window instantly resets to `top: 0`, orienting the user directly at the top of the newly selected view.
+
+

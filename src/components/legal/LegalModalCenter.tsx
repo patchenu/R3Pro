@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   X, 
   Shield, 
@@ -38,14 +38,26 @@ export const LegalModalCenter: React.FC<LegalModalCenterProps> = ({
   const [activeTab, setActiveTab] = useState<LegalDocType>(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [copied, setCopied] = useState(false);
+  const contentBodyRef = useRef<HTMLDivElement>(null);
+  const outerWrapperRef = useRef<HTMLDivElement>(null);
 
   // Sync initial tab when modal opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen && initialTab) {
       setActiveTab(initialTab);
       setSearchQuery('');
     }
   }, [isOpen, initialTab]);
+
+  // Scroll content to top whenever active tab or search query changes
+  useEffect(() => {
+    if (contentBodyRef.current) {
+      contentBodyRef.current.scrollTop = 0;
+    }
+    if (outerWrapperRef.current) {
+      outerWrapperRef.current.scrollTop = 0;
+    }
+  }, [activeTab, isOpen]);
 
   const docMap: Record<LegalDocType, { title: string; lastUpdated: string; version: string; summary: string; sections: { id: string; title: string; content: string }[] }> = {
     terms: TERMS_OF_SERVICE_CONTENT,
@@ -82,7 +94,7 @@ export const LegalModalCenter: React.FC<LegalModalCenterProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 print:p-0 print:bg-white print:static">
+    <div ref={outerWrapperRef} className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 print:p-0 print:bg-white print:static">
       <div className="relative bg-white w-full max-w-5xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] print:max-h-none print:shadow-none print:border-0 print:rounded-none">
         
         {/* Header */}
@@ -212,7 +224,7 @@ export const LegalModalCenter: React.FC<LegalModalCenterProps> = ({
         </div>
 
         {/* Policy Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 text-slate-800 text-xs sm:text-sm leading-relaxed">
+        <div ref={contentBodyRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-6 text-slate-800 text-xs sm:text-sm leading-relaxed">
           
           {/* Doc Title & Summary Callout */}
           <div className="p-5 bg-gradient-to-r from-slate-50 to-indigo-50/50 border border-indigo-100 rounded-2xl space-y-2">

@@ -97,6 +97,7 @@ export const VendorApplicationModal: React.FC<VendorApplicationModalProps> = ({
       title={submitted ? 'Application Received!' : `Vendor & Sponsor Application`}
       subtitle={selectedTier ? `${selectedTier.title} • ${formatCurrency(selectedTier.price)}` : event.title}
       maxWidth="2xl"
+      resetScrollKey={submitted}
     >
       {submitted ? (
         <div className="text-center py-6 space-y-4">

@@ -44,6 +44,11 @@ const MainLayout: React.FC = () => {
     }
   }, [isAuthenticated, isDemoMode, activeTab]);
 
+  // Ensure window scroll position resets to top on tab / page navigation
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeTab]);
+
   const handleOpenLegal = (doc: LegalDocType) => {
     setActiveLegalTab(doc);
     setIsLegalModalOpen(true);

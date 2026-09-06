@@ -75,6 +75,7 @@ export const ManageRegistration: React.FC<ManageRegistrationProps> = ({ isOpen, 
       title="Manage Your Registration & Pass"
       subtitle="View, update, or cancel your sign-up, download calendar appointments, or inspect pass details"
       maxWidth="2xl"
+      resetScrollKey={activeReg ? activeReg.id : 'lookup'}
     >
       {!activeReg ? (
         <form onSubmit={handleLookup} className="space-y-4">

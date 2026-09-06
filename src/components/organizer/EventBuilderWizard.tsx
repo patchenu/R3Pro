@@ -762,6 +762,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
       title="Create New Event / Campaign Wizard"
       subtitle={`Guided 7-step setup for ${currentOrg.name}`}
       maxWidth="4xl"
+      resetScrollKey={currentStep}
     >
       <div className="space-y-6">
         

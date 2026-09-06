@@ -483,6 +483,7 @@ export const VolunteerCrm: React.FC = () => {
           title={`${selectedVolunteer.name} — Volunteer Profile & Impact Analysis`}
           subtitle={`Community CRM Record • ${selectedVolunteer.email} • ${selectedVolunteer.phone}`}
           maxWidth="3xl"
+          resetScrollKey={selectedVolunteer ? selectedVolunteer.id : undefined}
         >
           <div className="space-y-6 text-xs">
             

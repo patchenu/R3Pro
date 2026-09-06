@@ -149,6 +149,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         'Enter your email to receive a password reset code'
       }
       maxWidth="md"
+      resetScrollKey={`${mode}_${loginMethod}_${codeStep}_${resetStep}`}
     >
       <div className="space-y-5">
 

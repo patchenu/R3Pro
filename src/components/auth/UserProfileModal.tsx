@@ -94,6 +94,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
         title="My Account & Delegated Roles"
         subtitle={`Signed in as ${currentUser.name} (${currentUser.email})`}
         maxWidth="3xl"
+        resetScrollKey={activeTab}
       >
         <div className="space-y-6">
           

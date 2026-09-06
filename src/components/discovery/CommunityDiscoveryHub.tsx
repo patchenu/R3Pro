@@ -7,6 +7,7 @@ import {
   Building2, Plus, Trophy, Award, TrendingUp, Grid, List, Clock, Tag, X, Store, Zap
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatTimeRange, formatPercentage } from '../../utils/formatters';
+import { scrollToElement } from '../../utils/scroll';
 import { CommunityCalendarView } from './CommunityCalendarView';
 
 interface CommunityDiscoveryHubProps {
@@ -109,8 +110,7 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
               <>
                 <button
                   onClick={() => {
-                    const el = document.getElementById('events-explorer');
-                    el?.scrollIntoView({ behavior: 'smooth' });
+                    scrollToElement('events-explorer', 80);
                   }}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
                 >
@@ -143,8 +143,7 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
 
                 <button
                   onClick={() => {
-                    const el = document.getElementById('events-explorer');
-                    el?.scrollIntoView({ behavior: 'smooth' });
+                    scrollToElement('events-explorer', 80);
                   }}
                   className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition flex items-center gap-2"
                 >
@@ -168,8 +167,7 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
 
                 <button
                   onClick={() => {
-                    const el = document.getElementById('events-explorer');
-                    el?.scrollIntoView({ behavior: 'smooth' });
+                    scrollToElement('events-explorer', 80);
                   }}
                   className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition flex items-center gap-2"
                 >

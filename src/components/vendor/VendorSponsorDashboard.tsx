@@ -34,6 +34,11 @@ export const VendorSponsorDashboard: React.FC = () => {
     'brand_assets' | 'season_passes' | 'roi_dossier' | 'qa_helpdesk' | 'available_packages'
   >('my_passes');
 
+  // Reset scroll to top on tab switch
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeTab]);
+
   const [isCoiModalOpen, setIsCoiModalOpen] = useState(false);
   const [selectedAppForCoi, setSelectedAppForCoi] = useState<VendorApplication | null>(null);
   const [coiCarrier, setCoiCarrier] = useState('');

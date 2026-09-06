@@ -114,6 +114,11 @@ R3Pro is an enterprise-grade web application combining the volunteer coordinatio
     - **On-the-Fly Role & Scope Modifier**: Instant role adjustments and multi-select committee department assignments.
     - **1-Click Super Admin Promotion & Demotion**: 1-tap elevation with SOC 2 Type II immutable audit logging.
 
+22. **Intelligent Viewport Scroll Management & Multi-Step Dual-Layer Modal Resets**:
+    - **Dual-Layer Modal Scroll Reset**: Automated multi-tick scroll resetting on `Modal.tsx` and across all multi-step wizards (`UnifiedRegistrationModal`, `EventBuilderWizard`, `CommercialMarketplaceModal`, `OrgOnboardingModal`, `LegalModalCenter`), eliminating scroll trapping and ensuring new wizard steps and tabs always open at the top.
+    - **Sticky-Header Offset Anchor Navigation**: Centralized `scrollToElement` utility calculating 80px margins above section anchors (`#shifts-container`, `#events-explorer`) to prevent content from hiding beneath sticky navbars.
+    - **Instant Viewport Navigation Reset**: Switching tabs across `App.tsx`, `MasterPlannerDashboard`, `OrgExecutiveDashboard`, `VendorSponsorDashboard`, `EventMarketingHub`, `LeadPortal`, and `AdminObservabilityHub` instantly resets window scroll to `(0, 0)`.
+    - **Post-Confirmation Focus**: Completing sign-ups smoothly scrolls to the top celebration pass card with 1-click calendar downloads and QR check-in badges.
 
 ---
 

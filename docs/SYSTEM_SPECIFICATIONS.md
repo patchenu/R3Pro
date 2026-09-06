@@ -634,3 +634,30 @@ Full PostgreSQL DDL schema with 100% Row-Level Security (RLS) policies is provis
 - **Registration Stepper & Canvas**: Step 1 contact/dependent inputs $\rightarrow$ Step 2 vector signature pad & type-name mode $\rightarrow$ Step 3 donation chips & payment methods $\rightarrow$ instant Confirmation Card pass generation with QR code and calendar sync (`.ics` / Google Calendar).
 - **Navigation & Simulator Bar**: 6-role switcher, Live/Demo mode toggle, Organization/Event dropdowns, and role-scoped tabs verified with 100% headless Chrome CDP automated coverage.
 
+---
+
+## 11. Intelligent Viewport Scroll Management & Step-Based Dual-Layer Modal Resets
+
+### 11.1 Dual-Layer Modal Viewport Synchronization (`Modal.tsx`, `resetScrollKey`)
+1. **Dual-Layer Scroll Trap Remediation**:
+   - Modals contain two scrollable layers: the outer viewport overlay (`fixed inset-0 overflow-y-auto`) and the modal body card (`max-h-[80vh] overflow-y-auto`).
+   - Prior to dual-layer resets, advancing from Step 1 to Step 2 retained vertical scroll offsets, leaving users stranded at the bottom of the new step.
+2. **Reactive Step-Based Scroll Invalidation**:
+   - `Modal.tsx` consumes a reactive `resetScrollKey?: any` prop (e.g. `step`, `currentStep`, `${step}_${activeTab}`).
+   - Dedicated `useRef` attachments on both the outer overlay and inner content body execute synchronized `scrollTop = 0` operations on mount and whenever `resetScrollKey` updates.
+   - Enforced across `UnifiedRegistrationModal`, `EventBuilderWizard`, `CommercialMarketplaceModal`, `OrgOnboardingModal`, `AuthModal`, `ManageRegistration`, `VendorApplicationModal`, `ProBonoPledgeModal`, `UserProfileModal`, `VolunteerCrm`, and `TeamMemberManagerModal`.
+
+### 11.2 Sticky-Header Offset Anchor Navigation (`src/utils/scroll.ts`)
+1. **Calculated Offset Margin**:
+   - Standard `scrollIntoView()` places target headers directly behind sticky app headers (56px Navbar + 36px Role Switcher Bar).
+   - `scrollToElement(elementIdOrNode, offset = 80, behavior = 'smooth')` computes exact document coordinates minus 80px visual headroom, ensuring clean visibility for `#shifts-container` and `#events-explorer`.
+
+### 11.3 Instant Viewport Navigation & Confirmation Resets
+1. **Global App Tab Switching (`App.tsx`)**:
+   - Navigating between top-level tabs instantly resets `window.scrollTo({ top: 0, behavior: 'instant' })`.
+2. **Workspace Sub-Tab Synchronization**:
+   - Instant viewport resets on tab transitions within `MasterPlannerDashboard`, `OrgExecutiveDashboard`, `VendorSponsorDashboard`, `EventMarketingHub`, `LeadPortal`, `AdminObservabilityHub`, and `LegalModalCenter`.
+3. **Post-Registration Confirmation View**:
+   - Completing registration smoothly scrolls to the top of `ConfirmationCard` to immediately display the celebration pass and QR check-in voucher.
+
+

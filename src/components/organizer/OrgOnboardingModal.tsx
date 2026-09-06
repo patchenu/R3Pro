@@ -87,6 +87,7 @@ export const OrgOnboardingModal: React.FC<OrgOnboardingModalProps> = ({ isOpen, 
       title="Register New Organization"
       subtitle="Create a verified multi-tenant workspace with Turnkey Department Presets"
       maxWidth="3xl"
+      resetScrollKey={`${isAuthenticated}_${authMode}`}
     >
       {/* 1. AUTH GATE (If unauthenticated user arrives) */}
       {!isAuthenticated ? (

@@ -74,6 +74,7 @@ export const ProBonoPledgeModal: React.FC<ProBonoPledgeModalProps> = ({
       title="Offer Pro-Bono Professional Services / Equipment"
       subtitle={`${event.title} • Community Partner In-Kind Giving`}
       maxWidth="2xl"
+      resetScrollKey={isSuccess}
     >
       {!isSuccess ? (
         <form onSubmit={handleSubmit} className="space-y-5">

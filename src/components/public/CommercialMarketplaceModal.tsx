@@ -100,6 +100,7 @@ export const CommercialMarketplaceModal: React.FC<CommercialMarketplaceModalProp
       title="Commercial Vendor & Corporate Sponsorship Hub"
       subtitle={`${event.title} • Commercial Marketplace & Partner Opportunities`}
       maxWidth="4xl"
+      resetScrollKey={`${step}_${activeTab}`}
     >
       <div className="space-y-6">
         

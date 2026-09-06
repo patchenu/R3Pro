@@ -77,6 +77,7 @@ export const TeamMemberManagerModal: React.FC<TeamMemberManagerModalProps> = ({ 
       title="Team Members & Role Delegations"
       subtitle={`Manage coordinator, planner, and committee lead permissions for ${currentOrg.name}`}
       maxWidth="2xl"
+      resetScrollKey={editingUser ? editingUser.id : 'list'}
     >
       <div className="space-y-6">
         

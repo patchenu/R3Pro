@@ -908,4 +908,39 @@ Provides tabbed, step-by-step instructions for non-technical PTA coordinators an
   - `Save Password` saves volunteer profile and syncs service history.
   - `Return to Event Page` dismisses confirmation view and restores landing exploration.
 
+---
+
+## 42. Intelligent Viewport Scroll Management, Multi-Step Dual-Layer Modal Resets & Sticky Header Offsets
+
+### 42.1 Dual-Layer Modal Scroll Reset Architecture (`Modal.tsx`, `resetScrollKey`)
+- **Dual-Layer Scroll Container Trap Problem**:
+  - Modals feature two distinct scrollable DOM elements: the outer viewport wrapper (`fixed inset-0 overflow-y-auto`) and the modal card inner body (`max-h-[80vh] overflow-y-auto`).
+  - When users scrolled down to complete Step 1 (e.g. adding household dependents or organizer notes) and clicked *"Continue to Digital Waivers"*, unmanaged modals maintained their previous scroll offsets, stranding the user at the bottom of Step 2 (showing only the submit button and obscuring the stepper progress bar, instructions, and waiver content).
+- **Dual-Layer Reactive Scroll Synchronization**:
+  - `Modal.tsx` accepts a reactive `resetScrollKey?: any` prop (e.g. `step`, `currentStep`, `${step}_${activeTab}`).
+  - Employs dedicated `useRef` attachments on both the outer viewport wrapper and modal body containers.
+  - Automatically triggers multi-tick scroll resets (`scrollTop = 0`) upon modal open (`isOpen`) and on any `resetScrollKey` dependency updates, guaranteeing that advancing or reversing wizard steps always starts at the top of the form with clear contextual orientation.
+
+### 42.2 Sticky-Header Offset Anchor Navigation (`src/utils/scroll.ts`, `scrollToElement`)
+- **Offset Calculation**:
+  - Standard `element.scrollIntoView({ block: 'start' })` aligns elements flush against `window.scrollY = 0`, placing section titles directly underneath sticky navigation headers (56px Navbar + 36px Role Switcher Bar).
+  - The centralized `scrollToElement(elementIdOrNode, offset = 80, behavior = 'smooth')` utility calculates `element.getBoundingClientRect().top + window.scrollY - offset`, reserving 80px of visual margin above section anchors (such as `#shifts-container` and `#events-explorer`).
+
+### 42.3 Full-Spectrum Page, Tab & Dashboard Viewport Resets
+- **Global App Tab Transitions (`App.tsx`)**:
+  - Switching between top-level views (*Community Hub*, *Event Sign-Up*, *Planner Command Hub*, *Org Super Admin*, *Vendors & Sponsors*, *Gate Kiosk*) automatically executes `window.scrollTo({ top: 0, behavior: 'instant' })`.
+- **Workspace Dashboard Sub-Tab Synchronization**:
+  - `MasterPlannerDashboard.tsx` (`activePlannerTab`, `activeReportSubTab`).
+  - `OrgExecutiveDashboard.tsx` (`activeAdminTab`).
+  - `VendorSponsorDashboard.tsx` (`activeTab`).
+  - `EventMarketingHub.tsx` (`activeTab`).
+  - `LeadPortal.tsx` (`activeLeadTab`, `activeSubPartId`).
+  - `AdminObservabilityHub.tsx` (`activeHubTab`).
+  - `LegalModalCenter.tsx` (`activeTab` and policy body `ref`).
+
+### 42.4 Post-Confirmation Viewport Orientation (`ConfirmationCard.tsx`, `PublicEventLanding.tsx`)
+- Completing volunteer registration, vendor applications, or in-kind donations triggers automatic smooth scrolling to the top of the viewport.
+- Ensures the volunteer immediately views their green celebration badge, confirmation number, QR check-in pass, and 1-click calendar download buttons without manual scrolling.
+
+
 

@@ -335,6 +335,7 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
       title="Complete Your Sign-Up & Support"
       subtitle={`Step ${step} of 3 • ${event.title}`}
       maxWidth="3xl"
+      resetScrollKey={step}
     >
       {/* Progress Stepper Bar */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">

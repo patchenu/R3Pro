@@ -7,6 +7,7 @@ import {
   Shirt, ArrowUpDown, Award, Briefcase, Video, BookOpen
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatTimeRange, formatPercentage } from '../../utils/formatters';
+import { scrollToElement, scrollToTop } from '../../utils/scroll';
 import { Thermometer } from '../common/Thermometer';
 import { UnifiedRegistrationModal } from './UnifiedRegistrationModal';
 import { VendorApplicationModal } from './VendorApplicationModal';
@@ -43,6 +44,13 @@ export const PublicEventLanding: React.FC = () => {
   const [confirmedReg, setConfirmedReg] = useState<any | null>(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+
+  // Automatically scroll to top when a new registration is confirmed so user immediately sees pass
+  React.useEffect(() => {
+    if (confirmedReg) {
+      scrollToTop(undefined, 'smooth');
+    }
+  }, [confirmedReg]);
 
   // Toggle Shift Selection
   const toggleShiftSelection = (shiftId: string) => {
@@ -260,12 +268,7 @@ export const PublicEventLanding: React.FC = () => {
                 setIsRegModalOpen(true);
               } else {
                 setSlotTypeFilter('volunteer');
-                const el = document.getElementById('shifts-container');
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                } else {
-                  setIsRegModalOpen(true);
-                }
+                scrollToElement('shifts-container', 80);
               }
             }}
             className="bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-slate-950 font-extrabold py-3 px-6 rounded-xl text-xs sm:text-sm shadow-md hover:shadow-lg transition shrink-0 flex items-center gap-2 cursor-pointer"

@@ -28,6 +28,11 @@ export const LeadPortal: React.FC = () => {
 
   const [activeLeadTab, setActiveLeadTab] = useState<'shifts_checkin' | 'supplies' | 'contractors'>('shifts_checkin');
 
+  // Reset scroll to top on lead portal tab/department switch
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeLeadTab, activeSubPartId]);
+
   // Modals
   const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
   const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);

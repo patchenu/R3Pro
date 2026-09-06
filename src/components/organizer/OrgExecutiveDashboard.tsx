@@ -50,6 +50,11 @@ export const OrgExecutiveDashboard: React.FC<OrgExecutiveDashboardProps> = ({ in
     }
   }, [initialTab]);
 
+  // Reset scroll to top on executive dashboard tab switch
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeAdminTab]);
+
   // Email & SMS Communication Studio State
   const initialComm = currentOrg.communicationSettings;
   const [emailDeliveryMode, setEmailDeliveryMode] = useState<'managed' | 'custom_domain'>(initialComm?.emailDeliveryMode || 'custom_domain');

@@ -18,6 +18,11 @@ export const EventMarketingHub: React.FC = () => {
   const [includeTearOffTabs, setIncludeTearOffTabs] = useState(true);
   const [includeUrgentShifts, setIncludeUrgentShifts] = useState(true);
 
+  // Reset scroll to top on marketing tab switch
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeTab]);
+
   const eventUrl = `${window.location.origin}/?event=${currentEvent.id}&mode=public`;
 
   // Compute key stats

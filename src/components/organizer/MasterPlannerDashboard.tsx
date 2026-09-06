@@ -49,6 +49,11 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   const [activePlannerTab, setActivePlannerTab] = useState<'overview' | 'volunteers' | 'vendors' | 'reports'>('overview');
   const [activeReportSubTab, setActiveReportSubTab] = useState<'exports' | 'gaps' | 'marketing' | 'items'>('exports');
 
+  // Reset scroll to top on dashboard tab switch
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activePlannerTab, activeReportSubTab]);
+
   // Committee & Needs Modals
   const [isAddDeptModalOpen, setIsAddDeptModalOpen] = useState(false);
   const [editingDept, setEditingDept] = useState<SubPart | null>(null);

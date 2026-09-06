@@ -32,6 +32,11 @@ export const AdminObservabilityHub: React.FC<AdminObservabilityHubProps> = ({
 
   const [activeHubTab, setActiveHubTab] = useState<'accounts' | 'impersonation' | 'sentry' | 'web_vitals' | 'uptime' | 'audit'>('accounts');
 
+  // Reset scroll to top on observability hub tab switch
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeHubTab]);
+
   // Accounts & Users State
   const [selectedOrgFilter, setSelectedOrgFilter] = useState<string>('all');
   const [userSearchQuery, setUserSearchQuery] = useState('');

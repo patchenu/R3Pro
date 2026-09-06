@@ -31,6 +31,11 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
   const [accountPassword, setAccountPassword] = useState('');
   const [isPasswordSaved, setIsPasswordSaved] = useState(false);
 
+  // Smoothly scroll window to top upon mounting confirmation view
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const shiftMap = new Map(shifts.map(s => [s.id, s]));
   const subPartMap = new Map(subParts.map(sp => [sp.id, sp]));
   const itemMap = new Map((itemSlots || []).map(i => [i.id, i]));
