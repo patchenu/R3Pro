@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:honeycomb": "cd honeycomb-app && vite --port 5174",
+    "build:honeycomb": "cd honeycomb-app && tsc && vite build",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "db:migrate": "node scripts/migrate.mjs",

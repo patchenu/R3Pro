@@ -22,11 +22,17 @@ import { LegalDocType } from './content/legal';
 import { StickyImpersonationBanner } from './components/common/StickyImpersonationBanner';
 import { AdminObservabilityHub } from './components/admin/AdminObservabilityHub';
 import { ImpersonationCommandPalette } from './components/admin/ImpersonationCommandPalette';
+import { UnifiedEventRegistrationModal } from './components/public/UnifiedEventRegistrationModal';
+import { NeedConfirmationModal } from './components/public/NeedConfirmationModal';
 
 const MainLayout: React.FC = () => {
   const { activeRole, switchEvent, switchOrganization, isAuthenticated, isDemoMode, isImpersonating, toggleCommandPalette } = useApp();
   const [activeTab, setActiveTab] = useState<string>('discovery_hub');
   const [isEventBuilderOpen, setIsEventBuilderOpen] = useState(false);
+  const [isUnifiedRegisterOpen, setIsUnifiedRegisterOpen] = useState(false);
+  const [isNeedConfirmOpen, setIsNeedConfirmOpen] = useState(false);
+  const [needConfirmToken, setNeedConfirmToken] = useState<string | undefined>(undefined);
+  const [eventBuilderBasics, setEventBuilderBasics] = useState<any>(undefined);
   const [isOrgWizardOpen, setIsOrgWizardOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authRoleIntent, setAuthRoleIntent] = useState<'org_admin' | 'volunteer'>('org_admin');
@@ -75,6 +81,12 @@ const MainLayout: React.FC = () => {
     const orgId = params.get('org');
     const mode = params.get('mode');
     const tab = params.get('tab');
+
+    const confirmNeedParam = params.get('confirmNeedToken') || params.get('needToken');
+    if (confirmNeedParam) {
+      setNeedConfirmToken(confirmNeedParam);
+      setIsNeedConfirmOpen(true);
+    }
 
     if (eventId) {
       switchEvent(eventId);
@@ -137,7 +149,7 @@ const MainLayout: React.FC = () => {
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        openEventBuilder={() => setIsEventBuilderOpen(true)}
+        openEventBuilder={() => setIsUnifiedRegisterOpen(true)}
       />
 
       {/* Main Tab Routing */}
@@ -146,7 +158,7 @@ const MainLayout: React.FC = () => {
           <CommunityDiscoveryHub
             onSelectEvent={(eventId) => setActiveTab('public_landing')}
             onOpenOrgWizard={handleOpenOrgWizard}
-            onOpenEventBuilder={() => setIsEventBuilderOpen(true)}
+            onOpenEventBuilder={() => setIsUnifiedRegisterOpen(true)}
             onOpenAuth={handleOpenAuth}
             onNavigateToVendorHub={() => setActiveTab('vendor_portal')}
             onNavigateToOrgAdmin={() => setActiveTab('org_admin_view')}
@@ -197,11 +209,40 @@ const MainLayout: React.FC = () => {
         />
       )}
 
+      {/* Unified Event Registration Intake (Organizer Step 1 vs Volunteer Grassroots) */}
+      {isUnifiedRegisterOpen && (
+        <UnifiedEventRegistrationModal
+          isOpen={isUnifiedRegisterOpen}
+          onClose={() => setIsUnifiedRegisterOpen(false)}
+          onContinueToOrganizerSetup={(basics) => {
+            setEventBuilderBasics(basics);
+            setIsUnifiedRegisterOpen(false);
+            setIsEventBuilderOpen(true);
+          }}
+        />
+      )}
+
       {/* Event Builder Modal */}
       {isEventBuilderOpen && (
         <EventBuilderWizard
           isOpen={isEventBuilderOpen}
-          onClose={() => setIsEventBuilderOpen(false)}
+          onClose={() => {
+            setIsEventBuilderOpen(false);
+            setEventBuilderBasics(undefined);
+          }}
+          initialBasics={eventBuilderBasics}
+        />
+      )}
+
+      {/* Need Confirmation Modal (1-Click Peer Item Acceptance) */}
+      {isNeedConfirmOpen && (
+        <NeedConfirmationModal
+          isOpen={isNeedConfirmOpen}
+          onClose={() => {
+            setIsNeedConfirmOpen(false);
+            setNeedConfirmToken(undefined);
+          }}
+          token={needConfirmToken}
         />
       )}
 

@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { EVENT_TEMPLATES, EventTemplatePreset } from '../../data/templates';
-import { EventTheme } from '../../types';
+import { 
+  EventTheme, 
+  ShiftDutyCategory, 
+  SupportNeedType, 
+  DUTY_CATEGORIES, 
+  STANDARD_COMPLIANCE_REQUIREMENTS 
+} from '../../types';
 import { Modal } from '../common/Modal';
 import { 
   Sparkles, Calendar, MapPin, DollarSign, Users, 
@@ -9,13 +15,24 @@ import {
   Tag, Plus, X, Copy, History, HelpCircle, Briefcase, Award,
   ShieldCheck, Clock, Package, CheckCircle2, Edit3, Trash2, Radio,
   ArrowUp, ArrowDown, Shirt, Video, Globe, Palette, AlertCircle,
-  Lock, Key, FileQuestion, Eye, Shield
+  Lock, Key, FileQuestion, Eye, Shield, Send, HeartHandshake, User, Mail, Phone
 } from 'lucide-react';
 import { formatCurrency, formatTimeRange } from '../../utils/formatters';
 
 interface EventBuilderWizardProps {
   isOpen: boolean;
   onClose: () => void;
+  initialBasics?: {
+    title?: string;
+    organizationName?: string;
+    venueName?: string;
+    venueAddress?: string;
+    startDate?: string;
+    endDate?: string;
+    durationHours?: number;
+    organizerName?: string;
+    organizerEmail?: string;
+  };
 }
 
 const PRESET_EVENT_TAGS = [
@@ -58,6 +75,8 @@ interface WizardDepartment {
 interface WizardShift {
   title: string;
   description: string;
+  dutyCategory?: ShiftDutyCategory;
+  complianceRequirements?: string[];
   departmentIndex: number;
   startTime: string;
   endTime: string;
@@ -71,12 +90,18 @@ interface WizardShift {
 interface WizardItem {
   itemName: string;
   category: string;
+  needType?: SupportNeedType;
   departmentIndex: number;
   quantityNeeded: number;
   unit: string;
   dropOffLocation: string;
   dropOffDeadline: string;
   estimatedFmvPerUnit: number;
+  assignedToName?: string;
+  assignedToEmail?: string;
+  assignedToPhone?: string;
+  assignedNotes?: string;
+  reminderCadence?: 'standard' | 'intensive' | 'same_day';
 }
 
 interface WizardTier {
@@ -92,7 +117,7 @@ interface WizardTier {
   powerProvided?: boolean;
 }
 
-export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, onClose }) => {
+export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, onClose, initialBasics }) => {
   const { createEvent, currentOrg, users, currentUser, events, showToast } = useApp();
 
   // Wizard Step (1 to 7)
@@ -191,6 +216,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const [shiftTitle, setShiftTitle] = useState('');
   const [shiftDesc, setShiftDesc] = useState('');
   const [shiftDeptIdx, setShiftDeptIdx] = useState(0);
+  const [shiftDutyCat, setShiftDutyCat] = useState<ShiftDutyCategory>('other');
+  const [shiftCompliance, setShiftCompliance] = useState<string[]>(['open_all']);
+  const [customComplianceInput, setCustomComplianceInput] = useState('');
   const [shiftStart, setShiftStart] = useState('2026-10-15T09:00:00');
   const [shiftEnd, setShiftEnd] = useState('2026-10-15T12:00:00');
   const [shiftCap, setShiftCap] = useState(4);
@@ -203,12 +231,18 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const [editingItemIdx, setEditingItemIdx] = useState<number | null>(null);
   const [itemName, setItemName] = useState('');
   const [itemCategory, setItemCategory] = useState('Supplies');
+  const [itemNeedType, setItemNeedType] = useState<SupportNeedType>('equipment');
   const [itemDeptIdx, setItemDeptIdx] = useState(0);
   const [itemQty, setItemQty] = useState(10);
   const [itemUnit, setItemUnit] = useState('boxes');
   const [itemDropOff, setItemDropOff] = useState('Department Desk');
   const [itemDeadline, setItemDeadline] = useState('Saturday 8:00 AM');
   const [itemFmv, setItemFmv] = useState(25);
+  const [itemAssignedName, setItemAssignedName] = useState('');
+  const [itemAssignedEmail, setItemAssignedEmail] = useState('');
+  const [itemAssignedPhone, setItemAssignedPhone] = useState('');
+  const [itemAssignedNotes, setItemAssignedNotes] = useState('');
+  const [itemReminderCadence, setItemReminderCadence] = useState<'standard' | 'intensive' | 'same_day'>('standard');
 
   const [isAddTierModalOpen, setIsAddTierModalOpen] = useState(false);
   const [editingTierIdx, setEditingTierIdx] = useState<number | null>(null);
@@ -222,6 +256,18 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const [tierBoothDim, setTierBoothDim] = useState('10x10');
   const [tierPower, setTierPower] = useState(false);
   const [tierInstantCheckout, setTierInstantCheckout] = useState(true);
+
+  // Synchronize initialBasics if provided from Unified Intake
+  useEffect(() => {
+    if (initialBasics && isOpen) {
+      if (initialBasics.title) setTitle(initialBasics.title);
+      if (initialBasics.venueName) setVenueName(initialBasics.venueName);
+      if (initialBasics.venueAddress) setVenueAddress(initialBasics.venueAddress);
+      if (initialBasics.startDate) setStartDate(initialBasics.startDate);
+      if (initialBasics.endDate) setEndDate(initialBasics.endDate);
+      setCurrentStep(2); // Jump straight to Step 2: Essentials & Goals
+    }
+  }, [initialBasics, isOpen]);
 
   const orgPastEvents = events.filter(e => e.orgId === currentOrg.id);
 
@@ -432,6 +478,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setShiftTitle('');
     setShiftDesc('');
     setShiftDeptIdx(0);
+    setShiftDutyCat('other');
+    setShiftCompliance(['open_all']);
+    setCustomComplianceInput('');
     const day = startDate ? startDate.slice(0, 10) : '2026-10-15';
     setShiftStart(`${day}T09:00:00`);
     setShiftEnd(`${day}T12:00:00`);
@@ -449,6 +498,9 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setShiftTitle(s.title);
     setShiftDesc(s.description);
     setShiftDeptIdx(s.departmentIndex);
+    setShiftDutyCat(s.dutyCategory || 'other');
+    setShiftCompliance(s.complianceRequirements && s.complianceRequirements.length > 0 ? s.complianceRequirements : ['open_all']);
+    setCustomComplianceInput('');
     setShiftStart(s.startTime || startDate);
     setShiftEnd(s.endTime || endDate);
     setShiftCap(s.capacity);
@@ -466,6 +518,8 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     const shiftPayload: WizardShift = {
       title: shiftTitle.trim(),
       description: shiftDesc.trim(),
+      dutyCategory: shiftDutyCat,
+      complianceRequirements: shiftCompliance,
       departmentIndex: shiftDeptIdx,
       startTime: shiftStart,
       endTime: shiftEnd,
@@ -500,6 +554,8 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     const generatedShifts: WizardShift[] = slots.map(s => ({
       title: `${baseTitle.trim()} — ${s.name}`,
       description: desc.trim() || `Volunteer support for ${baseTitle.trim()}`,
+      dutyCategory: shiftDutyCat,
+      complianceRequirements: shiftCompliance,
       departmentIndex: deptIdx,
       startTime: s.start,
       endTime: s.end,
@@ -524,12 +580,18 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     setEditingItemIdx(null);
     setItemName('');
     setItemCategory('Supplies');
+    setItemNeedType('equipment');
     setItemDeptIdx(0);
     setItemQty(10);
     setItemUnit('boxes');
     setItemDropOff('Department Station');
     setItemDeadline('Event Morning 8:00 AM');
     setItemFmv(25);
+    setItemAssignedName('');
+    setItemAssignedEmail('');
+    setItemAssignedPhone('');
+    setItemAssignedNotes('');
+    setItemReminderCadence('standard');
     setIsAddItemModalOpen(true);
   };
 
@@ -538,12 +600,18 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     const i = items[idx];
     setItemName(i.itemName);
     setItemCategory(i.category);
+    setItemNeedType(i.needType || 'equipment');
     setItemDeptIdx(i.departmentIndex);
     setItemQty(i.quantityNeeded);
     setItemUnit(i.unit);
     setItemDropOff(i.dropOffLocation);
     setItemDeadline(i.dropOffDeadline);
     setItemFmv(i.estimatedFmvPerUnit || 25);
+    setItemAssignedName(i.assignedToName || '');
+    setItemAssignedEmail(i.assignedToEmail || '');
+    setItemAssignedPhone(i.assignedToPhone || '');
+    setItemAssignedNotes(i.assignedNotes || '');
+    setItemReminderCadence(i.reminderCadence || 'standard');
     setIsAddItemModalOpen(true);
   };
 
@@ -554,12 +622,18 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
     const itemPayload: WizardItem = {
       itemName: itemName.trim(),
       category: itemCategory,
+      needType: itemNeedType,
       departmentIndex: itemDeptIdx,
       quantityNeeded: Number(itemQty) || 1,
       unit: itemUnit.trim(),
       dropOffLocation: itemDropOff.trim(),
       dropOffDeadline: itemDeadline.trim(),
-      estimatedFmvPerUnit: Number(itemFmv) || 0
+      estimatedFmvPerUnit: Number(itemFmv) || 0,
+      assignedToName: itemAssignedName.trim() || undefined,
+      assignedToEmail: itemAssignedEmail.trim() || undefined,
+      assignedToPhone: itemAssignedPhone.trim() || undefined,
+      assignedNotes: itemAssignedNotes.trim() || undefined,
+      reminderCadence: itemReminderCadence
     };
 
     if (editingItemIdx !== null) {
@@ -717,6 +791,8 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
         departmentIndex: s.departmentIndex,
         title: s.title,
         description: s.description,
+        dutyCategory: s.dutyCategory || 'other',
+        complianceRequirements: s.complianceRequirements || ['open_all'],
         startTime: s.startTime,
         endTime: s.endTime,
         capacity: s.capacity,
@@ -726,18 +802,37 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
         reportingLocationOverride: s.reportingLocationOverride,
         waiverTemplateId: 'waiver_general_liability'
       })),
-      itemSlots: items.map(i => ({
-        eventId: '',
-        subPartId: '',
-        departmentIndex: i.departmentIndex,
-        itemName: i.itemName,
-        category: i.category,
-        quantityNeeded: i.quantityNeeded,
-        unit: i.unit,
-        dropOffLocation: i.dropOffLocation,
-        dropOffDeadline: i.dropOffDeadline,
-        estimatedFmvPerUnit: i.estimatedFmvPerUnit
-      })),
+      itemSlots: items.map(i => {
+        let assignedPayload = undefined;
+        if (i.assignedToName && (i.assignedToEmail || i.assignedToPhone)) {
+          assignedPayload = {
+            assignedToName: i.assignedToName,
+            assignedToEmail: i.assignedToEmail || '',
+            assignedToPhone: i.assignedToPhone || '',
+            assignedAt: new Date().toISOString(),
+            status: 'pending_confirmation' as const,
+            confirmationToken: 'ntok_' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10),
+            dueDate: i.dropOffDeadline,
+            assignedNotes: i.assignedNotes,
+            reminderSentAt: new Date().toISOString()
+          };
+        }
+        return {
+          eventId: '',
+          subPartId: '',
+          departmentIndex: i.departmentIndex,
+          itemName: i.itemName,
+          category: i.category,
+          needType: i.needType || 'equipment',
+          quantityNeeded: i.quantityNeeded,
+          unit: i.unit,
+          dropOffLocation: i.dropOffLocation,
+          dropOffDeadline: i.dropOffDeadline,
+          estimatedFmvPerUnit: i.estimatedFmvPerUnit,
+          assignedTo: assignedPayload,
+          reminderCadence: i.reminderCadence || 'standard'
+        };
+      }),
       ticketTiers: tiers.map(t => ({
         eventId: '',
         title: t.title,
@@ -1459,7 +1554,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className="text-sm font-bold text-slate-900">Step 4: Volunteer Shift Needs & Staffing Capacities</h3>
-                <p className="text-slate-500 text-xs">Define volunteer shift roles, capacities, and liability waiver requirements</p>
+                <p className="text-slate-500 text-xs">Define duty categories, clearances (SafeSport, LAUSD, ServSafe), capacities, and waiver rules</p>
               </div>
               <button
                 type="button"
@@ -1475,11 +1570,18 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               {shifts.length > 0 ? (
                 shifts.map((shift, idx) => {
                   const dept = departments[shift.departmentIndex] || { name: 'General Event' };
+                  const dutyCatObj = DUTY_CATEGORIES.find(c => c.id === shift.dutyCategory);
                   return (
                     <div key={idx} className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="font-bold text-slate-900 text-sm">{shift.title}</span>
+                          {dutyCatObj && (
+                            <span className="px-2 py-0.5 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg font-bold text-[10px] flex items-center gap-1">
+                              <span>{dutyCatObj.icon}</span>
+                              <span>{dutyCatObj.label}</span>
+                            </span>
+                          )}
                           <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded font-bold text-[10px]">
                             {dept.name}
                           </span>
@@ -1487,11 +1589,29 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                             {shift.capacity} Spots Needed
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-500 mt-0.5">{shift.description}</p>
-                        <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-2">
-                          <span>Schedule: {formatTimeRange(shift.startTime, shift.endTime)}</span>
-                          <span>• Waiver: {shift.requiresWaiver ? 'Yes (Liability)' : 'None'}</span>
+                        <p className="text-[11px] text-slate-500">{shift.description}</p>
+                        
+                        {/* Clearances & Schedule */}
+                        <div className="text-[10px] text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5">
+                          <span><strong>Schedule:</strong> {formatTimeRange(shift.startTime, shift.endTime)}</span>
+                          <span>• <strong>Waiver:</strong> {shift.requiresWaiver ? 'Yes (Liability)' : 'None'}</span>
+                          {shift.minAge && <span>• <strong>Min Age:</strong> {shift.minAge}+</span>}
                         </div>
+
+                        {/* Compliance Badges */}
+                        {shift.complianceRequirements && shift.complianceRequirements.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1 pt-1">
+                            <span className="text-[9px] font-bold text-slate-400">Clearances:</span>
+                            {shift.complianceRequirements.map((reqId, rIdx) => {
+                              const standardReq = STANDARD_COMPLIANCE_REQUIREMENTS.find(r => r.id === reqId);
+                              return (
+                                <span key={rIdx} className="px-1.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-900 rounded font-medium text-[9px]">
+                                  {standardReq ? `${standardReq.badge} ${standardReq.name}` : reqId}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1.5 self-end sm:self-center">
@@ -1527,8 +1647,8 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
           <div className="space-y-4 animate-in fade-in text-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 className="text-sm font-bold text-slate-900">Step 5: Supply & Equipment Wishlist Drop-Offs</h3>
-                <p className="text-slate-500 text-xs">Specify physical goods, baked items, drop-off points, and IRS Fair Market Value offsets</p>
+                <h3 className="text-sm font-bold text-slate-900">Step 5: Support Needs, Equipment & Peer Direct Assignments</h3>
+                <p className="text-slate-500 text-xs">Request equipment/supplies or assign directly to peers (e.g., Minh Tran) with 1-click confirmation links</p>
               </div>
               <button
                 type="button"
@@ -1536,7 +1656,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                 className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center gap-1.5 self-start"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>+ Add Wishlist Item</span>
+                <span>+ Add Support Need / Item</span>
               </button>
             </div>
 
@@ -1544,22 +1664,47 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               {items.length > 0 ? (
                 items.map((item, idx) => {
                   const dept = departments[item.departmentIndex] || { name: 'General' };
+                  const needTypeLabels: Record<string, string> = {
+                    equipment: '📦 Equipment',
+                    supplies: '🎁 Supplies',
+                    deliveries: '🚚 Transport',
+                    custom_service: '⚡ Service',
+                    financial: '💵 Cash Sponsorship'
+                  };
                   return (
                     <div key={idx} className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="font-bold text-slate-900 text-sm">{item.itemName}</span>
                           <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">
                             {item.quantityNeeded} {item.unit}
+                          </span>
+                          <span className="px-2 py-0.5 bg-teal-50 border border-teal-200 text-teal-800 rounded font-semibold text-[10px]">
+                            {needTypeLabels[item.needType || 'supplies'] || '🎁 Supplies'}
                           </span>
                           <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px]">
                             Dept: {dept.name}
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-3">
-                          <span>Drop-Off: {item.dropOffLocation} (By {item.dropOffDeadline})</span>
-                          <span>• Est. FMV: {formatCurrency(item.estimatedFmvPerUnit || 25)} / {item.unit}</span>
+                        <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                          <span><strong>Drop-Off:</strong> {item.dropOffLocation} (By {item.dropOffDeadline})</span>
+                          <span>• <strong>Est. FMV:</strong> {formatCurrency(item.estimatedFmvPerUnit || 25)} / {item.unit}</span>
                         </div>
+
+                        {/* Peer Assignment Notification Card */}
+                        {item.assignedToName && (
+                          <div className="mt-1 p-2 bg-purple-50 rounded-xl border border-purple-200 flex items-center justify-between gap-2 text-[11px]">
+                            <div className="flex items-center gap-1.5 text-purple-950">
+                              <User className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                              <span>
+                                Assigned to: <strong>{item.assignedToName}</strong> ({item.assignedToEmail || item.assignedToPhone || 'No contact specified'})
+                              </span>
+                            </div>
+                            <span className="px-2 py-0.5 bg-purple-200/80 text-purple-900 rounded font-bold text-[9px] uppercase tracking-wide">
+                              ✉️ 1-Click Pass Triggered
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1.5 self-end sm:self-center">
@@ -2094,6 +2239,31 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               />
             </div>
 
+            {/* Duty Category / Responsibilities */}
+            <div>
+              <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+                <span>Duty Category / Primary Responsibility *</span>
+                <span className="text-[10px] text-slate-400">Classifies volunteer station duties</span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-40 overflow-y-auto p-1 bg-slate-50 border border-slate-200 rounded-xl">
+                {DUTY_CATEGORIES.map(cat => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setShiftDutyCat(cat.id)}
+                    className={`p-2 rounded-lg border text-left transition flex items-center gap-1.5 ${
+                      shiftDutyCat === cat.id
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs font-bold'
+                        : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    <span className="text-sm">{cat.icon}</span>
+                    <span className="text-[11px] truncate">{cat.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Committee Department</label>
@@ -2236,13 +2406,83 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               </div>
             </div>
 
+            {/* Standard Compliance Clearances & Requirements */}
+            <div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-amber-950 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Volunteer Clearances & Special Requirements:</span>
+                </span>
+                <span className="text-[10px] text-amber-800 font-semibold">{shiftCompliance.length} Active</span>
+              </div>
+              <p className="text-[10px] text-amber-900 leading-tight">
+                Select standardized certifications required before volunteers can sign up for this shift.
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pt-1">
+                {STANDARD_COMPLIANCE_REQUIREMENTS.map(req => {
+                  const isChecked = shiftCompliance.includes(req.id);
+                  return (
+                    <label
+                      key={req.id}
+                      className={`flex items-start gap-2 p-1.5 rounded-lg border cursor-pointer transition text-[11px] ${
+                        isChecked ? 'bg-amber-100/90 border-amber-300 text-amber-950 font-bold' : 'bg-white border-amber-200/80 text-slate-700'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {
+                          if (isChecked) {
+                            setShiftCompliance(shiftCompliance.filter(c => c !== req.id));
+                          } else {
+                            const next = req.id === 'open_all' ? ['open_all'] : [...shiftCompliance.filter(c => c !== 'open_all'), req.id];
+                            setShiftCompliance(next);
+                          }
+                        }}
+                        className="w-3.5 h-3.5 mt-0.5 rounded text-amber-600"
+                      />
+                      <div className="min-w-0">
+                        <span className="truncate block">{req.badge} {req.name}</span>
+                        <span className="text-[9px] text-slate-500 block truncate">{req.description}</span>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+
+              {/* Custom Compliance Item Input */}
+              <div className="flex gap-1.5 pt-1">
+                <input
+                  type="text"
+                  value={customComplianceInput}
+                  onChange={(e) => setCustomComplianceInput(e.target.value)}
+                  placeholder="Custom clearance (e.g. USA SafeSport, City Permit)..."
+                  className="flex-1 px-2.5 py-1 bg-white border border-amber-300 rounded-lg text-xs"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const val = customComplianceInput.trim();
+                    if (val && !shiftCompliance.includes(val)) {
+                      setShiftCompliance([...shiftCompliance.filter(c => c !== 'open_all'), val]);
+                      setCustomComplianceInput('');
+                    }
+                  }}
+                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs shadow-2xs"
+                >
+                  + Add
+                </button>
+              </div>
+            </div>
+
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Required Skills / Certifications (Comma-separated)</label>
+              <label className="block font-bold text-slate-700 mb-1">Additional Required Skills (Comma-separated)</label>
               <input
                 type="text"
                 value={shiftSkillsInput}
                 onChange={(e) => setShiftSkillsInput(e.target.value)}
-                placeholder="e.g. First Aid, Food Safety, Heavy Lifting, Cash Handling"
+                placeholder="e.g. Cash Handling, Bilingual Spanish, Forklift Operation"
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
               />
             </div>
@@ -2290,18 +2530,51 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
         <Modal
           isOpen={isAddItemModalOpen}
           onClose={() => setIsAddItemModalOpen(false)}
-          title={editingItemIdx !== null ? `Edit Wishlist Item: ${itemName}` : 'Add Supply & Wishlist Item'}
-          subtitle="Request item drop-offs with IRS Fair Market Value offsets"
+          title={editingItemIdx !== null ? `Edit Wishlist Item: ${itemName}` : 'Add Support Need / Equipment Wishlist'}
+          subtitle="Request item drop-offs or assign directly to peers with 1-click confirmation links"
+          maxWidth="lg"
         >
           <form onSubmit={handleSaveItem} className="space-y-4 text-xs">
+            {/* Support Need Type Selector */}
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Item Description *</label>
+              <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+                <span>Support Need Classification *</span>
+                <span className="text-[10px] text-slate-400">Equipment vs Supplies vs Cash vs Services</span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                {[
+                  { id: 'equipment', label: '📦 Equipment', desc: 'Tables, canopies, generators' },
+                  { id: 'supplies', label: '🎁 Consumables', desc: 'Plates, water, decorations' },
+                  { id: 'deliveries', label: '🚚 Transport', desc: 'Truck haul, bulk pickup' },
+                  { id: 'custom_service', label: '⚡ Service', desc: 'Photography, DJ, medical' }
+                ].map(nt => (
+                  <button
+                    key={nt.id}
+                    type="button"
+                    onClick={() => setItemNeedType(nt.id as any)}
+                    className={`p-2 rounded-xl border text-left transition ${
+                      itemNeedType === nt.id
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs font-bold'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    <div className="text-xs">{nt.label}</div>
+                    <div className={`text-[9px] truncate ${itemNeedType === nt.id ? 'text-emerald-100' : 'text-slate-400'}`}>
+                      {nt.desc}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Item Description / Name *</label>
               <input
                 type="text"
                 required
                 value={itemName}
                 onChange={(e) => setItemName(e.target.value)}
-                placeholder="e.g. Bottled Water (Cases of 24)"
+                placeholder="e.g. 6-ft Heavy Duty Plastic Folding Tables"
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold"
               />
             </div>
@@ -2344,7 +2617,7 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Unit (e.g. cases, trays)</label>
+                <label className="block font-bold text-slate-700 mb-1">Unit (e.g. tables, cases, trays)</label>
                 <input
                   type="text"
                   value={itemUnit}
@@ -2374,6 +2647,82 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                   onChange={(e) => setItemFmv(Number(e.target.value))}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-emerald-700"
                 />
+              </div>
+            </div>
+
+            {/* Direct Peer Assignment & Notification Dispatch Card */}
+            <div className="p-3.5 bg-purple-50/80 rounded-2xl border border-purple-200 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-purple-950 font-bold text-xs">
+                  <User className="w-4 h-4 text-purple-700" />
+                  <span>Assign Need to a Specific Person (e.g. Minh Tran)</span>
+                </div>
+                <span className="text-[10px] text-purple-700 font-semibold">Optional Direct Request</span>
+              </div>
+              
+              <p className="text-[10px] text-purple-900 leading-relaxed">
+                If assigned, they will receive a notification email with a <strong>1-click confirmation pass</strong> to accept or decline bringing this item, plus automated reminders.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold text-purple-900 mb-0.5">Assignee Full Name</label>
+                  <input
+                    type="text"
+                    value={itemAssignedName}
+                    onChange={(e) => setItemAssignedName(e.target.value)}
+                    placeholder="e.g. Minh Tran"
+                    className="w-full px-2.5 py-1.5 bg-white border border-purple-300 rounded-xl text-xs font-semibold text-purple-950"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-purple-900 mb-0.5">Assignee Email Address</label>
+                  <input
+                    type="email"
+                    value={itemAssignedEmail}
+                    onChange={(e) => setItemAssignedEmail(e.target.value)}
+                    placeholder="e.g. minh.tran@example.org"
+                    className="w-full px-2.5 py-1.5 bg-white border border-purple-300 rounded-xl text-xs font-semibold text-purple-950"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-purple-900 mb-0.5">Assignee Phone Number</label>
+                  <input
+                    type="tel"
+                    value={itemAssignedPhone}
+                    onChange={(e) => setItemAssignedPhone(e.target.value)}
+                    placeholder="e.g. (555) 392-1084"
+                    className="w-full px-2.5 py-1.5 bg-white border border-purple-300 rounded-xl text-xs font-semibold text-purple-950"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold text-purple-900 mb-0.5">Special Instructions / Dimensions</label>
+                  <input
+                    type="text"
+                    value={itemAssignedNotes}
+                    onChange={(e) => setItemAssignedNotes(e.target.value)}
+                    placeholder="e.g. Please bring 6-ft plastic folding table by 8:00 AM"
+                    className="w-full px-2.5 py-1.5 bg-white border border-purple-300 rounded-xl text-xs text-purple-950"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-purple-900 mb-0.5">Automated Reminder Cadence</label>
+                  <select
+                    value={itemReminderCadence}
+                    onChange={(e) => setItemReminderCadence(e.target.value as any)}
+                    className="w-full px-2.5 py-1.5 bg-white border border-purple-300 rounded-xl text-xs font-semibold text-purple-950"
+                  >
+                    <option value="standard">Standard (72h, 24h & 2h before due date)</option>
+                    <option value="intensive">Intensive Daily Reminders (High-Priority Items)</option>
+                    <option value="same_day">Same-Day Morning Notification Only</option>
+                  </select>
+                </div>
               </div>
             </div>
 

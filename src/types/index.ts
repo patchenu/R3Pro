@@ -183,22 +183,53 @@ export interface SubPart {
   itemSlotIds: string[];
 }
 
+export type ShiftDutyCategory = 
+  | 'check_in' 
+  | 'security_crowd' 
+  | 'clean_up_teardown' 
+  | 'deliveries_transport' 
+  | 'food_hospitality' 
+  | 'labor_setup' 
+  | 'kids_games' 
+  | 'first_aid_safety' 
+  | 'ticket_sales' 
+  | 'info_guiding' 
+  | 'other';
+
 export interface Shift {
   id: string;
   subPartId: string;
   eventId: string;
   title: string;
   description: string;
+  dutyCategory?: ShiftDutyCategory;
   startTime: string; // e.g. "2026-09-15T08:00:00"
   endTime: string;   // e.g. "2026-09-15T11:00:00"
   capacity: number;
   claimedCount: number;
   minAge?: number;
   skillsRequired?: string[];
+  complianceRequirements?: string[]; // Standard compliance (e.g. "USA SafeSport", "LAUSD Tier II", "ServSafe")
   requiresWaiver: boolean;
   waiverTemplateId?: string;
   isApproved: boolean; // For variable threshold queue
   reportingLocationOverride?: string;
+}
+
+export type SupportNeedType = 'equipment' | 'financial' | 'volunteer' | 'supplies' | 'custom_service';
+export type NeedAssignmentStatus = 'unassigned' | 'pending_confirmation' | 'confirmed' | 'delivered' | 'declined';
+
+export interface NeedAssignment {
+  assignedToName: string;
+  assignedToEmail: string;
+  assignedToPhone?: string;
+  assignedAt: string;
+  status: NeedAssignmentStatus;
+  confirmationToken: string;
+  dueDate?: string;
+  confirmedAt?: string;
+  confirmationNotes?: string;
+  reminderSentAt?: string;
 }
 
 export interface ItemSlot {
@@ -207,13 +238,42 @@ export interface ItemSlot {
   eventId: string;
   itemName: string;
   category: string;
+  needType?: SupportNeedType;
   quantityNeeded: number;
   quantityPledged: number;
   unit: string; // e.g. "packs", "boxes", "tables", "trays"
   dropOffLocation: string;
   dropOffDeadline: string;
   estimatedFmvPerUnit?: number;
+  assignedTo?: NeedAssignment;
+  reminderCadence?: 'standard' | 'intensive' | 'same_day';
 }
+
+export const DUTY_CATEGORIES: { id: ShiftDutyCategory; label: string; description: string; icon: string }[] = [
+  { id: 'check_in', label: 'Check-In & Greeters', description: 'Welcome attendees, scan passes, distribute wristbands', icon: '🎫' },
+  { id: 'food_hospitality', label: 'Food & Hospitality', description: 'Food prep, snack stations, hydration booths, dining area', icon: '🍔' },
+  { id: 'labor_setup', label: 'Labor & Setup', description: 'Staging, canopy tents, tables, heavy equipment layout', icon: '🔨' },
+  { id: 'security_crowd', label: 'Security & Crowd Control', description: 'Gate monitoring, perimeter watch, parking assistance', icon: '🛡️' },
+  { id: 'clean_up_teardown', label: 'Clean-Up & Teardown', description: 'Waste management, breakdown of tents/tables, venue restoration', icon: '🧹' },
+  { id: 'deliveries_transport', label: 'Deliveries & Transport', description: 'Item pickup, loading/unloading supplies, campus dispatch', icon: '🚚' },
+  { id: 'kids_games', label: 'Kids, Arts & Games', description: 'Carnival booths, face painting, bounce house monitor', icon: '🎨' },
+  { id: 'first_aid_safety', label: 'First Aid & Safety Station', description: 'First aid tent, emergency hydration, lost child desk', icon: '🩺' },
+  { id: 'ticket_sales', label: 'Ticket & Merchandise Sales', description: 'Raffle sales, admission desk, donation box collection', icon: '🎟️' },
+  { id: 'info_guiding', label: 'Information & Guiding', description: 'Directions, schedule questions, VIP escort', icon: '📣' },
+  { id: 'other', label: 'General Operations', description: 'Ad-hoc support and coordinator floating', icon: '⚡' }
+];
+
+export const STANDARD_COMPLIANCE_REQUIREMENTS = [
+  { id: 'open_all', name: 'Open to Anyone', category: 'General', badge: '🌱', description: 'No special clearance required' },
+  { id: 'safesport', name: 'USA SafeSport Certified', category: 'Youth Safety', badge: '🛡️', description: 'Minor athlete abuse prevention training' },
+  { id: 'lausd_tier2', name: 'School District / LAUSD Volunteer Tier II', category: 'Education', badge: '🏫', description: 'LiveScan fingerprint & TB risk assessment clearance' },
+  { id: 'livescan_bg', name: 'LiveScan Background Check', category: 'Background Check', badge: '🔍', description: 'State/DOJ criminal background verification' },
+  { id: 'servsafe', name: 'ServSafe / Food Safety Certified', category: 'Food Safety', badge: '🧑‍🍳', description: 'Commercial food handling and prep safety certificate' },
+  { id: 'cpr_firstaid', name: 'Red Cross First Aid / CPR / AED', category: 'Medical & Safety', badge: '🩹', description: 'Current emergency resuscitation & first aid certification' },
+  { id: 'driver_license', name: 'Valid Driver License & Auto Insurance', category: 'Transport', badge: '🚗', description: 'Clean DMV record and active vehicle liability coverage' },
+  { id: 'heavy_lifting', name: 'Heavy Lifting (25+ lbs)', category: 'Physical', badge: '📦', description: 'Ability to safely lift and carry folding tables, pop-ups, coolers' },
+  { id: 'adult_18_plus', name: 'Adult Volunteer Only (18+)', category: 'Age Requirement', badge: '🔞', description: 'Must be 18 years of age or older' }
+];
 
 export type TicketType = 'admission_ticket' | 'vendor_booth' | 'sponsor_package' | 'raffle';
 

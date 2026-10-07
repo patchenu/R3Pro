@@ -2,18 +2,21 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Package, CheckCircle2, Clock, MapPin, Search, 
-  Printer, FileText, Sparkles, User, Tag, Edit3, DollarSign 
+  Printer, FileText, Sparkles, User, Tag, Edit3, DollarSign, Send, Check, AlertCircle, Eye
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { printInKindTaxLetterHtml, printItemReceivingManifestHtml } from '../../utils/exportPdf';
 import { Modal } from '../common/Modal';
+import { NeedConfirmationModal } from '../public/NeedConfirmationModal';
+import { ItemSlot } from '../../types';
 
 export const ItemReceivingHub: React.FC = () => {
-  const { currentEvent, currentOrg, itemSlots, subParts, registrations, toggleItemPledgeReceived } = useApp();
+  const { currentEvent, currentOrg, itemSlots, subParts, registrations, toggleItemPledgeReceived, sendNeedReminder, updateItemSlot } = useApp();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubPartId, setSelectedSubPartId] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'delivered' | 'pending'>('all');
+  const [previewNeedSlot, setPreviewNeedSlot] = useState<ItemSlot | null>(null);
 
   // Modal state for editing receiving verification details
   const [editingPledge, setEditingPledge] = useState<{
@@ -402,15 +405,160 @@ export const ItemReceivingHub: React.FC = () => {
                 onClick={() => handleSaveVerification(true)}
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center gap-1.5"
               >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Confirm & Save Verification</span>
+                <Check className="w-3.5 h-3.5" />
+                <span>Verify & Issue Receipt</span>
               </button>
             </div>
-
           </div>
         </Modal>
       )}
 
+      {/* DIRECT PEER-ASSIGNED SUPPORT NEEDS (e.g. Minh Tran assigned to bring 6-ft folding tables) */}
+      {itemSlots.some(i => i.assignedTo) && (
+        <div className="bg-white rounded-3xl border border-purple-200 shadow-sm p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 bg-purple-100 text-purple-800 rounded-lg">
+                  <User className="w-4 h-4" />
+                </span>
+                <h3 className="text-base font-bold text-slate-900">Direct Assigned Support Needs & Peer Follow-Up</h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Items assigned directly to off-platform individuals (e.g. Minh Tran) with 1-click confirmation links and automated reminder queues.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {itemSlots.filter(i => i.assignedTo).map((item) => {
+              const subPart = subParts.find(sp => sp.id === item.subPartId);
+              const assign = item.assignedTo!;
+              const isConfirmed = assign.status === 'confirmed';
+              const isDeclined = assign.status === 'declined';
+              const isDelivered = assign.status === 'delivered';
+              const isPending = !isConfirmed && !isDeclined && !isDelivered;
+
+              return (
+                <div
+                  key={item.id}
+                  className={`p-4 rounded-2xl border transition flex flex-col justify-between gap-3 ${
+                    isConfirmed ? 'bg-emerald-50/70 border-emerald-200' :
+                    isDelivered ? 'bg-indigo-50/70 border-indigo-200' :
+                    isDeclined ? 'bg-rose-50/70 border-rose-200' :
+                    'bg-amber-50/60 border-amber-200'
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <span className="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-bold uppercase text-slate-700">
+                          {item.needType || 'Equipment'}
+                        </span>
+                        <h4 className="font-extrabold text-sm text-slate-900 mt-1">{item.itemName}</h4>
+                        <div className="text-xs font-bold text-purple-900 mt-0.5">
+                          Need: {item.quantityNeeded} {item.unit} • {subPart?.name || 'General Operations'}
+                        </div>
+                      </div>
+
+                      {/* Status Badge */}
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 ${
+                        isConfirmed ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                        isDelivered ? 'bg-indigo-100 text-indigo-800 border border-indigo-300' :
+                        isDeclined ? 'bg-rose-100 text-rose-800 border border-rose-300' :
+                        'bg-amber-100 text-amber-800 border border-amber-300'
+                      }`}>
+                        {isConfirmed && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
+                        {isPending && <Clock className="w-3 h-3 text-amber-600" />}
+                        {isDelivered && <Package className="w-3 h-3 text-indigo-600" />}
+                        <span>
+                          {isConfirmed ? `✓ Confirmed by ${assign.assignedToName}` :
+                           isDelivered ? `📦 Delivered & Checked In` :
+                           isDeclined ? `✕ Declined by ${assign.assignedToName}` :
+                           `⏳ Awaiting ${assign.assignedToName}'s Confirmation`}
+                        </span>
+                      </span>
+                    </div>
+
+                    {/* Assignee Contact & Logistics */}
+                    <div className="p-2.5 bg-white/90 rounded-xl border border-slate-200/80 text-xs space-y-1">
+                      <div className="flex items-center gap-2 text-slate-800 font-semibold">
+                        <User className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                        <span><strong>Assigned To:</strong> {assign.assignedToName}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                        {assign.assignedToEmail && <span>📧 {assign.assignedToEmail}</span>}
+                        {assign.assignedToPhone && <span>📞 {assign.assignedToPhone}</span>}
+                        <span>• <strong>Due:</strong> {item.dropOffDeadline}</span>
+                        <span>• <strong>Gate:</strong> {item.dropOffLocation}</span>
+                      </div>
+                      {assign.confirmationNotes && (
+                        <div className="pt-1 text-[11px] text-slate-700 italic border-t border-slate-100">
+                          &quot;{assign.confirmationNotes}&quot;
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/60">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewNeedSlot(item)}
+                      className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>View Confirmation Pass</span>
+                    </button>
+
+                    <div className="flex items-center gap-1.5">
+                      {isPending && (
+                        <button
+                          type="button"
+                          onClick={() => sendNeedReminder(item.id)}
+                          className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                        >
+                          <Send className="w-3.5 h-3.5 text-amber-300" />
+                          <span>⚡ Send Reminder</span>
+                        </button>
+                      )}
+
+                      {!isDelivered && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateItemSlot(item.id, {
+                              assignedTo: {
+                                ...assign,
+                                status: 'delivered',
+                                confirmedAt: assign.confirmedAt || new Date().toISOString()
+                              },
+                              quantityPledged: item.quantityNeeded
+                            });
+                          }}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Mark Received</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Need Confirmation Preview Modal */}
+      {previewNeedSlot && (
+        <NeedConfirmationModal
+          isOpen={!!previewNeedSlot}
+          onClose={() => setPreviewNeedSlot(null)}
+          itemSlot={previewNeedSlot}
+        />
+      )}
     </div>
   );
 };

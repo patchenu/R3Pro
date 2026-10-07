@@ -177,6 +177,9 @@ interface AppContextType {
   addItemSlot: (itemData: Omit<ItemSlot, 'id' | 'quantityPledged'>) => ItemSlot;
   updateItemSlot: (itemSlotId: string, updates: Partial<ItemSlot>) => void;
   deleteItemSlot: (itemSlotId: string) => void;
+  assignItemNeed: (itemId: string, assignee: { name: string; email: string; phone?: string; dueDate?: string; notes?: string; reminderCadence?: 'standard' | 'intensive' | 'same_day' }) => string;
+  confirmItemNeed: (token: string, response: 'confirm' | 'decline', notes?: string) => { success: boolean; item?: ItemSlot; error?: string };
+  sendNeedReminder: (itemId: string) => void;
   requestBudgetIncrease: (subPartId: string, amount: number, reason: string) => void;
   approveRequest: (requestId: string) => void;
   rejectRequest: (requestId: string) => void;
@@ -785,10 +788,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           eventId: id,
           title: s.title,
           description: s.description || '',
+          dutyCategory: s.dutyCategory || 'other',
+          complianceRequirements: s.complianceRequirements || ['open_all'],
           startTime: s.startTime || event.startDate,
           endTime: s.endTime || event.endDate,
           capacity: s.capacity || 4,
           claimedCount: 0,
+          minAge: s.minAge,
+          skillsRequired: s.skillsRequired,
+          reportingLocationOverride: s.reportingLocationOverride,
           requiresWaiver: s.requiresWaiver ?? true,
           waiverTemplateId: s.waiverTemplateId || 'waiver_general_liability',
           isApproved: true
@@ -803,12 +811,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           eventId: id,
           itemName: i.itemName,
           category: i.category || 'Supplies',
+          needType: i.needType || 'equipment',
           quantityNeeded: i.quantityNeeded || 1,
           quantityPledged: 0,
           unit: i.unit || 'units',
           dropOffLocation: i.dropOffLocation || 'Department Station',
           dropOffDeadline: i.dropOffDeadline || 'Event Morning',
-          estimatedFmvPerUnit: i.estimatedFmvPerUnit || 20
+          estimatedFmvPerUnit: i.estimatedFmvPerUnit || 20,
+          assignedTo: i.assignedTo,
+          reminderCadence: i.reminderCadence || 'standard'
         });
       });
 
@@ -1989,6 +2000,108 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       itemSlots: prev.itemSlots.filter((i: ItemSlot) => i.id !== itemSlotId)
     }));
     showToast('info', 'Item Removed', 'Supply wishlist item has been removed.');
+  };
+
+  const assignItemNeed = (
+    itemId: string,
+    assignee: {
+      name: string;
+      email: string;
+      phone?: string;
+      dueDate?: string;
+      notes?: string;
+      reminderCadence?: 'standard' | 'intensive' | 'same_day';
+    }
+  ) => {
+    const confirmationToken = 'need_' + Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 12);
+    
+    setData((prev: any) => ({
+      ...prev,
+      itemSlots: prev.itemSlots.map((i: ItemSlot) => {
+        if (i.id !== itemId) return i;
+        return {
+          ...i,
+          dropOffDeadline: assignee.dueDate || i.dropOffDeadline,
+          reminderCadence: assignee.reminderCadence || 'standard',
+          assignedTo: {
+            assignedToName: assignee.name.trim(),
+            assignedToEmail: assignee.email.trim(),
+            assignedToPhone: assignee.phone?.trim() || undefined,
+            assignedAt: new Date().toISOString(),
+            status: 'pending_confirmation',
+            confirmationToken,
+            dueDate: assignee.dueDate || i.dropOffDeadline,
+            confirmationNotes: assignee.notes?.trim()
+          }
+        };
+      })
+    }));
+
+    showToast(
+      'success',
+      'Need Assigned & Notification Dispatched',
+      `Assigned to ${assignee.name} (${assignee.email}). Confirmation email dispatched with 1-click accept pass.`
+    );
+
+    return confirmationToken;
+  };
+
+  const confirmItemNeed = (token: string, response: 'confirm' | 'decline', notes?: string) => {
+    let matchedItem: ItemSlot | undefined;
+
+    setData((prev: any) => ({
+      ...prev,
+      itemSlots: prev.itemSlots.map((i: ItemSlot) => {
+        if (i.assignedTo?.confirmationToken !== token) return i;
+        matchedItem = i;
+        const newStatus = response === 'confirm' ? 'confirmed' : 'declined';
+        return {
+          ...i,
+          quantityPledged: response === 'confirm' ? i.quantityNeeded : i.quantityPledged,
+          assignedTo: {
+            ...i.assignedTo,
+            status: newStatus,
+            confirmedAt: new Date().toISOString(),
+            confirmationNotes: notes ? notes.trim() : i.assignedTo.confirmationNotes
+          }
+        };
+      })
+    }));
+
+    if (matchedItem) {
+      if (response === 'confirm') {
+        showToast('success', 'Delivery Confirmed! ✓', `Thank you! You have confirmed delivery of ${matchedItem.itemName}.`);
+      } else {
+        showToast('info', 'Adjustment Requested', `Marked ${matchedItem.itemName} as declined/needs adjustment.`);
+      }
+      return { success: true, item: matchedItem };
+    }
+
+    return { success: false, error: 'Invalid or expired confirmation link' };
+  };
+
+  const sendNeedReminder = (itemId: string) => {
+    let assigneeName = 'Supporter';
+    setData((prev: any) => ({
+      ...prev,
+      itemSlots: prev.itemSlots.map((i: ItemSlot) => {
+        if (i.id !== itemId || !i.assignedTo) return i;
+        assigneeName = i.assignedTo.assignedToName;
+        return {
+          ...i,
+          assignedTo: {
+            ...i.assignedTo,
+            reminderSentAt: new Date().toISOString()
+          }
+        };
+      })
+    }));
+
+    showToast(
+      'success',
+      'Follow-Up Reminder Sent',
+      `Simulated email reminder dispatched to ${assigneeName} with 1-click confirmation pass.`
+    );
   };
 
   const createTicketTier = (tierData: Omit<TicketTier, 'id' | 'claimedCount'>): TicketTier => {
@@ -3481,6 +3594,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addItemSlot,
       updateItemSlot,
       deleteItemSlot,
+      assignItemNeed,
+      confirmItemNeed,
+      sendNeedReminder,
       createTicketTier,
       updateTicketTier,
       deleteTicketTier,
