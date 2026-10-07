@@ -4,11 +4,15 @@ import { Event, Organization } from '../../types';
 import { 
   Search, Calendar as CalendarIcon, MapPin, Users, DollarSign, 
   Sparkles, Filter, CheckCircle2, ArrowRight, ShieldCheck, HeartHandshake, 
-  Building2, Plus, Trophy, Award, TrendingUp, Grid, List, Clock, Tag, X, Store, Zap
+  Building2, Plus, Trophy, Award, TrendingUp, Grid, List, Clock, Tag, X, Store, Zap,
+  Key, Lock, Send, ShieldAlert
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatTimeRange, formatPercentage } from '../../utils/formatters';
 import { scrollToElement } from '../../utils/scroll';
 import { CommunityCalendarView } from './CommunityCalendarView';
+import { PrivateAccessCodeModal } from './PrivateAccessCodeModal';
+import { NominateEventModal } from '../public/NominateEventModal';
+import { OrganizerClaimModal } from '../organizer/OrganizerClaimModal';
 
 interface CommunityDiscoveryHubProps {
   onSelectEvent: (eventId: string) => void;
@@ -36,14 +40,38 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
   const [viewMode, setViewMode] = useState<'grid' | 'calendar'>('grid');
   const [selectedMonth, setSelectedMonth] = useState<string>('September 2026');
 
+  // Modals for Grassroots Nomination, Private Code, and Organizer Claim
+  const [isPrivateCodeModalOpen, setIsPrivateCodeModalOpen] = useState(false);
+  const [isNominateModalOpen, setIsNominateModalOpen] = useState(false);
+  const [claimEventForModal, setClaimEventForModal] = useState<Event | null>(null);
+
+  // Check URL parameters for claimToken or passcode on load
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const claimTokenParam = params.get('claimToken');
+    const passcodeParam = params.get('passcode') || params.get('code');
+
+    if (claimTokenParam) {
+      const match = events.find(e => e.organizerClaimToken === claimTokenParam);
+      if (match) {
+        setClaimEventForModal(match);
+      }
+    } else if (passcodeParam) {
+      setIsPrivateCodeModalOpen(true);
+    }
+  }, [events]);
+
   const now = new Date().toISOString();
 
   // Verify if user belongs to/leads an organization
   const hasOrg = Boolean(currentUser.orgId && currentUser.orgId !== '' && organizations.some(o => o.id === currentUser.orgId));
 
-  // Separate into Current/Upcoming vs Past Completed Events
-  const upcomingEvents = events.filter(e => e.status !== 'completed' && e.endDate >= now);
-  const pastEvents = events.filter(e => e.status === 'completed' || e.endDate < now);
+  // Separate into Current/Upcoming vs Past Completed Events (Filter out private events from public directory)
+  const upcomingEvents = events.filter(e => e.status !== 'completed' && e.endDate >= now && e.visibility !== 'private');
+  const pastEvents = events.filter(e => (e.status === 'completed' || e.endDate < now) && e.visibility !== 'private');
+
+  // Check if any provisional grassroots events exist for the simulation demo
+  const provisionalEvents = events.filter(e => e.claimStatus === 'unclaimed_provisional');
 
   // Filtered upcoming events
   const filteredUpcoming = upcomingEvents.filter(e => {
@@ -112,7 +140,7 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
                   onClick={() => {
                     scrollToElement('events-explorer', 80);
                   }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer"
                 >
                   <Users className="w-4 h-4" />
                   <span>Browse Volunteer Opportunities</span>
@@ -121,10 +149,10 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
 
                 <button
                   onClick={() => onOpenAuth?.('volunteer')}
-                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition flex items-center gap-2"
+                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer"
                 >
                   <HeartHandshake className="w-4 h-4 text-rose-400" />
-                  <span>Sign In / Volunteer Registration</span>
+                  <span>Sign In / Registration</span>
                 </button>
               </>
             )}
@@ -134,7 +162,7 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
               <>
                 <button
                   onClick={onOpenOrgWizard}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-emerald-500/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-emerald-500/30 transition transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer"
                 >
                   <Building2 className="w-4 h-4" />
                   <span>Register Your Organization</span>
@@ -145,7 +173,7 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
                   onClick={() => {
                     scrollToElement('events-explorer', 80);
                   }}
-                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition flex items-center gap-2"
+                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer"
                 >
                   <Users className="w-4 h-4" />
                   <span>Browse Volunteer Shifts</span>
@@ -158,7 +186,7 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
               <>
                 <button
                   onClick={onOpenEventBuilder}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl text-xs sm:text-sm shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>+ Register / Create New Event</span>
@@ -169,7 +197,7 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
                   onClick={() => {
                     scrollToElement('events-explorer', 80);
                   }}
-                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition flex items-center gap-2"
+                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3 px-5 rounded-2xl text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer"
                 >
                   <Users className="w-4 h-4" />
                   <span>Browse Community Shifts</span>
@@ -177,7 +205,57 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
               </>
             )}
 
+            {/* Secondary Action: Grassroots Event Nomination & Private Access Code */}
+            <button
+              onClick={() => setIsNominateModalOpen(true)}
+              className="bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/40 font-bold py-3 px-4 rounded-2xl text-xs sm:text-sm transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title="Volunteered at an off-platform event? Nominate it to notify the organizer & claim verified hours"
+            >
+              <Sparkles className="w-4 h-4 text-teal-300" />
+              <span>+ Add Unlisted Event & Claim Hours</span>
+            </button>
+
+            <button
+              onClick={() => setIsPrivateCodeModalOpen(true)}
+              className="bg-white/10 hover:bg-white/20 text-slate-200 border border-white/20 font-bold py-3 px-4 rounded-2xl text-xs sm:text-sm transition flex items-center gap-1.5 cursor-pointer"
+              title="Have an invitation passcode for a private unlisted event?"
+            >
+              <Key className="w-4 h-4 text-amber-300" />
+              <span>Private Passcode</span>
+            </button>
           </div>
+
+          {/* SIMULATED ORGANIZER CLAIM INVITATION BANNER (If provisional events exist) */}
+          {provisionalEvents.length > 0 && (
+            <div className="pt-4 max-w-2xl mx-auto animate-in fade-in">
+              <div className="bg-gradient-to-r from-teal-900/90 to-emerald-950/90 border border-teal-400/40 p-4 rounded-2xl text-left flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center shrink-0 border border-teal-400/30">
+                    <Send className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-teal-300 tracking-wider block">
+                      Organizer Activation Invitation (Simulation Demo)
+                    </span>
+                    <h4 className="text-xs sm:text-sm font-bold text-white">
+                      {provisionalEvents[0].title} was nominated by a volunteer!
+                    </h4>
+                    <p className="text-[11px] text-teal-200">
+                      Organized by <strong>{organizations.find(o => o.id === provisionalEvents[0].orgId)?.name || 'Organizer'}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setClaimEventForModal(provisionalEvents[0])}
+                  className="bg-teal-400 hover:bg-teal-300 text-slate-950 font-black py-2 px-4 rounded-xl text-xs transition shrink-0 flex items-center gap-1.5 shadow-md cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Review &amp; Claim Workspace</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Conditional Admin / Planner Workspace Shortcuts (Only visible if registered as Leader/Planner) */}
           {(currentUser.role === 'org_admin' || currentUser.role === 'event_planner' || currentUser.role === 'committee_lead') && (
@@ -403,8 +481,18 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
                         </span>
                       </div>
 
-                      {/* 501c3 Tag */}
-                      <div className="absolute top-3 right-3">
+                      {/* 501c3 & Restricted / Provisional Badges */}
+                      <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
+                        {event.visibility === 'restricted' && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/95 text-white text-[10px] font-bold shadow-sm flex items-center gap-1">
+                            <ShieldAlert className="w-3 h-3" /> Screened / Application
+                          </span>
+                        )}
+                        {event.claimStatus === 'unclaimed_provisional' && (
+                          <span className="px-2 py-0.5 rounded-full bg-teal-500/95 text-white text-[10px] font-bold shadow-sm flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" /> Grassroots Nominated
+                          </span>
+                        )}
                         <span className="px-2 py-0.5 rounded-full bg-emerald-500/90 text-white text-[10px] font-bold shadow-sm flex items-center gap-1">
                           <ShieldCheck className="w-3 h-3" /> 501(c)(3)
                         </span>
@@ -419,9 +507,11 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
 
                     {/* Content */}
                     <div className="p-5 space-y-3">
-                      <h3 className="text-lg font-black text-slate-900 leading-snug group-hover:text-indigo-600 transition">
-                        {event.title}
-                      </h3>
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-lg font-black text-slate-900 leading-snug group-hover:text-indigo-600 transition">
+                          {event.title}
+                        </h3>
+                      </div>
                       <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
                         {event.description}
                       </p>
@@ -656,6 +746,49 @@ export const CommunityDiscoveryHub: React.FC<CommunityDiscoveryHubProps> = ({
           </button>
         </div>
       </section>
+
+      {/* 🔑 Private Access Code Modal */}
+      {isPrivateCodeModalOpen && (
+        <PrivateAccessCodeModal
+          isOpen={isPrivateCodeModalOpen}
+          onClose={() => setIsPrivateCodeModalOpen(false)}
+          onUnlockSuccess={(unlockedEvent: Event) => {
+            switchOrganization(unlockedEvent.orgId);
+            switchEvent(unlockedEvent.id);
+            onSelectEvent(unlockedEvent.id);
+          }}
+        />
+      )}
+
+      {/* 🌱 Nominate Unlisted Event Modal */}
+      {isNominateModalOpen && (
+        <NominateEventModal
+          isOpen={isNominateModalOpen}
+          onClose={() => setIsNominateModalOpen(false)}
+          onEventCreated={(claimToken, claimUrl) => {
+            // Find provisional event created
+            const created = events.find(e => e.organizerClaimToken === claimToken);
+            if (created) {
+              switchOrganization(created.orgId);
+              switchEvent(created.id);
+            }
+          }}
+        />
+      )}
+
+      {/* 📩 Organizer Claim & Verification Portal Modal */}
+      {claimEventForModal && (
+        <OrganizerClaimModal
+          isOpen={!!claimEventForModal}
+          onClose={() => setClaimEventForModal(null)}
+          claimToken={claimEventForModal.organizerClaimToken}
+          onClaimSuccess={(formalizedEvent: Event) => {
+            switchOrganization(formalizedEvent.orgId);
+            switchEvent(formalizedEvent.id);
+            onSelectEvent(formalizedEvent.id);
+          }}
+        />
+      )}
 
     </div>
   );

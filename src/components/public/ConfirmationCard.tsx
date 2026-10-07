@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Registration, Event, SubPart, Shift, ItemSlot, TicketTier } from '../../types';
+import { useApp } from '../../context/AppContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
   CheckCircle2, Calendar, MapPin, Phone, ShieldCheck, 
   Download, Printer, HeartHandshake, ArrowRight, Share2,
-  Key, Lock, Check, Gift, Ticket
+  Key, Lock, Check, Gift, Ticket, Clock, Award, ShieldAlert, FileText
 } from 'lucide-react';
 import { formatDate, formatTimeRange, formatCurrency } from '../../utils/formatters';
 import { generateIcsFile, getGoogleCalendarUrl } from '../../utils/calendar';
+import { printStudentServiceLetterHtml } from '../../utils/exportPdf';
 
 interface ConfirmationCardProps {
   registration: Registration;
@@ -28,6 +30,7 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
   ticketTiers = [],
   onClose
 }) => {
+  const { currentOrg } = useApp();
   const [accountPassword, setAccountPassword] = useState('');
   const [isPasswordSaved, setIsPasswordSaved] = useState(false);
 
@@ -35,6 +38,10 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  const isPendingReview = registration.status === 'pending_review';
+  const verifiedClaim = registration.shiftClaims.find(c => c.verificationStatus === 'supervisor_signed' || Boolean(c.certificateNumber));
+  const isSupervisorSigned = Boolean(verifiedClaim);
 
   const shiftMap = new Map(shifts.map(s => [s.id, s]));
   const subPartMap = new Map(subParts.map(sp => [sp.id, sp]));
@@ -81,21 +88,92 @@ export const ConfirmationCard: React.FC<ConfirmationCardProps> = ({
   return (
     <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden max-w-2xl mx-auto animate-in zoom-in-95 duration-300">
       {/* Top Hero Banner */}
-      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 text-white p-6 sm:p-8 text-center relative overflow-hidden">
+      <div className={`text-white p-6 sm:p-8 text-center relative overflow-hidden ${
+        isPendingReview 
+          ? 'bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700' 
+          : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700'
+      }`}>
         <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-3 border border-white/30 shadow-inner">
-          <CheckCircle2 className="w-9 h-9 text-white" />
+          {isPendingReview ? (
+            <ShieldAlert className="w-9 h-9 text-white" />
+          ) : (
+            <CheckCircle2 className="w-9 h-9 text-white" />
+          )}
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight">You're All Set, {registration.primaryName}!</h2>
-        <p className="text-sm text-emerald-100 mt-1 max-w-md mx-auto">
-          Thank you for signing up to support <strong className="text-white">{event.title}</strong>.
+        
+        <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+          {isPendingReview 
+            ? `Application Submitted, ${registration.primaryName}!` 
+            : `You're All Set, ${registration.primaryName}!`}
+        </h2>
+        
+        <p className="text-sm text-white/90 mt-1 max-w-md mx-auto">
+          {isPendingReview 
+            ? `Your volunteer request for ${event.title} is pending committee screening review.` 
+            : `Thank you for signing up to support ${event.title}.`}
         </p>
 
         <div className="inline-block mt-4 px-3.5 py-1 rounded-full bg-black/20 text-xs font-mono tracking-wider border border-white/20">
-          CONFIRMATION #{registration.id.toUpperCase()}
+          {isPendingReview ? `APPLICATION #${registration.id.toUpperCase()}` : `CONFIRMATION #${registration.id.toUpperCase()}`}
         </div>
       </div>
 
       <div className="p-6 sm:p-8 space-y-6">
+        
+        {/* Pending Review Notice Banner */}
+        {isPendingReview && (
+          <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl text-xs text-amber-950 space-y-2">
+            <div className="flex items-center gap-2 font-bold text-amber-900">
+              <Clock className="w-4 h-4 text-amber-600 animate-spin" />
+              <span>Pending Committee Review & Screening Approval</span>
+            </div>
+            <p className="text-amber-800 leading-relaxed">
+              This is a restricted event. The committee leads will review your application responses and send a formal confirmation notice to <strong>{registration.primaryEmail}</strong> once approved.
+            </p>
+          </div>
+        )}
+
+        {/* Official Verified Certificate Card if Signed */}
+        {isSupervisorSigned && verifiedClaim && (
+          <div className="p-5 bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl shadow-lg border border-indigo-400/40 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Award className="w-6 h-6 text-amber-400" />
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300 block">Official Verification</span>
+                  <h4 className="text-base font-extrabold text-white">Verified Service Certificate Issued</h4>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 rounded-lg text-xs font-black">
+                {verifiedClaim.serviceHoursAwarded || 3.0} Hours Certified
+              </span>
+            </div>
+
+            <div className="p-3 bg-white/10 rounded-xl border border-white/10 text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-slate-300">Certificate ID:</span>
+                <span className="font-mono font-bold text-amber-300">{verifiedClaim.certificateNumber || 'CERT-2026-X892'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-300">Signed By:</span>
+                <span className="font-semibold text-white">{verifiedClaim.verifiedByName || currentOrg.signatoryOfficerName || 'Authorized Coordinator'}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => printStudentServiceLetterHtml(
+                registration.primaryName,
+                verifiedClaim.serviceHoursAwarded || 3.0,
+                event,
+                currentOrg
+              )}
+              className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Download Official Signed Certificate (PDF)</span>
+            </button>
+          </div>
+        )}
         
         {/* QR Pass & Digital Check-In Card */}
         <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">

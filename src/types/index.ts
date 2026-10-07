@@ -89,9 +89,14 @@ export interface Organization {
     defaultReminderCadence: 'standard' | 'intensive' | 'same_day' | 'custom';
   };
   communicationSettings?: OrgCommunicationSettings;
+  isProvisional?: boolean;
+  claimStatus?: 'unclaimed_provisional' | 'claimed_active';
+  organizerClaimToken?: string;
 }
 
 export type EventStatus = 'draft' | 'published' | 'in_progress' | 'completed' | 'archived';
+
+export type EventVisibility = 'public' | 'restricted' | 'private';
 
 export interface EventTheme {
   id: string;
@@ -129,6 +134,34 @@ export interface Event {
   allowFeeCoverage: boolean;
   dressCode?: string; // Global Event Volunteer Dress Code / Baseline Attire
   subPartIds: string[];
+  
+  // 3-Tier Visibility & Gated Access Controls
+  visibility?: EventVisibility; // 'public' (default) | 'restricted' (application required) | 'private' (passcode/invite only)
+  accessCode?: string; // e.g. "VIP2026" for private events
+  screeningRequired?: boolean; // If true for restricted events
+  screeningQuestions?: string[]; // e.g. ["Are you certified in First Aid?", "Prior volunteer experience?"]
+  
+  // Grassroots / Unlisted Event Creation on behalf of Organizer
+  isProvisional?: boolean;
+  claimStatus?: 'unclaimed_provisional' | 'claimed_active' | 'rejected';
+  organizerClaimToken?: string; // 256-bit token for organizer verification link
+  nominatedByVolunteer?: {
+    name: string;
+    email: string;
+    phone?: string;
+    roleClaimed: string;
+    hoursServed: number;
+    serviceDate: string;
+    proofNotes?: string;
+    nominatedAt: string;
+  };
+  organizerContact?: {
+    name: string;
+    email: string;
+    phone?: string;
+    title?: string;
+    organizationName?: string;
+  };
 }
 
 export interface SubPart {
@@ -230,6 +263,14 @@ export interface SignedWaiver {
   isVerifiedAtDoor: boolean;
 }
 
+export type ParticipantVerificationStatus = 
+  | 'unverified' 
+  | 'identity_verified' 
+  | 'waiver_compliant' 
+  | 'attended_verified' 
+  | 'supervisor_signed' 
+  | 'flagged_review';
+
 export interface Registration {
   id: string;
   eventId: string;
@@ -239,8 +280,9 @@ export interface Registration {
   birthDate?: string; // YYYY-MM-DD
   manageToken: string; // 256-bit high entropy token
   createdAt: string;
-  status: 'confirmed' | 'cancelled';
+  status: 'confirmed' | 'pending_review' | 'cancelled';
   notes?: string;
+  screeningAnswers?: { question: string; answer: string }[];
   members: GroupMember[];
   shiftClaims: {
     shiftId: string;
@@ -248,6 +290,16 @@ export interface Registration {
     checkedIn: boolean;
     checkedInAt?: string;
     checkedInBy?: string;
+    
+    // 4-Pillar Participant Verification
+    verificationStatus?: ParticipantVerificationStatus;
+    verifiedByUserId?: string;
+    verifiedByName?: string;
+    verifiedAt?: string;
+    verificationNotes?: string;
+    serviceHoursAwarded?: number;
+    certificateNumber?: string;
+    supervisorSignatureData?: string;
   }[];
   itemPledges: {
     itemSlotId: string;

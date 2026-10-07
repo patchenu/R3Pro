@@ -6,7 +6,8 @@ import {
   Plus, Settings, CheckCircle2, ArrowRight, Layers, Store, HeartHandshake,
   Printer, FileSpreadsheet, Search, Filter, ShieldCheck, Award, Share2, AlertTriangle, FileText, Package,
   Edit3, Trash2, Tag, Calendar, MapPin, Radio, AlertCircle, Check, X, Zap, Clock,
-  Shirt, ArrowUp, ArrowDown, ArrowUpDown, Briefcase, Building2, FileCheck, CheckSquare, Send
+  Shirt, ArrowUp, ArrowDown, ArrowUpDown, Briefcase, Building2, FileCheck, CheckSquare, Send,
+  FileQuestion, PenTool, Shield
 } from 'lucide-react';
 import { formatCurrency, formatPercentage, formatTimeRange } from '../../utils/formatters';
 import { exportRosterToCsv } from '../../utils/exportCsv';
@@ -19,6 +20,7 @@ import { EventMarketingHub } from '../marketing/EventMarketingHub';
 import { GapAnalysisDashboard } from '../intelligence/GapAnalysisDashboard';
 import { ReportsExportCenter } from './ReportsExportCenter';
 import { ItemReceivingHub } from './ItemReceivingHub';
+import { ParticipantVerificationModal } from './ParticipantVerificationModal';
 
 interface MasterPlannerDashboardProps {
   onOpenEventBuilder: () => void;
@@ -42,10 +44,16 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
     addContractor, updateContractor, deleteContractor,
     pledgeProBonoService, updateProBonoPledge, deleteProBonoPledge,
     postAnnouncement, deleteAnnouncement,
+    approveRestrictedRegistration, rejectRestrictedRegistration,
     showToast
   } = useApp();
 
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+  const [verificationTarget, setVerificationTarget] = useState<{
+    registration: any;
+    shiftId: string;
+    groupMemberId: string;
+  } | null>(null);
   const [activePlannerTab, setActivePlannerTab] = useState<'overview' | 'volunteers' | 'vendors' | 'reports'>('overview');
   const [activeReportSubTab, setActiveReportSubTab] = useState<'exports' | 'gaps' | 'marketing' | 'items'>('exports');
 
@@ -160,6 +168,11 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
   const shiftFillRate = formatPercentage(totalClaimed, totalCap);
   const totalAllocatedBudget = subParts.reduce((sum, sp) => sum + sp.budgetAllocated, 0);
 
+  // Filter pending screened applications for restricted events
+  const pendingRestrictedRegistrations = registrations.filter(
+    r => r.eventId === currentEvent.id && r.status === 'pending_review'
+  );
+
   // Flatten shift claims for comprehensive volunteer management
   const allVolunteerRows = registrations.flatMap(reg => 
     reg.shiftClaims.map(claim => {
@@ -170,6 +183,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
 
       return {
         regId: reg.id,
+        registration: reg,
         claim,
         shift,
         subPart,
@@ -1353,6 +1367,108 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
       {/* TAB 2: LIVE VOLUNTEER MANIFEST & MANAGEMENT */}
       {activePlannerTab === 'volunteers' && (
         <div className="space-y-6">
+
+          {/* RESTRICTED VOLUNTEER SCREENING APPLICATION QUEUE */}
+          {pendingRestrictedRegistrations.length > 0 && (
+            <div className="bg-gradient-to-br from-amber-500/10 via-amber-50 to-orange-50 border-2 border-amber-300 rounded-3xl p-6 space-y-4 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-amber-500 text-white rounded-xl shadow-xs">
+                    <ShieldAlert className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-black text-amber-950">
+                        Restricted Volunteer Applications Review Queue
+                      </h3>
+                      <span className="px-2.5 py-0.5 bg-amber-200 text-amber-900 rounded-full font-black text-xs">
+                        {pendingRestrictedRegistrations.length} Pending
+                      </span>
+                    </div>
+                    <p className="text-xs text-amber-800 mt-0.5">
+                      This campaign requires screening review. Inspect volunteer questionnaire answers and grant admission with 1 click.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {pendingRestrictedRegistrations.map((app) => {
+                  const shift = shifts.find(s => s.id === app.shiftClaims[0]?.shiftId);
+                  const subPart = shift ? subParts.find(sp => sp.id === shift.subPartId) : undefined;
+                  return (
+                    <div
+                      key={app.id}
+                      className="bg-white rounded-2xl border border-amber-200 p-4 shadow-xs space-y-3 flex flex-col justify-between"
+                    >
+                      <div className="space-y-2.5">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-extrabold text-sm text-slate-900">{app.primaryName}</div>
+                            <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-x-2">
+                              <span>📧 {app.primaryEmail}</span>
+                              <span>• 📞 {app.primaryPhone}</span>
+                            </div>
+                          </div>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800">
+                            Screening Pending
+                          </span>
+                        </div>
+
+                        {shift && (
+                          <div className="p-2 bg-slate-50 rounded-xl text-xs text-slate-700 border border-slate-200">
+                            <span className="font-bold text-slate-900">Applied Role:</span> {shift.title}
+                            {subPart && <span className="text-indigo-700 font-semibold ml-1">({subPart.name})</span>}
+                          </div>
+                        )}
+
+                        {/* Screening Questionnaire Answers */}
+                        {app.screeningAnswers && app.screeningAnswers.length > 0 && (
+                          <div className="space-y-1.5 p-3 bg-amber-50/60 rounded-xl border border-amber-200/80 text-xs">
+                            <div className="font-bold text-amber-900 text-[11px] uppercase tracking-wider flex items-center gap-1">
+                              <FileQuestion className="w-3.5 h-3.5 text-amber-700" />
+                              <span>Screening Responses:</span>
+                            </div>
+                            {app.screeningAnswers.map((sa, sIdx) => (
+                              <div key={sIdx} className="space-y-0.5 text-[11px]">
+                                <div className="font-semibold text-slate-800">{sa.question}</div>
+                                <div className="text-slate-600 bg-white p-1.5 rounded-lg border border-amber-100 italic">
+                                  &quot;{sa.answer || 'No response provided'}&quot;
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Approval / Rejection Actions */}
+                      <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Reject applicant ${app.primaryName}?`)) {
+                              rejectRestrictedRegistration(app.id, 'Screening criteria not satisfied');
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition border border-rose-200 cursor-pointer"
+                        >
+                          ✕ Reject
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => approveRestrictedRegistration(app.id)}
+                          className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition flex items-center gap-1 cursor-pointer"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>✓ Approve Volunteer</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           
           {/* Volunteer Action Controls */}
           <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
@@ -1443,13 +1559,14 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
                     <th className="pb-3 font-bold">Contact</th>
                     <th className="pb-3 font-bold">Waiver Status</th>
                     <th className="pb-3 font-bold">Check-In Status</th>
-                    <th className="pb-3 text-right font-bold">Certificates</th>
+                    <th className="pb-3 font-bold">Verification Status</th>
+                    <th className="pb-3 text-right font-bold">Sign-Off & Certs</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredVolunteers.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-slate-400">
+                      <td colSpan={8} className="py-8 text-center text-slate-400">
                         No volunteers match your filter criteria.
                       </td>
                     </tr>
@@ -1502,7 +1619,7 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
                         <td className="py-3.5">
                           <button
                             onClick={() => toggleCheckIn(row.regId, row.claim.shiftId, row.member.id)}
-                            className={`px-3 py-1 rounded-xl font-bold text-xs transition flex items-center gap-1.5 ${
+                            className={`px-3 py-1 rounded-xl font-bold text-xs transition flex items-center gap-1.5 cursor-pointer ${
                               row.claim.checkedIn
                                 ? 'bg-emerald-600 text-white shadow-sm'
                                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -1513,19 +1630,70 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
                           </button>
                         </td>
 
-                        {/* Actions / Certificates */}
+                        {/* 4-Pillar Verification Status */}
+                        <td className="py-3.5">
+                          {row.claim.verificationStatus === 'supervisor_signed' ? (
+                            <div className="space-y-0.5">
+                              <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold text-[10px] inline-flex items-center gap-1">
+                                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                                Verified ({row.claim.serviceHoursAwarded || 3} hrs)
+                              </span>
+                              <span className="block text-[9px] font-mono text-slate-400">
+                                {row.claim.certificateNumber}
+                              </span>
+                            </div>
+                          ) : row.claim.verificationStatus === 'flagged_review' ? (
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-bold text-[10px] inline-flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3 text-amber-600" />
+                              Flagged Review
+                            </span>
+                          ) : row.claim.checkedIn ? (
+                            <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full font-bold text-[10px] inline-flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-blue-600" />
+                              Attended (Needs Sign-Off)
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full font-medium text-[10px]">
+                              Unverified
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Actions / Certificates & Sign-off */}
                         <td className="py-3.5 text-right">
-                          <button
-                            onClick={() => printStudentServiceLetterHtml(
-                              row.member.name,
-                              3.0,
-                              currentEvent,
-                              currentOrg
-                            )}
-                            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded-lg transition"
-                          >
-                            Hours Letter
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setVerificationTarget({
+                                registration: row.registration,
+                                shiftId: row.claim.shiftId,
+                                groupMemberId: row.member.id
+                              })}
+                              className={`text-xs font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer ${
+                                row.claim.verificationStatus === 'supervisor_signed'
+                                  ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                  : 'bg-purple-600 hover:bg-purple-700 text-white shadow-xs'
+                              }`}
+                              title="4-Pillar Verification & Supervisor Canvas Sign-Off"
+                            >
+                              <ShieldCheck className="w-3 h-3" />
+                              <span>{row.claim.verificationStatus === 'supervisor_signed' ? 'Signed ✓' : 'Verify'}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => printStudentServiceLetterHtml(
+                                row.member.name,
+                                row.claim.serviceHoursAwarded || 3.0,
+                                currentEvent,
+                                currentOrg
+                              )}
+                              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-lg transition cursor-pointer"
+                              title="Print Official Hours Certificate"
+                            >
+                              PDF
+                            </button>
+                          </div>
                         </td>
 
                       </tr>
@@ -2935,6 +3103,17 @@ export const MasterPlannerDashboard: React.FC<MasterPlannerDashboardProps> = ({
         isOpen={isApprovalModalOpen}
         onClose={() => setIsApprovalModalOpen(false)}
       />
+
+      {/* 4-Pillar Participant Verification & Supervisor Sign-Off Modal */}
+      {verificationTarget && (
+        <ParticipantVerificationModal
+          isOpen={Boolean(verificationTarget)}
+          onClose={() => setVerificationTarget(null)}
+          registration={verificationTarget.registration}
+          shiftId={verificationTarget.shiftId}
+          groupMemberId={verificationTarget.groupMemberId}
+        />
+      )}
 
     </div>
   );

@@ -64,6 +64,19 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
   const initialDob = matchingCrm?.birthDate || pastRegistration?.birthDate || '1990-06-15';
   const initialAge = calculateAge(initialDob) || 36;
 
+  // Screening questions for restricted events
+  const defaultScreeningQuestions = event.screeningQuestions && event.screeningQuestions.length > 0 
+    ? event.screeningQuestions 
+    : [
+        'Why are you interested in volunteering for this restricted initiative?',
+        'Please list any relevant qualifications, background, or certifications.'
+      ];
+
+  const [screeningAnswers, setScreeningAnswers] = useState<Record<string, string>>({
+    [defaultScreeningQuestions[0]]: 'Excited to contribute to this community program and support the youth.',
+    [defaultScreeningQuestions[1] || 'Qualifications']: 'First aid certified with 3 years youth mentoring experience.'
+  });
+
   // Form State
   const [primaryName, setPrimaryName] = useState(initialName);
   const [primaryEmail, setPrimaryEmail] = useState(initialEmail);
@@ -300,12 +313,17 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
   const handleFinalSubmit = () => {
     setFormError(null);
 
+    const formattedScreeningAnswers = event.visibility === 'restricted'
+      ? Object.entries(screeningAnswers).map(([question, answer]) => ({ question, answer }))
+      : undefined;
+
     const payload = {
       primaryName,
       primaryEmail,
       primaryPhone,
       birthDate: primaryBirthDate,
       notes,
+      screeningAnswers: formattedScreeningAnswers,
       members,
       shiftSelections: shiftAssignments.map(sa => ({ shiftId: sa.shiftId, groupMemberIndex: sa.memberIndex })),
       itemSelections: selectedItemPledges,
@@ -471,6 +489,41 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
               Used to verify age eligibility and liability waiver requirements.
             </p>
           </div>
+
+          {/* Committee Screening Questionnaire (Only for Restricted Events) */}
+          {event.visibility === 'restricted' && (
+            <div className="bg-amber-50/80 p-4 rounded-2xl border border-amber-200/90 space-y-3">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-950">
+                    Committee Screening Questionnaire (Restricted Event)
+                  </h4>
+                  <p className="text-[11px] text-amber-800">
+                    Your answers will be reviewed by the event committee prior to registration approval.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-1">
+                {defaultScreeningQuestions.map((q, qIdx) => (
+                  <div key={qIdx}>
+                    <label className="block text-xs font-bold text-slate-800 mb-1">
+                      {qIdx + 1}. {q} *
+                    </label>
+                    <textarea
+                      rows={2}
+                      required
+                      value={screeningAnswers[q] || ''}
+                      onChange={(e) => setScreeningAnswers(prev => ({ ...prev, [q]: e.target.value }))}
+                      placeholder="Enter your response..."
+                      className="w-full px-3 py-2 bg-white border border-amber-300/80 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-amber-500/30"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* A2P 10DLC SMS & Operational Notifications Opt-In */}
           <SmsOptInConsentBlock
@@ -1012,10 +1065,16 @@ export const UnifiedRegistrationModal: React.FC<UnifiedRegistrationModalProps> =
             <button
               type="button"
               onClick={handleFinalSubmit}
-              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-black py-3 px-6 rounded-xl text-xs shadow-lg shadow-emerald-900/30 transition transform hover:scale-105 active:scale-100 flex items-center gap-2"
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-black py-3 px-6 rounded-xl text-xs shadow-lg shadow-emerald-900/30 transition transform hover:scale-105 active:scale-100 flex items-center gap-2 cursor-pointer"
             >
               <Check className="w-4 h-4" />
-              <span>{grandTotal > 0 ? `Pay ${formatCurrency(grandTotal)} & Confirm` : 'Complete Sign-Up'}</span>
+              <span>
+                {event.visibility === 'restricted' 
+                  ? 'Submit Application for Review' 
+                  : grandTotal > 0 
+                  ? `Pay ${formatCurrency(grandTotal)} & Confirm` 
+                  : 'Complete Sign-Up'}
+              </span>
             </button>
           </div>
 

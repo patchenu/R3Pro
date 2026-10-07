@@ -1,11 +1,11 @@
-import { 
+import type { 
   Organization, User, Event, SubPart, Shift, ItemSlot, TicketTier, 
   Registration, Donation, VendorApplication, ApprovalRequest, 
   VolunteerCrmRecord, Announcement, AuditLog, PaidContractor, ProBonoPledge,
   VendorInquiry, VendorLead, VendorAddOn, VendorAddOnOrder, 
   CorporateSeasonPass, EventImpactMetrics, ErrorLogRecord, WebVitalsMetrics,
   ApiLatencyMetric, HealthCheckItem 
-} from '../types';
+} from '../types/index.ts';
 
 export const SEED_ORGANIZATIONS: Organization[] = [
   {
@@ -116,6 +116,32 @@ export const SEED_ORGANIZATIONS: Organization[] = [
       defaultCurrency: 'USD',
       approvalThresholdBudget: 200,
       approvalThresholdSlots: 4,
+      defaultReminderCadence: 'standard'
+    }
+  },
+  {
+    id: 'org_clearwater_conservancy',
+    name: 'Clearwater Coastal Conservancy',
+    type: 'non_profit',
+    ein: 'PENDING-CLAIM',
+    contactEmail: 'dave@clearwaterconservancy.org',
+    phone: '(555) 912-3847',
+    address: 'Ocean Beach Pier #4, Clearwater, FL 33767',
+    website: 'https://clearwaterconservancy.org',
+    logoUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=120&auto=format&fit=crop&q=80',
+    primaryColor: '#0ea5e9',
+    signatoryOfficerName: 'Captain Dave Miller',
+    signatoryOfficerTitle: 'Director of Conservation',
+    signatorySignatureUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=160&auto=format&fit=crop&q=80',
+    volunteerCount: 14,
+    totalFundsRaised: 850,
+    isProvisional: true,
+    claimStatus: 'unclaimed_provisional',
+    organizerClaimToken: 'claim_cw928471029',
+    settings: {
+      defaultCurrency: 'USD',
+      approvalThresholdBudget: 200,
+      approvalThresholdSlots: 5,
       defaultReminderCadence: 'standard'
     }
   }
@@ -328,6 +354,7 @@ export const SEED_EVENTS: Event[] = [
     reminderCadence: 'standard',
     allowFeeCoverage: true,
     dressCode: 'Lincoln High Spirit T-Shirt (provided) or casual athletic wear & sneakers',
+    visibility: 'public',
     subPartIds: ['subpart_carnival_games', 'subpart_carnival_food', 'subpart_carnival_labor', 'subpart_carnival_vendors']
   },
   {
@@ -362,7 +389,139 @@ export const SEED_EVENTS: Event[] = [
     reminderCadence: 'standard',
     allowFeeCoverage: true,
     dressCode: 'Casual tech spirit wear / Lincoln STEM polo & comfortable sneakers',
+    visibility: 'public',
     subPartIds: []
+  },
+  {
+    id: 'evt_stem_mentorship_restricted',
+    orgId: 'org_lincoln_pta',
+    eventKey: 'EVT-2026-Q4-004',
+    title: 'STEM Robotics & Coding Youth Mentorship Lab',
+    slug: 'lincoln-stem-mentorship-2026',
+    tagline: 'High-impact 1-on-1 robotics and coding coaching for middle school students.',
+    description: 'An advanced STEM mentorship cohort where qualified high school and collegiate mentors coach younger students in Python programming, Arduino circuit design, and VEX robotics challenge strategy. Application and screening required.',
+    tags: ['STEM & Tech', 'Youth Mentorship', 'Student Service Hours', 'Restricted Application'],
+    startDate: '2026-10-10T10:00:00',
+    endDate: '2026-10-10T15:00:00',
+    venueName: 'Lincoln High Innovation Lab (Room 304)',
+    venueAddress: '1420 Lincoln Blvd, Springfield, IL 62704',
+    mapUrl: 'https://maps.google.com/?q=Springfield+IL',
+    isVirtual: false,
+    coverImageUrl: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=1200&auto=format&fit=crop&q=80',
+    theme: {
+      id: 'indigo_mentorship',
+      name: 'Deep Indigo Mentor',
+      primaryColor: '#6366f1',
+      accentColor: '#818cf8',
+      bgGradient: 'from-indigo-600 to-purple-800'
+    },
+    fundraisingGoal: 5000,
+    totalRaised: 2200,
+    currency: 'USD',
+    status: 'published',
+    approvalThresholdBudget: 250,
+    approvalThresholdSlots: 5,
+    reminderCadence: 'standard',
+    allowFeeCoverage: true,
+    dressCode: 'Lincoln STEM Lab Labcoat or Blue polo shirt & closed-toe shoes',
+    visibility: 'restricted',
+    screeningRequired: true,
+    screeningQuestions: [
+      'Do you have prior experience with Python, Arduino, or VEX robotics?',
+      'Are you comfortable mentoring middle school students 1-on-1 under teacher supervision?'
+    ],
+    subPartIds: ['subpart_stem_mentoring']
+  },
+  {
+    id: 'evt_board_gala_private',
+    orgId: 'org_metro_foundation',
+    eventKey: 'EVT-2026-Q4-005',
+    title: 'Executive Donor Leadership Gala & Private Auction 2026',
+    slug: 'metro-executive-donor-gala-2026',
+    tagline: 'Private invitation-only celebration for major contributors and board leadership.',
+    description: 'An exclusive, private annual summit and recognition reception for Metro Community Foundation leadership circle donors, corporate underwriters, and advisory board trustees.',
+    tags: ['Private Invitation', 'Board Leadership', 'Major Donors'],
+    startDate: '2026-11-20T18:30:00',
+    endDate: '2026-11-20T22:30:00',
+    venueName: 'The Skyline Penthouse Club',
+    venueAddress: '300 N LaSalle Dr, Suite 5000, Chicago, IL 60654',
+    mapUrl: 'https://maps.google.com/?q=Chicago+IL',
+    isVirtual: false,
+    coverImageUrl: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1200&auto=format&fit=crop&q=80',
+    theme: {
+      id: 'gold_private',
+      name: 'Private Gold Reserve',
+      primaryColor: '#d97706',
+      accentColor: '#f59e0b',
+      bgGradient: 'from-amber-600 to-yellow-800'
+    },
+    fundraisingGoal: 100000,
+    totalRaised: 75000,
+    currency: 'USD',
+    status: 'published',
+    approvalThresholdBudget: 1000,
+    approvalThresholdSlots: 10,
+    reminderCadence: 'standard',
+    allowFeeCoverage: true,
+    dressCode: 'Black Tie / Evening Formalwear',
+    visibility: 'private',
+    accessCode: 'VIP2026',
+    subPartIds: ['subpart_private_gala']
+  },
+  {
+    id: 'evt_beach_cleanup_provisional',
+    orgId: 'org_clearwater_conservancy',
+    eventKey: 'EVT-2026-Q3-009',
+    title: 'Clearwater Bay Coastal Cleanup & Dune Restoration',
+    slug: 'clearwater-bay-coastal-cleanup-2026',
+    tagline: 'Grassroots community beach restoration & marine sanctuary protection.',
+    description: 'Volunteer beach and coastal dune restoration project initiated by local marine ecology volunteers. Removing plastic debris, planting sea oats, and surveying turtle nesting habitats.',
+    tags: ['Environmental', 'Coastal Cleanup', 'Student Service Hours', 'Grassroots'],
+    startDate: '2026-09-26T08:00:00',
+    endDate: '2026-09-26T13:00:00',
+    venueName: 'Clearwater North Beach Pier & Dune Trail',
+    venueAddress: '100 Pier 60 Dr, Clearwater, FL 33767',
+    mapUrl: 'https://maps.google.com/?q=Clearwater+FL',
+    isVirtual: false,
+    coverImageUrl: 'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?w=1200&auto=format&fit=crop&q=80',
+    theme: {
+      id: 'ocean_cyan',
+      name: 'Ocean Cyan Marine',
+      primaryColor: '#0ea5e9',
+      accentColor: '#38bdf8',
+      bgGradient: 'from-sky-500 to-teal-700'
+    },
+    fundraisingGoal: 3000,
+    totalRaised: 850,
+    currency: 'USD',
+    status: 'published',
+    approvalThresholdBudget: 200,
+    approvalThresholdSlots: 5,
+    reminderCadence: 'standard',
+    allowFeeCoverage: true,
+    dressCode: 'Sun hat, UV protective shirts, durable water-resistant shoes/boots & work gloves',
+    visibility: 'public',
+    isProvisional: true,
+    claimStatus: 'unclaimed_provisional',
+    organizerClaimToken: 'claim_cw928471029',
+    nominatedByVolunteer: {
+      name: 'Maya Lin',
+      email: 'maya.lin@earthcare.org',
+      phone: '(555) 345-6712',
+      roleClaimed: 'Coastal Debris Triage Lead',
+      hoursServed: 4.5,
+      serviceDate: '2026-09-02',
+      proofNotes: 'Led team of 6 removing 180 lbs discarded ocean plastic along North Dune trail.',
+      nominatedAt: '2026-09-03T10:00:00'
+    },
+    organizerContact: {
+      name: 'Captain Dave Miller',
+      email: 'dave@clearwaterconservancy.org',
+      phone: '(555) 912-3847',
+      title: 'Director of Conservation',
+      organizationName: 'Clearwater Coastal Conservancy'
+    },
+    subPartIds: ['subpart_beach_cleanup']
   },
   {
     id: 'evt_fall_carnival_2025',
@@ -396,6 +555,7 @@ export const SEED_EVENTS: Event[] = [
     reminderCadence: 'standard',
     allowFeeCoverage: true,
     dressCode: 'Casual spirit wear & comfortable athletic sneakers',
+    visibility: 'public',
     subPartIds: []
   },
   {
@@ -430,6 +590,7 @@ export const SEED_EVENTS: Event[] = [
     reminderCadence: 'intensive',
     allowFeeCoverage: true,
     dressCode: 'Black-Tie or Formal Evening Attire / Dark suits and formal gowns',
+    visibility: 'public',
     subPartIds: []
   }
 ];
@@ -505,6 +666,57 @@ export const SEED_SUBPARTS: SubPart[] = [
     budgetAllocated: 400,
     budgetSpent: 120,
     shiftIds: ['shift_carnival_vendor_guide'],
+    itemSlotIds: []
+  },
+  {
+    id: 'subpart_stem_mentoring',
+    eventId: 'evt_stem_mentorship_restricted',
+    name: 'STEM Mentorship & Coaching Lab',
+    category: 'registration_greeters',
+    leadUserId: 'user_marcus',
+    leadName: 'Marcus Vance',
+    leadPhone: '(555) 234-8902',
+    leadEmail: 'marcus@lincolnpta.org',
+    reportingGate: 'Innovation Lab (Room 304)',
+    dressCodeNotes: 'Lincoln STEM Lab Labcoat or Blue polo shirt & closed-toe shoes',
+    suppliesNotes: 'Lesson guides, Arduino kits, and laptops prepared in lab.',
+    budgetAllocated: 1500,
+    budgetSpent: 420,
+    shiftIds: ['shift_stem_mentor_coach'],
+    itemSlotIds: []
+  },
+  {
+    id: 'subpart_private_gala',
+    eventId: 'evt_board_gala_private',
+    name: 'VIP Guest Relations & Hospitality',
+    category: 'hospitality_food',
+    leadUserId: 'user_marcus',
+    leadName: 'Marcus Vance',
+    leadPhone: '(555) 234-8902',
+    leadEmail: 'marcus@lincolnpta.org',
+    reportingGate: 'Skyline Penthouse Reception Foyer',
+    dressCodeNotes: 'Black Tie / Dark Formal Suit or Evening Gown',
+    suppliesNotes: 'VIP guest list and donor recognition dossiers at podium.',
+    budgetAllocated: 5000,
+    budgetSpent: 3100,
+    shiftIds: ['shift_private_gala_usher'],
+    itemSlotIds: []
+  },
+  {
+    id: 'subpart_beach_cleanup',
+    eventId: 'evt_beach_cleanup_provisional',
+    name: 'Coastal Restoration & Marine Safety',
+    category: 'labor_setup',
+    leadUserId: 'user_dave_miller',
+    leadName: 'Captain Dave Miller',
+    leadPhone: '(555) 912-3847',
+    leadEmail: 'dave@clearwaterconservancy.org',
+    reportingGate: 'Pier 60 Ranger Station & Dune Entry',
+    dressCodeNotes: 'Sun hat, UV protective shirts, durable water-resistant shoes & gloves',
+    suppliesNotes: 'Trash grabbers, bio-degradable bags, and sand scales provided.',
+    budgetAllocated: 500,
+    budgetSpent: 180,
+    shiftIds: ['shift_beach_cleanup_crew'],
     itemSlotIds: []
   }
 ];
@@ -644,6 +856,54 @@ export const SEED_SHIFTS: Shift[] = [
     claimedCount: 3,
     minAge: 16,
     requiresWaiver: false,
+    isApproved: true
+  },
+  {
+    id: 'shift_stem_mentor_coach',
+    subPartId: 'subpart_stem_mentoring',
+    eventId: 'evt_stem_mentorship_restricted',
+    title: 'Robotics & Python 1-on-1 Student Coach',
+    description: 'Coach middle school students through building Arduino robotics line-followers and Python syntax puzzles.',
+    startTime: '2026-10-10T10:00:00',
+    endTime: '2026-10-10T14:30:00',
+    capacity: 6,
+    claimedCount: 2,
+    minAge: 16,
+    skillsRequired: ['Python', 'Robotics / Arduino', 'Patience & Teaching'],
+    requiresWaiver: true,
+    waiverTemplateId: 'waiver_general_liability',
+    isApproved: true
+  },
+  {
+    id: 'shift_private_gala_usher',
+    subPartId: 'subpart_private_gala',
+    eventId: 'evt_board_gala_private',
+    title: 'VIP Table Host & Silent Auction Concierge',
+    description: 'Greet VIP executive donors, assist with digital silent auction bidding tablets, and present award plaques.',
+    startTime: '2026-11-20T18:00:00',
+    endTime: '2026-11-20T22:30:00',
+    capacity: 4,
+    claimedCount: 2,
+    minAge: 18,
+    skillsRequired: ['Hospitality', 'Public Speaking', 'Discretion'],
+    requiresWaiver: true,
+    waiverTemplateId: 'waiver_general_liability',
+    isApproved: true
+  },
+  {
+    id: 'shift_beach_cleanup_crew',
+    subPartId: 'subpart_beach_cleanup',
+    eventId: 'evt_beach_cleanup_provisional',
+    title: 'Coastal Debris Triage & Dune Restoration Crew',
+    description: 'Collect microplastics, remove fishing gear, plant native dune sea oats, and catalog marine debris types.',
+    startTime: '2026-09-26T08:00:00',
+    endTime: '2026-09-26T12:30:00',
+    capacity: 20,
+    claimedCount: 8,
+    minAge: 12,
+    skillsRequired: ['Outdoor Stamina', 'Environmental Stewardship'],
+    requiresWaiver: true,
+    waiverTemplateId: 'waiver_general_liability',
     isApproved: true
   }
 ];
@@ -853,12 +1113,19 @@ export const SEED_REGISTRATIONS: Registration[] = [
       {
         shiftId: 'shift_carnival_morningsetup',
         groupMemberId: 'member_david',
-        checkedIn: false
+        checkedIn: true,
+        checkedInAt: '2026-09-19T06:58:00',
+        checkedInBy: 'Mike Alvarez',
+        verificationStatus: 'attended_verified',
+        serviceHoursAwarded: 2.5
       },
       {
         shiftId: 'shift_carnival_ringtoss',
         groupMemberId: 'member_emma',
-        checkedIn: false
+        checkedIn: true,
+        checkedInAt: '2026-09-19T09:25:00',
+        checkedInBy: 'Marcus Vance',
+        verificationStatus: 'waiver_compliant'
       }
     ],
     itemPledges: [
@@ -943,7 +1210,9 @@ export const SEED_REGISTRATIONS: Registration[] = [
         groupMemberId: 'member_jessica',
         checkedIn: true,
         checkedInAt: '2026-09-19T08:50:00',
-        checkedInBy: 'Sarah Jenkins'
+        checkedInBy: 'Sarah Jenkins',
+        verificationStatus: 'attended_verified',
+        serviceHoursAwarded: 3.0
       }
     ],
     itemPledges: [
@@ -1021,12 +1290,30 @@ export const SEED_REGISTRATIONS: Registration[] = [
         groupMemberId: 'member_robert',
         checkedIn: true,
         checkedInAt: '2026-09-19T06:55:00',
-        checkedInBy: 'Mike Alvarez'
+        checkedInBy: 'Mike Alvarez',
+        verificationStatus: 'supervisor_signed',
+        verifiedByUserId: 'user_elena',
+        verifiedByName: 'Elena Rostova (PTA President)',
+        verifiedAt: '2026-09-19T10:00:00',
+        verificationNotes: 'Completed morning canopy setup ahead of schedule. Excellent team leadership.',
+        serviceHoursAwarded: 2.5,
+        certificateNumber: 'CERT-2026-X891',
+        supervisorSignatureData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
       },
       {
         shiftId: 'shift_carnival_obstacle',
         groupMemberId: 'member_lucas',
-        checkedIn: false
+        checkedIn: true,
+        checkedInAt: '2026-09-19T11:55:00',
+        checkedInBy: 'Marcus Vance',
+        verificationStatus: 'supervisor_signed',
+        verifiedByUserId: 'user_marcus',
+        verifiedByName: 'Marcus Vance (Event Chair)',
+        verifiedAt: '2026-09-19T15:15:00',
+        verificationNotes: 'Maintained excellent student safety order at the obstacle course.',
+        serviceHoursAwarded: 3.0,
+        certificateNumber: 'CERT-2026-X892',
+        supervisorSignatureData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
       }
     ],
     itemPledges: [
@@ -1289,6 +1576,97 @@ export const SEED_REGISTRATIONS: Registration[] = [
         isVerifiedAtDoor: true
       }
     ]
+  },
+  {
+    id: 'reg_mentor_samuel_pending',
+    eventId: 'evt_stem_mentorship_restricted',
+    primaryName: 'Samuel Zhang',
+    primaryEmail: 'samuel.zhang@stanford.edu',
+    primaryPhone: '(555) 789-2345',
+    manageToken: 'tok_samuel_stem_app_8921',
+    createdAt: '2026-09-04T11:20:00',
+    status: 'pending_review',
+    screeningAnswers: [
+      {
+        question: 'Do you have prior experience with Python, Arduino, or VEX robotics?',
+        answer: 'Yes, 3 years high school robotics team captain, 2 years Arduino prototyping, and scored a 5 on AP Computer Science A.'
+      },
+      {
+        question: 'Are you comfortable mentoring middle school students 1-on-1 under teacher supervision?',
+        answer: 'Yes, I am an Eagle Scout with 50+ hours youth peer tutoring experience in mathematics and science.'
+      }
+    ],
+    members: [
+      {
+        id: 'member_samuel',
+        registrationId: 'reg_mentor_samuel_pending',
+        name: 'Samuel Zhang',
+        relationship: 'Self',
+        isMinor: false
+      }
+    ],
+    shiftClaims: [
+      {
+        shiftId: 'shift_stem_mentor_coach',
+        groupMemberId: 'member_samuel',
+        checkedIn: false,
+        verificationStatus: 'unverified'
+      }
+    ],
+    itemPledges: [],
+    ticketPurchases: [],
+    donations: [],
+    waivers: [
+      {
+        id: 'waiver_signed_samuel',
+        registrationId: 'reg_mentor_samuel_pending',
+        groupMemberId: 'member_samuel',
+        waiverTemplateId: 'waiver_general_liability',
+        waiverTitle: 'General Volunteer Assumption of Risk & Liability Release',
+        waiverText: 'I hereby release and hold harmless the organization...',
+        signerName: 'Samuel Zhang',
+        signerRelationship: 'Self',
+        signatureData: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+        signedAt: '2026-09-04T11:21:00',
+        ipAddress: '192.168.1.188',
+        isVerifiedAtDoor: false
+      }
+    ]
+  },
+  {
+    id: 'reg_maya_lin_provisional',
+    eventId: 'evt_beach_cleanup_provisional',
+    primaryName: 'Maya Lin',
+    primaryEmail: 'maya.lin@earthcare.org',
+    primaryPhone: '(555) 345-6712',
+    manageToken: 'tok_maya_lin_cleanup_7812',
+    createdAt: '2026-09-03T10:00:00',
+    status: 'confirmed',
+    members: [
+      {
+        id: 'member_maya',
+        registrationId: 'reg_maya_lin_provisional',
+        name: 'Maya Lin',
+        relationship: 'Self',
+        isMinor: false
+      }
+    ],
+    shiftClaims: [
+      {
+        shiftId: 'shift_beach_cleanup_crew',
+        groupMemberId: 'member_maya',
+        checkedIn: true,
+        checkedInAt: '2026-09-02T08:00:00',
+        checkedInBy: 'Captain Dave Miller',
+        verificationStatus: 'unverified',
+        verificationNotes: 'Claimed 4.5 hours for Coastal Debris Triage Lead on Sept 2, 2026. Awaiting Organizer Verification.',
+        serviceHoursAwarded: 4.5
+      }
+    ],
+    itemPledges: [],
+    ticketPurchases: [],
+    donations: [],
+    waivers: []
   }
 ];
 

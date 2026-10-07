@@ -8,7 +8,8 @@ import {
   Gift, Check, ChevronRight, ChevronLeft, Layers, LayoutTemplate,
   Tag, Plus, X, Copy, History, HelpCircle, Briefcase, Award,
   ShieldCheck, Clock, Package, CheckCircle2, Edit3, Trash2, Radio,
-  ArrowUp, ArrowDown, Shirt, Video, Globe, Palette, AlertCircle
+  ArrowUp, ArrowDown, Shirt, Video, Globe, Palette, AlertCircle,
+  Lock, Key, FileQuestion, Eye, Shield
 } from 'lucide-react';
 import { formatCurrency, formatTimeRange } from '../../utils/formatters';
 
@@ -137,6 +138,38 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
   const [thresholdSlots, setThresholdSlots] = useState(5);
   const [reminderCadence, setReminderCadence] = useState<'standard' | 'intensive' | 'same_day' | 'custom'>('standard');
   const [allowFeeCoverage, setAllowFeeCoverage] = useState<boolean>(true);
+
+  // 3-Tier Visibility & Access Control State
+  const [visibility, setVisibility] = useState<'public' | 'restricted' | 'private'>('public');
+  const [privateAccessCode, setPrivateAccessCode] = useState('VIP2026');
+  const [screeningQuestions, setScreeningQuestions] = useState<string[]>([
+    'Why are you interested in mentoring / volunteering for this initiative?',
+    'Please list your relevant background, skills, or certifications.'
+  ]);
+  const [newQuestionInput, setNewQuestionInput] = useState('');
+
+  const handleAddQuestion = () => {
+    const q = newQuestionInput.trim();
+    if (!q) return;
+    if (!screeningQuestions.includes(q)) {
+      setScreeningQuestions([...screeningQuestions, q]);
+    }
+    setNewQuestionInput('');
+  };
+
+  const handleRemoveQuestion = (idx: number) => {
+    setScreeningQuestions(screeningQuestions.filter((_, i) => i !== idx));
+  };
+
+  const handleGeneratePasscode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = 'VIP-';
+    for (let i = 0; i < 4; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setPrivateAccessCode(code);
+    showToast('info', 'Passcode Generated', `New private access code: ${code}`);
+  };
 
   // Modals for editing during wizard
   const [isAddDeptModalOpen, setIsAddDeptModalOpen] = useState(false);
@@ -739,7 +772,11 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
       reminderCadence,
       allowFeeCoverage,
       approvalThresholdBudget: thresholdBudget,
-      approvalThresholdSlots: thresholdSlots
+      approvalThresholdSlots: thresholdSlots,
+      visibility,
+      accessCode: visibility === 'private' ? privateAccessCode : undefined,
+      screeningRequired: visibility === 'restricted',
+      screeningQuestions: visibility === 'restricted' ? screeningQuestions : undefined
     }, undefined, customPayload);
 
     onClose();
@@ -1142,6 +1179,206 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* 3-Tier Visibility & Access Control Selector */}
+              <div className="sm:col-span-2 space-y-3 pt-3 border-t border-slate-200">
+                <div className="flex items-center justify-between">
+                  <label className="block font-bold text-slate-700 flex items-center gap-1.5">
+                    <Shield className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Campaign Visibility & Volunteer Access Control</span>
+                  </label>
+                  <span className="text-[10px] text-slate-400">Controls directory discovery and volunteer registration rules</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* Option 1: Public */}
+                  <div
+                    onClick={() => setVisibility('public')}
+                    className={`p-3 rounded-2xl border cursor-pointer transition flex flex-col justify-between ${
+                      visibility === 'public'
+                        ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-500/20 shadow-xs'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <Globe className="w-4 h-4 text-emerald-600" />
+                        <h4 className="font-bold text-slate-900 text-xs">🌍 Public</h4>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+                        Listed in public community discovery & calendar. Frictionless instant volunteer sign-up.
+                      </p>
+                    </div>
+                    {visibility === 'public' && (
+                      <span className="text-[10px] font-bold text-indigo-700 mt-2 flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Selected Active
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Option 2: Restricted */}
+                  <div
+                    onClick={() => setVisibility('restricted')}
+                    className={`p-3 rounded-2xl border cursor-pointer transition flex flex-col justify-between ${
+                      visibility === 'restricted'
+                        ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-500/20 shadow-xs'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <FileQuestion className="w-4 h-4 text-amber-600" />
+                        <h4 className="font-bold text-slate-900 text-xs">🛡️ Restricted</h4>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+                        Visible in public directory with "Screening Required" badge. Applicants submit questionnaire for committee review.
+                      </p>
+                    </div>
+                    {visibility === 'restricted' && (
+                      <span className="text-[10px] font-bold text-indigo-700 mt-2 flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Selected Active
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Option 3: Private */}
+                  <div
+                    onClick={() => setVisibility('private')}
+                    className={`p-3 rounded-2xl border cursor-pointer transition flex flex-col justify-between ${
+                      visibility === 'private'
+                        ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-500/20 shadow-xs'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <Lock className="w-4 h-4 text-purple-600" />
+                        <h4 className="font-bold text-slate-900 text-xs">🔒 Private / Unlisted</h4>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+                        Hidden from public directory & calendar. Accessible only via secure invite link or secret passcode.
+                      </p>
+                    </div>
+                    {visibility === 'private' && (
+                      <span className="text-[10px] font-bold text-indigo-700 mt-2 flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Selected Active
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Conditional Sub-panel: Restricted Screening Questions */}
+                {visibility === 'restricted' && (
+                  <div className="p-4 bg-amber-50/80 rounded-2xl border border-amber-200 space-y-3 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-amber-900 font-bold text-xs">
+                        <FileQuestion className="w-4 h-4 text-amber-700" />
+                        <span>Volunteer Screening Questionnaire ({screeningQuestions.length} Questions)</span>
+                      </div>
+                      <span className="text-[10px] text-amber-800 font-medium">Volunteers answer before submission</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {screeningQuestions.map((q, idx) => (
+                        <div key={idx} className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-amber-200 text-xs gap-2">
+                          <span className="font-medium text-slate-800"><strong className="text-amber-800">Q{idx + 1}:</strong> {q}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveQuestion(idx)}
+                            className="p-1 text-slate-400 hover:text-rose-600 transition"
+                            title="Remove Question"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newQuestionInput}
+                        onChange={(e) => setNewQuestionInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddQuestion();
+                          }
+                        }}
+                        placeholder="Add custom screening question (e.g. Do you have a clean driving record?)..."
+                        className="flex-1 px-3 py-2 bg-white border border-amber-300 rounded-xl text-xs font-medium"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddQuestion}
+                        className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-xs"
+                      >
+                        + Add Question
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[10px] font-bold text-amber-900">Suggested Questions:</span>
+                      {[
+                        'Do you have prior experience with minors / youth programs?',
+                        'Do you hold active First Aid / CPR or food handling certifications?',
+                        'Can you commit to mandatory 15-minute safety orientation?'
+                      ].map((presetQ, qIdx) => (
+                        <button
+                          key={qIdx}
+                          type="button"
+                          onClick={() => {
+                            if (!screeningQuestions.includes(presetQ)) {
+                              setScreeningQuestions([...screeningQuestions, presetQ]);
+                            }
+                          }}
+                          className="px-2 py-0.5 bg-white hover:bg-amber-100 border border-amber-200 rounded-lg text-[10px] text-amber-900 font-medium transition"
+                        >
+                          + {presetQ}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Conditional Sub-panel: Private Passcode */}
+                {visibility === 'private' && (
+                  <div className="p-4 bg-purple-50/80 rounded-2xl border border-purple-200 space-y-3 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-purple-900 font-bold text-xs">
+                        <Key className="w-4 h-4 text-purple-700" />
+                        <span>Private Event Passcode & Secret Access Token</span>
+                      </div>
+                      <span className="text-[10px] text-purple-800 font-medium">Required for unlisted campaign access</span>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-2">
+                      <div className="relative flex-1 w-full">
+                        <Key className="w-3.5 h-3.5 text-purple-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={privateAccessCode}
+                          onChange={(e) => setPrivateAccessCode(e.target.value.toUpperCase())}
+                          placeholder="e.g. VIP2026 or GALA-OCT"
+                          className="w-full pl-9 pr-3 py-2 bg-white border border-purple-300 rounded-xl font-mono font-bold text-sm tracking-widest text-purple-900 uppercase"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleGeneratePasscode}
+                        className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs shadow-xs transition whitespace-nowrap flex items-center gap-1.5 self-stretch sm:self-auto justify-center"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                        <span>⚡ Generate Code</span>
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-purple-700">
+                      Supporters can unlock this event by entering passcode <strong>{privateAccessCode || 'VIP2026'}</strong> or by clicking your private campaign URL.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1591,10 +1828,21 @@ export const EventBuilderWizard: React.FC<EventBuilderWizardProps> = ({ isOpen, 
             </div>
 
             {/* Final Dossier Summary */}
-            <div className="p-4 bg-gradient-to-r from-purple-900 to-indigo-900 text-white rounded-2xl space-y-2">
-              <div className="flex justify-between items-center">
+            <div className="p-4 bg-gradient-to-r from-purple-900 to-indigo-900 text-white rounded-2xl space-y-3">
+              <div className="flex justify-between items-start">
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-purple-300 font-bold">Campaign Launch Summary</span>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] uppercase tracking-wider text-purple-300 font-bold">Campaign Launch Summary</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      visibility === 'public' ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/30' :
+                      visibility === 'restricted' ? 'bg-amber-500/30 text-amber-200 border border-amber-400/30' :
+                      'bg-purple-400/30 text-purple-200 border border-purple-300/30'
+                    }`}>
+                      {visibility === 'public' ? '🌍 Public Directory' :
+                       visibility === 'restricted' ? `🛡️ Screened (${screeningQuestions.length} Qs)` :
+                       `🔒 Private (${privateAccessCode})`}
+                    </span>
+                  </div>
                   <h4 className="text-base font-extrabold text-white">{title}</h4>
                 </div>
                 <div className="text-right">

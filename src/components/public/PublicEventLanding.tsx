@@ -16,6 +16,7 @@ import { ProBonoPledgeModal } from './ProBonoPledgeModal';
 import { ConfirmationCard } from './ConfirmationCard';
 import { QrCodeModal } from '../common/QrCodeModal';
 import { ManageRegistration } from './ManageRegistration';
+import { OrganizerClaimModal } from '../organizer/OrganizerClaimModal';
 import { TicketTier } from '../../types';
 import { VisualScheduleTimelineBar } from './VisualScheduleTimelineBar';
 
@@ -40,6 +41,7 @@ export const PublicEventLanding: React.FC = () => {
   const [isVendorModalOpen, setIsVendorModalOpen] = useState(false);
   const [isCommercialModalOpen, setIsCommercialModalOpen] = useState(false);
   const [isProBonoModalOpen, setIsProBonoModalOpen] = useState(false);
+  const [isOrganizerClaimModalOpen, setIsOrganizerClaimModalOpen] = useState(false);
   const [selectedVendorTier, setSelectedVendorTier] = useState<TicketTier | null>(null);
   const [confirmedReg, setConfirmedReg] = useState<any | null>(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -133,16 +135,46 @@ export const PublicEventLanding: React.FC = () => {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-12">
           {/* Top Org & Meta Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold uppercase tracking-wider text-indigo-300">
                 {currentOrg.name}
               </span>
-              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
-                ✓ Verified 501(c)(3) Campaign
-              </span>
+              
+              {currentEvent.visibility === 'restricted' && (
+                <span className="px-3 py-1 rounded-full bg-amber-500/30 text-amber-300 border border-amber-400/40 text-xs font-bold flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Restricted • Screening Required</span>
+                </span>
+              )}
+
+              {currentEvent.visibility === 'private' && (
+                <span className="px-3 py-1 rounded-full bg-purple-500/30 text-purple-300 border border-purple-400/40 text-xs font-bold flex items-center gap-1">
+                  <span>🔒 Private / Unlisted Event</span>
+                </span>
+              )}
+
+              {currentEvent.claimStatus === 'unclaimed_provisional' ? (
+                <span className="px-3 py-1 rounded-full bg-teal-500/30 text-teal-300 border border-teal-400/40 text-xs font-bold flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-teal-400" />
+                  <span>Grassroots Nominated</span>
+                </span>
+              ) : (
+                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
+                  ✓ Verified 501(c)(3) Campaign
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
+              {currentEvent.claimStatus === 'unclaimed_provisional' && (
+                <button
+                  onClick={() => setIsOrganizerClaimModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-black shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Claim Organizer Workspace</span>
+                </button>
+              )}
               <button
                 onClick={() => setIsManageModalOpen(true)}
                 className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-semibold backdrop-blur-md transition flex items-center gap-1.5 text-slate-200"
@@ -158,6 +190,34 @@ export const PublicEventLanding: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Grassroots Provisional Callout Notice */}
+          {currentEvent.claimStatus === 'unclaimed_provisional' && (
+            <div className="mb-4 p-3.5 bg-teal-950/80 border border-teal-400/50 rounded-2xl text-xs text-teal-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+              <div className="flex items-center gap-2.5">
+                <Sparkles className="w-5 h-5 text-teal-300 shrink-0" />
+                <span>
+                  <strong>Grassroots Nominated Initiative:</strong> This campaign was registered on behalf of <strong>{currentOrg.name}</strong>. If you are the event chair or organizer, claim your workspace to verify volunteer service hours and customize event details.
+                </span>
+              </div>
+              <button
+                onClick={() => setIsOrganizerClaimModalOpen(true)}
+                className="px-3 py-1.5 bg-teal-400 hover:bg-teal-300 text-slate-950 font-black rounded-xl text-xs shrink-0 cursor-pointer"
+              >
+                Claim &amp; Verify Hours &rarr;
+              </button>
+            </div>
+          )}
+
+          {/* Restricted Event Notice */}
+          {currentEvent.visibility === 'restricted' && (
+            <div className="mb-4 p-3.5 bg-amber-950/70 border border-amber-400/40 rounded-2xl text-xs text-amber-200 flex items-center gap-2.5 shadow-md">
+              <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0" />
+              <span>
+                <strong>Application & Screening Required:</strong> Volunteer roles for this initiative require committee review. Complete your application below and answer the screening questionnaire. Confirmation passes will be issued upon approval.
+              </span>
+            </div>
+          )}
 
           {/* Event Title & Tagline */}
           <div className="max-w-3xl">
@@ -971,6 +1031,18 @@ export const PublicEventLanding: React.FC = () => {
         isOpen={isManageModalOpen}
         onClose={() => setIsManageModalOpen(false)}
       />
+
+      {/* 🚀 Organizer Workspace Claim Modal */}
+      {isOrganizerClaimModalOpen && (
+        <OrganizerClaimModal
+          isOpen={isOrganizerClaimModalOpen}
+          onClose={() => setIsOrganizerClaimModalOpen(false)}
+          claimToken={currentEvent.organizerClaimToken}
+          onClaimSuccess={() => {
+            setIsOrganizerClaimModalOpen(false);
+          }}
+        />
+      )}
 
     </div>
   );

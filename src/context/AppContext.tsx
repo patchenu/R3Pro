@@ -97,6 +97,7 @@ interface AppContextType {
     feeCovered: boolean;
     isAnonymous: boolean;
     paymentMethod?: any;
+    screeningAnswers?: { question: string; answer: string }[];
     waiverSignatures: { memberIndex: number; waiverTemplateId: string; waiverTitle: string; waiverText: string; signerName: string; signerRelationship: string; signatureData: string }[];
   }) => { success: boolean; registration?: Registration; error?: string };
 
@@ -108,6 +109,63 @@ interface AppContextType {
     payload?: { receivedBy?: string; donorNotes?: string; estimatedFmv?: number }
   ) => void;
   updateOrganizationBranding: (orgId: string, updates: Partial<Organization>) => void;
+  
+  // Grassroots / Unlisted Event Nomination & Organizer Claiming
+  nominateUnlistedEvent: (payload: {
+    eventTitle: string;
+    eventDescription?: string;
+    startDate: string;
+    endDate: string;
+    venueName: string;
+    venueAddress: string;
+    category?: string;
+    organizerName: string;
+    organizerEmail: string;
+    organizerPhone?: string;
+    organizerTitle?: string;
+    organizationName: string;
+    volunteerName: string;
+    volunteerEmail: string;
+    volunteerPhone?: string;
+    volunteerRoleClaimed: string;
+    volunteerHoursServed: number;
+    volunteerServiceDate: string;
+    volunteerProofNotes?: string;
+  }) => { success: boolean; event: Event; claimToken: string; claimUrl: string; registration: Registration };
+
+  claimProvisionalEvent: (payload: {
+    claimToken: string;
+    orgName?: string;
+    ein: string;
+    address?: string;
+    phone?: string;
+    signatoryName: string;
+    signatoryTitle: string;
+    signatorySignatureUrl?: string;
+    primaryColor?: string;
+    adminPassword?: string;
+    verifyVolunteerHours: boolean;
+    approvedHours?: number;
+    verificationNotes?: string;
+    supervisorSignatureData?: string;
+  }) => { success: boolean; event?: Event; error?: string };
+
+  // Participant Verification & Screening Management
+  verifyParticipant: (payload: {
+    registrationId: string;
+    shiftId: string;
+    groupMemberId: string;
+    hoursAwarded: number;
+    notes?: string;
+    supervisorSignatureData?: string;
+    supervisorName?: string;
+  }) => void;
+  flagParticipantForReview: (registrationId: string, shiftId: string, groupMemberId: string, reason: string) => void;
+  approveRestrictedRegistration: (registrationId: string) => void;
+  rejectRestrictedRegistration: (registrationId: string, reason?: string) => void;
+
+  // Private Campaign Access Code Unlocking
+  unlockPrivateEventByCode: (passcode: string) => { success: boolean; event?: Event; error?: string };
   
   // Committee Lead & Threshold Actions
   addSubPart: (subPartData: Omit<SubPart, 'id' | 'budgetSpent' | 'shiftIds' | 'itemSlotIds'>) => SubPart;
@@ -863,6 +921,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     feeCovered: boolean;
     isAnonymous: boolean;
     paymentMethod?: any;
+    screeningAnswers?: { question: string; answer: string }[];
     waiverSignatures: { memberIndex: number; waiverTemplateId: string; waiverTitle: string; waiverText: string; signerName: string; signerRelationship: string; signatureData: string }[];
   }) => {
     // 1. Check for shift capacity
@@ -925,11 +984,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
 
     // Shift claims
-    const shiftClaims = payload.shiftSelections.map(sel => ({
-      shiftId: sel.shiftId,
-      groupMemberId: createdMembers[sel.groupMemberIndex]?.id || createdMembers[0].id,
-      checkedIn: false
-    }));
+    const shiftClaims = payload.shiftSelections.map(sel => {
+      const member = createdMembers[sel.groupMemberIndex] || createdMembers[0];
+      const memberWaiver = signedWaivers.find(w => w.groupMemberId === member.id);
+      return {
+        shiftId: sel.shiftId,
+        groupMemberId: member.id,
+        checkedIn: false,
+        verificationStatus: (memberWaiver ? 'waiver_compliant' : 'identity_verified') as any
+      };
+    });
 
     // Item pledges
     const itemPledges = payload.itemSelections.map(sel => ({
@@ -953,6 +1017,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       taxReceiptNumber: generateReceiptNumber()
     }] : [];
 
+    const isRestrictedEvent = currentEvent.visibility === 'restricted';
+    const regStatus: 'confirmed' | 'pending_review' = isRestrictedEvent ? 'pending_review' : 'confirmed';
+
     const newRegistration: Registration = {
       id: regId,
       eventId: currentEvent.id,
@@ -962,8 +1029,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       birthDate: payload.birthDate,
       manageToken,
       createdAt: timestamp,
-      status: 'confirmed',
+      status: regStatus,
       notes: payload.notes,
+      screeningAnswers: payload.screeningAnswers,
       members: createdMembers,
       shiftClaims,
       itemPledges,
@@ -1082,7 +1150,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       manageToken
     }).catch(err => console.debug('[API Sync] Registration background sync:', err));
 
-    showToast('success', 'Registration Confirmed!', `Thank you ${payload.primaryName}. Your confirmation pass is ready.`);
+    if (isRestrictedEvent) {
+      showToast('info', 'Application Submitted for Review', `Thank you ${payload.primaryName}. Your application has been submitted to the event committee for review.`);
+    } else {
+      showToast('success', 'Registration Confirmed!', `Thank you ${payload.primaryName}. Your confirmation pass is ready.`);
+    }
     return { success: true, registration: newRegistration };
   };
 
@@ -1135,7 +1207,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 ...sc,
                 checkedIn: newStatus,
                 checkedInAt: newStatus ? new Date().toISOString() : undefined,
-                checkedInBy: newStatus ? currentUser.name : undefined
+                checkedInBy: newStatus ? currentUser.name : undefined,
+                verificationStatus: newStatus ? ('attended_verified' as const) : sc.verificationStatus
               };
             }
             return sc;
@@ -1199,8 +1272,585 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       return { ...prev, organizations: updatedOrgs };
     });
+  };
 
-    showToast('success', 'Organization Profile & Policies Saved', 'Organization branding, legal details, and variable threshold defaults updated successfully.');
+  // Grassroots / Unlisted Event Nomination & Organizer Claiming
+  const nominateUnlistedEvent = (payload: {
+    eventTitle: string;
+    eventDescription?: string;
+    startDate: string;
+    endDate: string;
+    venueName: string;
+    venueAddress: string;
+    category?: string;
+    organizerName: string;
+    organizerEmail: string;
+    organizerPhone?: string;
+    organizerTitle?: string;
+    organizationName: string;
+    volunteerName: string;
+    volunteerEmail: string;
+    volunteerPhone?: string;
+    volunteerRoleClaimed: string;
+    volunteerHoursServed: number;
+    volunteerServiceDate: string;
+    volunteerProofNotes?: string;
+  }) => {
+    const timestamp = new Date().toISOString();
+    const eventId = `evt_nom_${Date.now()}`;
+    const orgId = `org_nom_${Date.now()}`;
+    const subPartId = `sp_nom_${Date.now()}`;
+    const shiftId = `shift_nom_${Date.now()}`;
+    const regId = `reg_nom_${Date.now()}`;
+    const manageToken = generateManageToken();
+    const claimToken = `claim_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 10)}`;
+    const eventKey = `EVT-${new Date().getFullYear()}-GRASSROOTS-${Math.floor(100 + Math.random() * 900)}`;
+
+    const provisionalOrg: Organization = {
+      id: orgId,
+      name: payload.organizationName || `${payload.eventTitle} Committee`,
+      type: 'non_profit',
+      ein: 'PENDING-CLAIM',
+      contactEmail: payload.organizerEmail,
+      phone: payload.organizerPhone || '(555) 000-0000',
+      address: payload.venueAddress || 'Community Location',
+      website: '',
+      logoUrl: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=120&auto=format&fit=crop&q=80',
+      primaryColor: '#0ea5e9',
+      signatoryOfficerName: payload.organizerName,
+      signatoryOfficerTitle: payload.organizerTitle || 'Event Organizer / Coordinator',
+      volunteerCount: 1,
+      totalFundsRaised: 0,
+      isProvisional: true,
+      claimStatus: 'unclaimed_provisional',
+      organizerClaimToken: claimToken,
+      settings: {
+        defaultCurrency: 'USD',
+        approvalThresholdBudget: 250,
+        approvalThresholdSlots: 5,
+        defaultReminderCadence: 'standard'
+      }
+    };
+
+    const provisionalEvent: Event = {
+      id: eventId,
+      orgId: orgId,
+      eventKey: eventKey,
+      title: payload.eventTitle,
+      slug: payload.eventTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      tagline: `Community Grassroots Initiative • Organized by ${payload.organizerName}`,
+      description: payload.eventDescription || `Community volunteer initiative added on behalf of ${payload.organizerName}.`,
+      tags: ['Grassroots', 'Community Initiative', 'Student Service Hours', payload.category || 'General Service'],
+      startDate: payload.startDate,
+      endDate: payload.endDate,
+      venueName: payload.venueName,
+      venueAddress: payload.venueAddress,
+      mapUrl: `https://maps.google.com/?q=${encodeURIComponent(payload.venueAddress || payload.venueName)}`,
+      isVirtual: false,
+      coverImageUrl: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1200&auto=format&fit=crop&q=80',
+      theme: {
+        id: 'sky_grassroots',
+        name: 'Sky Blue Grassroots',
+        primaryColor: '#0ea5e9',
+        accentColor: '#38bdf8',
+        bgGradient: 'from-sky-500 to-indigo-700'
+      },
+      fundraisingGoal: 2500,
+      totalRaised: 0,
+      currency: 'USD',
+      status: 'published',
+      approvalThresholdBudget: 250,
+      approvalThresholdSlots: 5,
+      reminderCadence: 'standard',
+      allowFeeCoverage: true,
+      dressCode: 'Comfortable volunteer attire & sturdy shoes',
+      visibility: 'public',
+      isProvisional: true,
+      claimStatus: 'unclaimed_provisional',
+      organizerClaimToken: claimToken,
+      nominatedByVolunteer: {
+        name: payload.volunteerName,
+        email: payload.volunteerEmail,
+        phone: payload.volunteerPhone,
+        roleClaimed: payload.volunteerRoleClaimed,
+        hoursServed: payload.volunteerHoursServed,
+        serviceDate: payload.volunteerServiceDate,
+        proofNotes: payload.volunteerProofNotes,
+        nominatedAt: timestamp
+      },
+      organizerContact: {
+        name: payload.organizerName,
+        email: payload.organizerEmail,
+        phone: payload.organizerPhone,
+        title: payload.organizerTitle,
+        organizationName: payload.organizationName
+      },
+      subPartIds: [subPartId]
+    };
+
+    const provisionalSubPart: SubPart = {
+      id: subPartId,
+      eventId: eventId,
+      name: 'Community Volunteers & Field Operations',
+      category: 'labor_setup',
+      leadUserId: `user_lead_${orgId}`,
+      leadName: payload.organizerName,
+      leadPhone: payload.organizerPhone || '(555) 000-0000',
+      leadEmail: payload.organizerEmail,
+      reportingGate: 'Main Event Check-In',
+      dressCodeNotes: 'Comfortable attire & closed-toe shoes',
+      suppliesNotes: 'Check in with event coordinator on-site',
+      budgetAllocated: 500,
+      budgetSpent: 0,
+      shiftIds: [shiftId],
+      itemSlotIds: []
+    };
+
+    const provisionalShift: Shift = {
+      id: shiftId,
+      subPartId: subPartId,
+      eventId: eventId,
+      title: payload.volunteerRoleClaimed || 'Community Volunteer Contributor',
+      description: `Service contribution for ${payload.eventTitle}.`,
+      startTime: payload.startDate,
+      endTime: payload.endDate,
+      capacity: 10,
+      claimedCount: 1,
+      requiresWaiver: true,
+      waiverTemplateId: 'waiver_general_liability',
+      isApproved: true
+    };
+
+    const provisionalMemberId = `member_${regId}_0`;
+    const provisionalRegistration: Registration = {
+      id: regId,
+      eventId: eventId,
+      primaryName: payload.volunteerName,
+      primaryEmail: payload.volunteerEmail,
+      primaryPhone: payload.volunteerPhone || '(555) 000-0000',
+      manageToken: manageToken,
+      createdAt: timestamp,
+      status: 'confirmed',
+      notes: payload.volunteerProofNotes ? `Volunteer Proof/Notes: ${payload.volunteerProofNotes}` : undefined,
+      members: [
+        {
+          id: provisionalMemberId,
+          registrationId: regId,
+          name: payload.volunteerName,
+          email: payload.volunteerEmail,
+          phone: payload.volunteerPhone,
+          relationship: 'Self',
+          isMinor: false
+        }
+      ],
+      shiftClaims: [
+        {
+          shiftId: shiftId,
+          groupMemberId: provisionalMemberId,
+          checkedIn: true,
+          checkedInAt: timestamp,
+          checkedInBy: 'Volunteer Self-Service Claim',
+          verificationStatus: 'unverified',
+          serviceHoursAwarded: payload.volunteerHoursServed,
+          verificationNotes: `Volunteer claimed ${payload.volunteerHoursServed} hours on ${payload.volunteerServiceDate}. Awaiting Organizer Claim & Formal Verification.`
+        }
+      ],
+      itemPledges: [],
+      ticketPurchases: [],
+      donations: [],
+      waivers: []
+    };
+
+    const claimUrl = `${window.location.origin}/?claimToken=${claimToken}`;
+
+    // Add Audit log
+    const auditRecord: AuditLog = {
+      id: 'audit_' + Date.now(),
+      orgId: orgId,
+      eventId: eventId,
+      actorId: currentUser.id,
+      actorName: payload.volunteerName,
+      actorRole: 'volunteer',
+      action: 'nominate_unlisted_event',
+      details: `Nominated unlisted event "${payload.eventTitle}" for organizer ${payload.organizerName} (${payload.organizerEmail}). Claim token generated.`,
+      timestamp: timestamp
+    };
+
+    setData((prev: any) => ({
+      ...prev,
+      organizations: [provisionalOrg, ...prev.organizations],
+      events: [provisionalEvent, ...prev.events],
+      subParts: [provisionalSubPart, ...prev.subParts],
+      shifts: [provisionalShift, ...prev.shifts],
+      registrations: [provisionalRegistration, ...prev.registrations],
+      auditLogs: [auditRecord, ...prev.auditLogs]
+    }));
+
+    showToast(
+      'success',
+      'Event Added on Behalf of Organizer!',
+      `Invitation sent to ${payload.organizerName} (${payload.organizerEmail}) to formally claim the event and verify your ${payload.volunteerHoursServed} hours.`
+    );
+
+    return {
+      success: true,
+      event: provisionalEvent,
+      claimToken,
+      claimUrl,
+      registration: provisionalRegistration
+    };
+  };
+
+  const claimProvisionalEvent = (payload: {
+    claimToken: string;
+    orgName?: string;
+    ein: string;
+    address?: string;
+    phone?: string;
+    signatoryName: string;
+    signatoryTitle: string;
+    signatorySignatureUrl?: string;
+    primaryColor?: string;
+    adminPassword?: string;
+    verifyVolunteerHours: boolean;
+    approvedHours?: number;
+    verificationNotes?: string;
+    supervisorSignatureData?: string;
+  }) => {
+    const targetEvent = data.events.find((e: Event) => e.organizerClaimToken === payload.claimToken);
+    const targetOrg = data.organizations.find((o: Organization) => o.organizerClaimToken === payload.claimToken || (targetEvent && o.id === targetEvent.orgId));
+
+    if (!targetEvent || !targetOrg) {
+      showToast('error', 'Invalid Claim Token', 'Could not locate provisional campaign with this token.');
+      return { success: false, error: 'Provisional event not found.' };
+    }
+
+    const timestamp = new Date().toISOString();
+    const certNum = `CERT-${new Date().getFullYear()}-X${Math.floor(1000 + Math.random() * 9000)}`;
+
+    setData((prev: any) => {
+      // 1. Update Organization
+      const updatedOrgs = prev.organizations.map((o: Organization) => {
+        if (o.id === targetOrg.id) {
+          return {
+            ...o,
+            name: payload.orgName || o.name,
+            ein: payload.ein || o.ein,
+            address: payload.address || o.address,
+            phone: payload.phone || o.phone,
+            signatoryOfficerName: payload.signatoryName || o.signatoryOfficerName,
+            signatoryOfficerTitle: payload.signatoryTitle || o.signatoryOfficerTitle,
+            signatorySignatureUrl: payload.signatorySignatureUrl || o.signatorySignatureUrl,
+            primaryColor: payload.primaryColor || o.primaryColor,
+            isProvisional: false,
+            claimStatus: 'claimed_active' as const
+          };
+        }
+        return o;
+      });
+
+      // 2. Update Event
+      const updatedEvents = prev.events.map((e: Event) => {
+        if (e.id === targetEvent.id) {
+          return {
+            ...e,
+            isProvisional: false,
+            claimStatus: 'claimed_active' as const,
+            status: 'published' as const
+          };
+        }
+        return e;
+      });
+
+      // 3. Update Registrations (verify volunteer hours if selected)
+      const updatedRegistrations = prev.registrations.map((r: Registration) => {
+        if (r.eventId === targetEvent.id) {
+          const updatedClaims = r.shiftClaims.map(sc => {
+            if (payload.verifyVolunteerHours) {
+              const hours = payload.approvedHours !== undefined ? payload.approvedHours : (sc.serviceHoursAwarded || 3.0);
+              return {
+                ...sc,
+                verificationStatus: 'supervisor_signed' as const,
+                serviceHoursAwarded: hours,
+                verifiedByName: payload.signatoryName,
+                verifiedAt: timestamp,
+                verificationNotes: payload.verificationNotes || 'Officially verified upon organization workspace claim.',
+                certificateNumber: certNum,
+                supervisorSignatureData: payload.supervisorSignatureData || sc.supervisorSignatureData
+              };
+            }
+            return sc;
+          });
+          return { ...r, shiftClaims: updatedClaims };
+        }
+        return r;
+      });
+
+      // 4. Update or create user account for organizer
+      const organizerEmail = targetEvent.organizerContact?.email || targetOrg.contactEmail;
+      let updatedUsers = [...prev.users];
+      const existingUser = updatedUsers.find((u: User) => u.email.toLowerCase() === organizerEmail.toLowerCase());
+      
+      let claimedUser: User;
+      if (existingUser) {
+        claimedUser = {
+          ...existingUser,
+          role: 'org_admin',
+          orgId: targetOrg.id,
+          name: payload.signatoryName || existingUser.name,
+          accountStatus: 'active'
+        };
+        updatedUsers = updatedUsers.map(u => u.id === existingUser.id ? claimedUser : u);
+      } else {
+        claimedUser = {
+          id: `user_${Date.now()}`,
+          name: payload.signatoryName,
+          email: organizerEmail,
+          phone: payload.phone,
+          role: 'org_admin',
+          orgId: targetOrg.id,
+          accountStatus: 'active',
+          isRegisteredUser: true,
+          createdAt: timestamp
+        };
+        updatedUsers.push(claimedUser);
+      }
+
+      // 5. Update CRM for nominating volunteer
+      let updatedCrm = [...prev.volunteerCrm];
+      if (payload.verifyVolunteerHours && targetEvent.nominatedByVolunteer) {
+        const volEmail = targetEvent.nominatedByVolunteer.email;
+        const crmRecord = updatedCrm.find(c => c.email.toLowerCase() === volEmail.toLowerCase());
+        const hoursToAdd = payload.approvedHours !== undefined ? payload.approvedHours : targetEvent.nominatedByVolunteer.hoursServed;
+        if (crmRecord) {
+          updatedCrm = updatedCrm.map(c => c.id === crmRecord.id ? {
+            ...c,
+            lifetimeHours: c.lifetimeHours + hoursToAdd,
+            eventsParticipated: c.eventsParticipated + 1,
+            tags: Array.from(new Set([...c.tags, 'Verified Volunteer', 'Student Hours Certified'])),
+            lastActive: timestamp.slice(0, 10)
+          } : c);
+        } else {
+          updatedCrm.push({
+            id: 'crm_' + Date.now(),
+            orgId: targetOrg.id,
+            name: targetEvent.nominatedByVolunteer.name,
+            email: targetEvent.nominatedByVolunteer.email,
+            phone: targetEvent.nominatedByVolunteer.phone || '',
+            lifetimeHours: hoursToAdd,
+            lifetimeDonations: 0,
+            eventsParticipated: 1,
+            attendanceRate: 100,
+            skills: [targetEvent.nominatedByVolunteer.roleClaimed],
+            tags: ['Verified Volunteer', 'Student Hours Certified'],
+            lastActive: timestamp.slice(0, 10)
+          });
+        }
+      }
+
+      // 6. Audit log
+      const auditEntry: AuditLog = {
+        id: 'audit_' + Date.now(),
+        orgId: targetOrg.id,
+        eventId: targetEvent.id,
+        actorId: claimedUser.id,
+        actorName: payload.signatoryName,
+        actorRole: 'org_admin',
+        action: 'claim_provisional_event',
+        details: `Formally claimed organization "${payload.orgName || targetOrg.name}" and activated campaign "${targetEvent.title}". ${payload.verifyVolunteerHours ? 'Verified volunteer hours with supervisor signature.' : ''}`,
+        timestamp: timestamp
+      };
+
+      return {
+        ...prev,
+        organizations: updatedOrgs,
+        events: updatedEvents,
+        registrations: updatedRegistrations,
+        users: updatedUsers,
+        volunteerCrm: updatedCrm,
+        auditLogs: [auditEntry, ...prev.auditLogs],
+        currentOrgId: targetOrg.id,
+        currentEventId: targetEvent.id,
+        currentUserId: claimedUser.id,
+        activeRole: 'org_admin'
+      };
+    });
+
+    showToast(
+      'success',
+      'Organization & Event Claimed!',
+      `Welcome ${payload.signatoryName}. Your organization workspace is active and your campaign is published.`
+    );
+    return { success: true, event: targetEvent };
+  };
+
+  const verifyParticipant = (payload: {
+    registrationId: string;
+    shiftId: string;
+    groupMemberId: string;
+    hoursAwarded: number;
+    notes?: string;
+    supervisorSignatureData?: string;
+    supervisorName?: string;
+  }) => {
+    const timestamp = new Date().toISOString();
+    const certNum = `CERT-${new Date().getFullYear()}-X${Math.floor(1000 + Math.random() * 9000)}`;
+    const verifier = payload.supervisorName || currentUser.name || 'Authorized Coordinator';
+
+    setData((prev: any) => {
+      let volunteerEmail = '';
+      let volunteerName = '';
+
+      const updatedRegistrations = prev.registrations.map((r: Registration) => {
+        if (r.id === payload.registrationId) {
+          volunteerEmail = r.primaryEmail;
+          const updatedClaims = r.shiftClaims.map(sc => {
+            if (sc.shiftId === payload.shiftId && sc.groupMemberId === payload.groupMemberId) {
+              const member = r.members.find(m => m.id === payload.groupMemberId);
+              if (member) volunteerName = member.name;
+              return {
+                ...sc,
+                checkedIn: true,
+                checkedInAt: sc.checkedInAt || timestamp,
+                checkedInBy: sc.checkedInBy || verifier,
+                verificationStatus: 'supervisor_signed' as const,
+                serviceHoursAwarded: payload.hoursAwarded,
+                verifiedByUserId: currentUser.id,
+                verifiedByName: verifier,
+                verifiedAt: timestamp,
+                verificationNotes: payload.notes || 'Hours officially verified and approved.',
+                certificateNumber: certNum,
+                supervisorSignatureData: payload.supervisorSignatureData || sc.supervisorSignatureData
+              };
+            }
+            return sc;
+          });
+          return { ...r, shiftClaims: updatedClaims };
+        }
+        return r;
+      });
+
+      // Update CRM records
+      let updatedCrm = [...prev.volunteerCrm];
+      if (volunteerEmail) {
+        const crmRecord = updatedCrm.find(c => c.email.toLowerCase() === volunteerEmail.toLowerCase());
+        if (crmRecord) {
+          updatedCrm = updatedCrm.map(c => c.id === crmRecord.id ? {
+            ...c,
+            lifetimeHours: c.lifetimeHours + payload.hoursAwarded,
+            tags: Array.from(new Set([...c.tags, 'Verified Volunteer', 'Student Hours Certified'])),
+            lastActive: timestamp.slice(0, 10)
+          } : c);
+        }
+      }
+
+      // Audit Log
+      const auditLog: AuditLog = {
+        id: 'audit_' + Date.now(),
+        orgId: currentOrg.id,
+        eventId: currentEvent.id,
+        actorId: currentUser.id,
+        actorName: verifier,
+        actorRole: activeRole,
+        action: 'verify_participant_hours',
+        details: `Awarded ${payload.hoursAwarded} verified service hours to ${volunteerName || 'participant'} (Certificate #${certNum}).`,
+        timestamp: timestamp
+      };
+
+      return {
+        ...prev,
+        registrations: updatedRegistrations,
+        volunteerCrm: updatedCrm,
+        auditLogs: [auditLog, ...prev.auditLogs]
+      };
+    });
+
+    showToast('success', 'Participant Verified!', `${payload.hoursAwarded} community service hours awarded (Cert #${certNum}).`);
+  };
+
+  const flagParticipantForReview = (
+    registrationId: string,
+    shiftId: string,
+    groupMemberId: string,
+    reason: string
+  ) => {
+    setData((prev: any) => ({
+      ...prev,
+      registrations: prev.registrations.map((r: Registration) => {
+        if (r.id === registrationId) {
+          return {
+            ...r,
+            shiftClaims: r.shiftClaims.map(sc => {
+              if (sc.shiftId === shiftId && sc.groupMemberId === groupMemberId) {
+                return {
+                  ...sc,
+                  verificationStatus: 'flagged_review' as const,
+                  verificationNotes: `FLAGGED FOR INQUIRY: ${reason}`
+                };
+              }
+              return sc;
+            })
+          };
+        }
+        return r;
+      })
+    }));
+
+    showToast('warning', 'Participant Flagged for Review', reason);
+  };
+
+  const approveRestrictedRegistration = (registrationId: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      registrations: prev.registrations.map((r: Registration) => {
+        if (r.id === registrationId) {
+          return {
+            ...r,
+            status: 'confirmed' as const,
+            shiftClaims: r.shiftClaims.map(sc => ({
+              ...sc,
+              verificationStatus: sc.verificationStatus === 'unverified' ? ('identity_verified' as const) : sc.verificationStatus
+            }))
+          };
+        }
+        return r;
+      })
+    }));
+
+    showToast('success', 'Application Approved', 'Registration confirmed and participant notified.');
+  };
+
+  const rejectRestrictedRegistration = (registrationId: string, reason?: string) => {
+    setData((prev: any) => ({
+      ...prev,
+      registrations: prev.registrations.map((r: Registration) => {
+        if (r.id === registrationId) {
+          return {
+            ...r,
+            status: 'cancelled' as const,
+            notes: reason ? `Rejected Application Reason: ${reason}` : r.notes
+          };
+        }
+        return r;
+      })
+    }));
+
+    showToast('info', 'Application Declined', reason || 'Registration application declined.');
+  };
+
+  const unlockPrivateEventByCode = (passcode: string) => {
+    const trimmed = passcode.trim().toUpperCase();
+    const match = data.events.find(
+      (e: Event) => e.accessCode && e.accessCode.trim().toUpperCase() === trimmed
+    );
+
+    if (match) {
+      showToast('success', 'Private Event Unlocked', `Access granted to "${match.title}".`);
+      return { success: true, event: match };
+    }
+
+    showToast('error', 'Invalid Passcode', 'No private campaign matches this access passcode.');
+    return { success: false, error: 'Invalid passcode.' };
   };
 
   const addSubPart = (subPartData: Omit<SubPart, 'id' | 'budgetSpent' | 'shiftIds' | 'itemSlotIds'>): SubPart => {
@@ -2815,6 +3465,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       toggleCheckIn,
       toggleItemPledgeReceived,
       updateOrganizationBranding,
+      nominateUnlistedEvent,
+      claimProvisionalEvent,
+      verifyParticipant,
+      flagParticipantForReview,
+      approveRestrictedRegistration,
+      rejectRestrictedRegistration,
+      unlockPrivateEventByCode,
       addSubPart,
       updateSubPart,
       deleteSubPart,
